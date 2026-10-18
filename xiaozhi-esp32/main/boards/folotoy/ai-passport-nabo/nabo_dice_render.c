@@ -327,6 +327,9 @@ static void shade(int32_t nx, int32_t ny, int32_t nz, int16_t out[3], int16_t *l
     if (lit) *lit = (int16_t)(light >> 6);
 }
 
+static void finish_die(nabo_dice_die_t *d, mat_t world, int32_t s, int32_t tx, int32_t ty, int32_t h,
+                       uint32_t tilt_turns, int clip_w, int clip_h);
+
 static void build_die(nabo_dice_die_t *d, const nabo_dice_plan_t *p, unsigned i, int32_t t)
 {
     int32_t h = height_q8(p, i, t);
@@ -337,7 +340,7 @@ static void build_die(nabo_dice_die_t *d, const nabo_dice_plan_t *p, unsigned i,
     int32_t ty = (p->sy[i] << 8) + (((p->ty[i] - p->sy[i]) << 8) * move >> 14);
     uint32_t spin = (uint32_t)((int64_t)p->spin[i] * (ONE - turn) >> 14);
 
-    mat_t top, yaw, world, tilt, view;
+    mat_t top, yaw, world;
     for (int k = 0; k < 9; ++k) top[k] = TO_TOP[p->value[i]][k] * ONE;
     int32_t cy = icos(p->yaw[i]), sy = isin(p->yaw[i]);
     mat_t ry = {cy, 0, sy, 0, ONE, 0, -sy, 0, cy};
@@ -348,12 +351,20 @@ static void build_die(nabo_dice_die_t *d, const nabo_dice_plan_t *p, unsigned i,
         axis_angle(rot, p->axis[i], spin);
         mat_mul(world, rot, world);
     }
-    int32_t ce = icos(TILT), se = isin(TILT);
+    finish_die(d, world, p->half, tx, ty, h, TILT, NABO_DICE_W, NABO_DICE_H);
+}
+
+/* Shared by the roll and by nabo_dice_pose: tilt the posed die into view, place it with its
+ * lowest corner on the felt at (tx, ty) Q8 plus height h Q8, and build faces and shadow. */
+static void finish_die(nabo_dice_die_t *d, mat_t world, int32_t s, int32_t tx, int32_t ty, int32_t h,
+                       uint32_t tilt_turns, int clip_w, int clip_h)
+{
+    mat_t tilt, view;
+    int32_t ce = icos(tilt_turns), se = isin(tilt_turns);
     mat_t rx = {ONE, 0, 0, 0, ce, -se, 0, se, ce};
     memcpy(tilt, rx, sizeof(tilt));
     mat_mul(view, tilt, world);
 
-    int32_t s = p->half;
     /* Rest on the lowest corner while tumbling, never through the felt. */
     int32_t reach = (iabs(world[3]) + iabs(world[4]) + iabs(world[5])) * s;   /* Q14 px */
     int32_t lift = h + (reach >> 6);                                            /* Q8 */
@@ -361,10 +372,10 @@ static void build_die(nabo_dice_die_t *d, const nabo_dice_plan_t *p, unsigned i,
 
     int32_t ex = (iabs(view[0]) + iabs(view[1]) + iabs(view[2])) * s >> 14;
     int32_t ey = (iabs(view[3]) + iabs(view[4]) + iabs(view[5])) * s >> 14;
-    d->bx0 = (int16_t)clamp((cx8 >> 8) - ex - 2, 0, NABO_DICE_W - 1);
-    d->bx1 = (int16_t)clamp((cx8 >> 8) + ex + 2, 0, NABO_DICE_W - 1);
-    d->by0 = (int16_t)clamp((cy8 >> 8) - ey - 2, 0, NABO_DICE_H - 1);
-    d->by1 = (int16_t)clamp((cy8 >> 8) + ey + 2, 0, NABO_DICE_H - 1);
+    d->bx0 = (int16_t)clamp((cx8 >> 8) - ex - 2, 0, clip_w - 1);
+    d->bx1 = (int16_t)clamp((cx8 >> 8) + ex + 2, 0, clip_w - 1);
+    d->by0 = (int16_t)clamp((cy8 >> 8) - ey - 2, 0, clip_h - 1);
+    d->by1 = (int16_t)clamp((cy8 >> 8) + ey + 2, 0, clip_h - 1);
 
     /* Soft shadow: grows and fades as the die rises; light is up-left. */
     int32_t hp = h >> 8;
@@ -375,10 +386,10 @@ static void build_die(nabo_dice_die_t *d, const nabo_dice_plan_t *p, unsigned i,
     d->shrx = (int32_t)((1 << 28) / rx8);
     d->shry = (int32_t)((1 << 28) / ry8);
     d->sha = (int16_t)(175 * 90 / (90 + hp));
-    d->sx0 = (int16_t)clamp(((d->shx - rx8) >> 8) - 1, 0, NABO_DICE_W - 1);
-    d->sx1 = (int16_t)clamp(((d->shx + rx8) >> 8) + 1, 0, NABO_DICE_W - 1);
-    d->sy0 = (int16_t)clamp(((d->shy - ry8) >> 8) - 1, 0, NABO_DICE_H - 1);
-    d->sy1 = (int16_t)clamp(((d->shy + ry8) >> 8) + 1, 0, NABO_DICE_H - 1);
+    d->sx0 = (int16_t)clamp(((d->shx - rx8) >> 8) - 1, 0, clip_w - 1);
+    d->sx1 = (int16_t)clamp(((d->shx + rx8) >> 8) + 1, 0, clip_w - 1);
+    d->sy0 = (int16_t)clamp(((d->shy - ry8) >> 8) - 1, 0, clip_h - 1);
+    d->sy1 = (int16_t)clamp(((d->shy + ry8) >> 8) + 1, 0, clip_h - 1);
 
     d->faces = 0;
     for (int f = 0; f < 6 && d->faces < 3; ++f) {
@@ -422,6 +433,18 @@ static void build_die(nabo_dice_die_t *d, const nabo_dice_plan_t *p, unsigned i,
         o->lu = (int16_t)((ax * LX + ay * LY + az * LZ) >> 14);
         o->lv = (int16_t)((bx * LX + by * LY + bz * LZ) >> 14);
     }
+}
+
+void nabo_dice_pose(nabo_dice_die_t *d, unsigned value, int cx, int cy, int half, uint16_t yaw_turns,
+                    uint16_t tilt_turns)
+{
+    if (value < 1 || value > 6) value = 1;
+    mat_t top, world;
+    for (int k = 0; k < 9; ++k) top[k] = TO_TOP[value][k] * ONE;
+    int32_t cy_ = icos(yaw_turns), sy = isin(yaw_turns);
+    mat_t ry = {cy_, 0, sy, 0, ONE, 0, -sy, 0, cy_};
+    mat_mul(world, ry, top);
+    finish_die(d, world, half, cx << 8, cy << 8, 0, tilt_turns, 32767, 32767);
 }
 
 void nabo_dice_scene(nabo_dice_scene_t *scene, const nabo_dice_plan_t *p, int32_t t)
@@ -777,4 +800,47 @@ size_t nabo_dice_sound_fill(nabo_dice_sound_t *s, int16_t *pcm, size_t n)
         ++s->at;
     }
     return out;
+}
+
+/* ---------- a single posed die over any background (other games) ---------- */
+
+void nabo_dice_die_row(const nabo_dice_die_t *d, int y, int x0, int x1, uint16_t *dst)
+{
+    int sy = y >= d->sy0 && y <= d->sy1, by = y >= d->by0 && y <= d->by1;
+    if (!sy && !by) return;
+    int a = by ? d->bx0 : d->sx0, b = by ? d->bx1 : d->sx1;
+    if (sy && d->sx0 < a) a = d->sx0;
+    if (sy && d->sx1 > b) b = d->sx1;
+    if (a < x0) a = x0;
+    if (b > x1) b = x1;
+    const uint8_t *bayer = &BAYER[(y & 3) * 4];
+    int32_t py = (y << 8) + 128;
+    for (int x = a; x <= b; ++x) {
+        uint16_t v = dst[x - x0];
+        int32_t c[3] = {(v >> 11) * 255 * 16 / 31, ((v >> 5) & 63) * 255 * 16 / 63, (v & 31) * 255 * 16 / 31};
+        bool touched = false;
+        if (sy && x >= d->sx0 && x <= d->sx1) {
+            int32_t nx = (((x << 8) + 128) - d->shx) * d->shrx >> 16;   /* Q12 */
+            int32_t ny = (py - d->shy) * d->shry >> 16;
+            int32_t q = (nx * nx + ny * ny) >> 12;
+            if (q < 4096) {
+                int32_t f = 4096 - q, s = d->sha * (f * f >> 12) >> 12;
+                for (int k = 0; k < 3; ++k) c[k] = c[k] * (256 - s) >> 8;
+                touched = true;
+            }
+        }
+        if (by && x >= d->bx0 && x <= d->bx1) {
+            for (unsigned k = 0; k < d->faces; ++k) {
+                const nabo_dice_face_t *f = &d->face[k];
+                int64_t ox = ((x << 8) + 128) - f->fcx, oy = py - f->fcy;
+                int32_t u = (int32_t)((f->ux * ox + f->uy * oy) >> 8), w = (int32_t)((f->vx * ox + f->vy * oy) >> 8);
+                int32_t top[3], cov = face_pixel(f, u, w, top);
+                if (!cov) continue;
+                for (int i = 0; i < 3; ++i) c[i] += (top[i] - c[i]) * cov >> 8;
+                touched = true;
+                break;
+            }
+        }
+        if (touched) dst[x - x0] = pack(c, bayer[x & 3]);
+    }
 }

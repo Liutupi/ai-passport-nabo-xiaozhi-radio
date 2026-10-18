@@ -5,10 +5,7 @@ enum NaboApp {
     NABO_HOME,
     NABO_TOOLS,
     NABO_SETTINGS,
-    NABO_DICE,
-    NABO_MUYU,
-    NABO_DIVE,
-    NABO_KEYS,
+    NABO_TABLE,
     NABO_JUMP,
     NABO_STATUS,
     NABO_BATTERY,
@@ -28,6 +25,8 @@ bool nabo_apps_is_fast();
 void nabo_apps_down_pressed(uint32_t event_ms);
 /* Release of the DOWN key; DIVE dashes while it is held. */
 void nabo_apps_down_released(uint32_t event_ms);
+// Raw UP edges (the table uses UP as a game key with its own repeat).
+void nabo_apps_up_edge(bool pressed, uint32_t event_ms);
 void nabo_apps_register_tools();
 void nabo_apps_initialize();
 bool nabo_apps_voice_command(const char* transcript);

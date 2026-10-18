@@ -58,10 +58,9 @@ const char* nabo_voice_launch_app(const char* transcript) {
     struct {
         const char* spoken;
         const char* app;
-    } aliases[] = {{"摇骰子", "dice"},         {"骰子", "dice"},         {"摇色子", "dice"},
-                   {"色子", "dice"},           {"功德木鱼", "muyu"},     {"木鱼", "muyu"},
-                   {"深潜", "dive"},          {"潜水", "dive"},          {"跳一跳", "jump"},
-                   {"电脑快捷键", "computer"}, {"电脑控制", "computer"}, {"更多设置", "settings"},
+    } aliases[] = {{"牌桌", "table"},           {"大话骰", "table"},       {"二十一点", "table"},
+                   {"21点", "table"},           {"打牌", "table"},         {"跳一跳", "jump"},
+                   {"更多设置", "settings"},
                    {"设置", "settings"},       {"工具", "tools"},        {"节奏回声", "rhythm"},
                    {"节奏游戏", "rhythm"},     {"节奏", "rhythm"}};
     for (size_t i = 0; i < sizeof(aliases) / sizeof(*aliases); ++i) {

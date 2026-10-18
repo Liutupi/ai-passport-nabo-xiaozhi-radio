@@ -827,6 +827,8 @@ elseif(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO)
     set(BUILTIN_TEXT_FONT font_noto_sans_basic_20_4)
     set(BUILTIN_ICON_FONT font_material_symbols_20_4)
     set(DEFAULT_EMOJI_COLLECTION noto-color-emoji_32)
+    # NABO TABLE's sprite pack (tools/generate_table_sprites.py) is read in place from the assets partition.
+    set(DEFAULT_ASSETS_EXTRA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/table_assets")
 elseif(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT)
     set(BOARD_DIR "folotoy/ai-passport")
     set(BUILTIN_TEXT_FONT font_noto_sans_basic_20_4)
@@ -1449,22 +1451,19 @@ if(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO)
 endif()
 
 if(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO)
-    target_link_libraries(${COMPONENT_LIB} PRIVATE idf::bt)
-    target_add_binary_data(${COMPONENT_LIB} "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/muyu_rgb565_rle.bin" BINARY)
-endif()
-
-if(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO)
     target_add_binary_data(${COMPONENT_LIB} "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/jump_sprites.bin" BINARY)
     # The scanline renderer is CPU-bound on the single-core C3. Keep the rest of
     # XiaoZhi's size-oriented build, but inline/optimize this integer hot path.
     set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_jump_model.c"
                                 "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_jump_rig.c"
                                 PROPERTIES COMPILE_OPTIONS "-O3")
-    # DIVE renders and synthesizes per pixel/sample on the C3; keep those paths optimized.
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_dive_draw.c"
-                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_dive_render.c"
-                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_dive_text.c"
-                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_dive_sound.c"
+    # NABO TABLE composes pixels and synthesizes samples on the C3; keep those paths optimized.
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_table_gfx.c"
+                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_table_shapes.c"
+                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_table_sprites.c"
+                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_table_text.c"
+                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_table_sound.c"
+                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_dice_render.c"
                                 PROPERTIES COMPILE_OPTIONS "-O2")
 endif()
 

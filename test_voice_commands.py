@@ -14,8 +14,7 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
     lib=ctypes.CDLL(str(dll))
     parse=lib.nabo_voice_launch_app
     parse.argtypes=[ctypes.c_char_p];parse.restype=ctypes.c_char_p
-    aliases={'摇骰子':'dice','骰子':'dice','摇色子':'dice','色子':'dice','木鱼':'muyu','功德木鱼':'muyu',
-             '深潜':'dive','潜水':'dive','跳一跳':'jump','电脑快捷键':'computer','电脑控制':'computer',
+    aliases={'牌桌':'table','大话骰':'table','二十一点':'table','21点':'table','打牌':'table','跳一跳':'jump',
              '设置':'settings','更多设置':'settings','工具':'tools',
              '节奏回声':'rhythm','节奏游戏':'rhythm','节奏':'rhythm'}
     count=0
@@ -24,9 +23,9 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
             command=template.format(spoken)
             assert parse(command.encode())==app.encode(),command
             count+=1
-    for command in ['', '木鱼','不要打开木鱼','别打开摇骰子','我不想打开深潜','如何打开木鱼',
-                    '教我怎么打开深潜','打开网络电台','打开木鱼有什么用','打开木鱼和骰子','打开木鱼然后关机',
-                    '打开未知程序','打开电脑设置','我听过木鱼这个词','打开'+'木鱼'*100]:
+    for command in ['', '牌桌','不要打开牌桌','别打开大话骰','我不想打开牌桌','如何打开牌桌',
+                    '教我怎么打开大话骰','打开网络电台','打开牌桌有什么用','打开牌桌和节奏','打开牌桌然后关机',
+                    '打开未知程序','打开电脑设置','我听过牌桌这个词','打开木鱼','打开深潜','打开'+'牌桌'*100]:
         assert parse(command.encode()) is None,command
         count+=1
     assert parse(None) is None

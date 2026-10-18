@@ -115,6 +115,21 @@ private:
         // Button callbacks run on the button task; schedule all UI/audio
         // work onto the main task so LVGL and codec access stay on one thread.
         auto up = adc_button_[kAdcButtonUp];
+        // The table game reads UP as a raw key (press / release); menus keep using its click.
+        up->OnPressDown([this]() {
+            uint32_t event_ms = esp_timer_get_time() / 1000;
+            Application::GetInstance().Schedule([this, event_ms]() {
+                DisplayLockGuard lock(display_);
+                nabo_apps_up_edge(true, event_ms);
+            });
+        });
+        up->OnPressUp([this]() {
+            uint32_t event_ms = esp_timer_get_time() / 1000;
+            Application::GetInstance().Schedule([this, event_ms]() {
+                DisplayLockGuard lock(display_);
+                nabo_apps_up_edge(false, event_ms);
+            });
+        });
         up->OnClick([this]() {
             Application::GetInstance().Schedule([this]() {
                 DisplayLockGuard lock(display_);

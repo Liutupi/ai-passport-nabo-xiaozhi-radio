@@ -70,6 +70,11 @@ bool nabo_dice_die_bounds(const nabo_dice_scene_t *scene, unsigned i, int *x0, i
 /* One sprite row, inclusive x range, native RGB565. */
 void nabo_dice_draw_row(const nabo_dice_scene_t *scene, int y, int x0, int x1, uint16_t *dst);
 
+/* One die at rest anywhere on screen, for other games: value 1..6 on top, resting point
+ * (cx, cy) px on the felt, half edge px, yaw and view tilt in 1/65536 turns. */
+void nabo_dice_pose(nabo_dice_die_t *d, unsigned value, int cx, int cy, int half, uint16_t yaw, uint16_t tilt);
+/* Blends one row of a posed die and its shadow over dst (native RGB565, x0..x1 inclusive). */
+void nabo_dice_die_row(const nabo_dice_die_t *d, int y, int x0, int x1, uint16_t *dst);
 /* Table hits for the sound, sorted by time. Amplitude is Q8 (256 = hardest). */
 typedef struct { uint16_t ms; uint16_t amp; } nabo_dice_impact_t;
 unsigned nabo_dice_impacts(const nabo_dice_plan_t *plan, nabo_dice_impact_t *out, unsigned cap);

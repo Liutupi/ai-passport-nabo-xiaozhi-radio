@@ -23,10 +23,7 @@ os.environ['CC'] = CC
 sys.path.insert(0, str(ROOT/'tests/legacy'))
 suite = unittest.TestSuite()
 choices = {
-    'test_dice': ['DiceRenderActualC', 'DiceUIActualC'],
-    'test_keys': ['KeysModel'],
-    'test_muyu': ['MuyuCoreC'],
-    'test_muyu_ui': ['MuyuUIActualC'],
+    'test_dice': ['DiceRenderActualC'],   # the dice renderer stays: NABO TABLE draws its dice with it
 }
 for name, classes in choices.items():
     module = importlib.import_module(name)

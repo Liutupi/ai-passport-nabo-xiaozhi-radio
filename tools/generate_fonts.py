@@ -28,7 +28,11 @@ FONTS = {
     'nabo_poster_font_28': ('archivo', 28, 4),
     'nabo_poster_font_48': ('archivo', 48, 4),
     'nabo_mono_font_12': ('mono', 12, 4),
+    # NABO TABLE: 12 px for hints and labels, 24 px for a few big words.
+    'nabo_table_font_12': ('sans', 12, 4),
+    'nabo_table_font_24': ('sans', 24, 4),
 }
+TABLE_24 = '玩家 12获胜暂停开！'
 
 
 def existing_menu_glyphs():
@@ -41,6 +45,15 @@ def existing_menu_glyphs():
     for match in re.finditer(r'/\* U\+([0-9A-F]+) ', text):
         found.add(int(match.group(1), 16))
     return {c for c in found if c > 0x7e}
+
+
+def table_glyphs():
+    """Non-ASCII code points used by the NABO TABLE sources."""
+    chars = set()
+    for path in sorted(BOARD.glob('nabo_table_*.c')):
+        if not path.name.startswith('._'):
+            chars.update(ord(c) for c in path.read_text('utf-8') if ord(c) > 0x7e)
+    return {c for c in chars if c < 0x2500 or 0x3000 <= c <= 0x9fff or 0xff00 <= c <= 0xffef}
 
 
 def source_glyphs():
@@ -96,6 +109,12 @@ def main():
         if name in LINE_HEIGHT:
             digest = convert(args.converter, font, name, size, bpp, '0x20-0x7E', menu)
             symbols = menu
+        elif name == 'nabo_table_font_12':
+            symbols = ''.join(chr(c) for c in sorted(table_glyphs()))
+            digest = convert(args.converter, font, name, size, bpp, '0x20-0x7E', symbols)
+        elif name == 'nabo_table_font_24':
+            symbols = TABLE_24
+            digest = convert(args.converter, font, name, size, bpp, None, symbols)
         elif name == 'nabo_mono_font_12':
             digest = convert(args.converter, font, name, size, bpp, '0x20-0x7E')
             symbols = 'ASCII'
