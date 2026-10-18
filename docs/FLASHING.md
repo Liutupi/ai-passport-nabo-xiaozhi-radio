@@ -18,7 +18,7 @@ Release ZIP 是独立镜像集合，不是可直接写到 `0x0` 的单个文件�
 
 ## 准备
 
-下载并解压 `ai-passport-nabo-xiaozhi-table-v1.4.0.zip`。在解压目录执行：
+下载并解压 `ai-passport-nabo-xiaozhi-table-v1.5.0.zip`。在解压目录执行：
 
 ```powershell
 python -m pip install -r requirements-flash.txt
@@ -40,7 +40,7 @@ python tools/flash_release.py --package . --mode upgrade --port COM8 --expected-
 
 ### 在各版本之间切换
 
-牌桌版 v1.4.0 与电台版 v1.0.0–v1.2.0、深潜版 v1.3.0–v1.3.1 的 bootloader 和分区表相同，NVS 互相兼容。
+牌桌版 v1.4.0–v1.5.0 与电台版 v1.0.0–v1.2.0、深潜版 v1.3.0–v1.3.1 的 bootloader 和分区表相同，NVS 互相兼容。
 
 - **切到牌桌版**：用本包的 upgrade 模式（写应用和资源）。
 - **从牌桌版切回其他版本**：旧版本的 upgrade 模式要求资源与它的包完全一致，会拒绝写入；请用对应版本包的 install 模式（写四个镜像，仍保留 NVS 和 files 区）。电台版见 [ai-passport-nabo-xiaozhi](https://github.com/Liutupi/ai-passport-nabo-xiaozhi/releases)，深潜版见 [ai-passport-nabo-xiaozhi-dive](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-dive/releases)。

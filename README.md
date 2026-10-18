@@ -4,7 +4,7 @@
 
 本仓库从 [ai-passport-nabo-xiaozhi-dive](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-dive)（v1.3.1 深潜版）分出，保留完整历史。为给牌桌腾出空间，**移除了深潜、摇骰子、功德木鱼和蓝牙电脑快捷键**。分区表和 NVS 与此前各版兼容，配网、激活和成绩都保留；牌桌的 NABO 动画放在资源分区里，所以从其他版本切换过来时，**应用和资源两个镜像都要写**（刷写工具的 upgrade 模式会自动处理）。
 
-**当前版本：v1.4.0，2026-10-18。** 应用 SHA256 `b9502231ad4d8b2056e91c567858826fbc91c30fa25dcdb60024c08892e97f4b`。
+**当前版本：v1.5.0，2026-10-18（牌桌支持 2–4 人）。** 应用 SHA256 `849a1ce6468c9f927ba94e951f74c5dbf1a9c1ec0da06bbdc8d63187e1f43e05`。
 
 [下载固件](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-table/releases/latest) · [使用指南](docs/USER_GUIDE.md) · [刷写说明](docs/FLASHING.md) · [编译说明](docs/BUILD.md) · [维护交接](docs/HANDOFF.md) · [验证记录](docs/VALIDATION.md) · [更新记录](CHANGELOG.md)
 
