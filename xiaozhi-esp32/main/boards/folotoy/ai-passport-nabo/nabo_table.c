@@ -85,9 +85,9 @@ int nabo_table_status(char *out, size_t cap)
     table_state_t *st = s_st;
     if (!atomic_load(&s_running) || !st) return snprintf(out, cap, "{\"running\":0}");
     const nt_t *m = &st->model;
-    return snprintf(out, cap, "{\"running\":1,\"scene\":%d,\"game\":%d,\"players\":%d,\"score\":[%d,%d,%d,%d],"
+    return snprintf(out, cap, "{\"running\":1,\"scene\":%d,\"game\":%d,\"players\":%d,\"cfg_players\":%d,\"score\":[%d,%d,%d,%d],"
                               "\"round\":%d,\"turn\":%d,\"paused\":%d,\"heap\":%u}",
-                    m->scene, m->game, m->np, m->score[0], m->score[1], m->score[2], m->score[3], m->round, m->turn,
+                    m->scene, m->game, m->np, m->cfg.players, m->score[0], m->score[1], m->score[2], m->score[3], m->round, m->turn,
                     m->paused, (unsigned)esp_get_free_heap_size());
 }
 
