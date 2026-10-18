@@ -291,8 +291,10 @@ void Application::Run() {
 }
 
 void Application::HandleNetworkConnectedEvent() {
-    if (local_app_active_.load())
+    if (local_app_active_.load()) {
+        network_up_during_local_ = true;   // handled when the local program ends
         return;
+    }
     ESP_LOGI(TAG, "Network connected");
     auto state = GetDeviceState();
 
@@ -320,8 +322,10 @@ void Application::HandleNetworkConnectedEvent() {
 }
 
 void Application::HandleNetworkDisconnectedEvent() {
-    if (local_app_active_.load())
+    if (local_app_active_.load()) {
+        network_up_during_local_ = false;
         return;
+    }
     // Close current conversation when network disconnected
     auto state = GetDeviceState();
     if (state == kDeviceStateNotifying) {
@@ -1432,15 +1436,22 @@ void Application::BeginLocalApp() {
     Schedule([this]() {
         if (local_app_active_.exchange(true))
             return;
-        if (GetDeviceState() == kDeviceStateNotifying)
+        auto state = GetDeviceState();
+        // Before the network is up (or while waiting for Wi-Fi setup) there is no conversation
+        // to pause: keep the boot state, so leaving can continue the boot flow.
+        bool from_boot = state == kDeviceStateStarting || state == kDeviceStateWifiConfiguring;
+        local_from_boot_ = from_boot;
+        network_up_during_local_ = false;
+        if (state == kDeviceStateNotifying)
             StopNotification();
         if (protocol_ && protocol_->IsAudioChannelOpened())
             protocol_->CloseAudioChannel();
         protocol_.reset();
         pending_listening_start_ = false;
         audio_service_.Stop();
-        SetDeviceState(kDeviceStateIdle);
-        ESP_LOGI(TAG, "Local app: conversation paused");
+        if (!from_boot)
+            SetDeviceState(kDeviceStateIdle);
+        ESP_LOGI(TAG, "Local app: %s", from_boot ? "opened during startup" : "conversation paused");
     });
 }
 
@@ -1448,6 +1459,16 @@ void Application::EndLocalApp() {
     Schedule([this]() {
         if (!local_app_active_.load() || activation_task_handle_)
             return;
+        if (local_from_boot_.exchange(false)) {
+            // Never activated: resume the boot flow. If Wi-Fi came up meanwhile, activate now;
+            // otherwise the board keeps scanning or serving Wi-Fi setup as before.
+            audio_service_.Start();
+            local_app_active_.store(false);
+            if (network_up_during_local_.exchange(false))
+                xEventGroupSetBits(event_group_, MAIN_EVENT_NETWORK_CONNECTED);
+            ESP_LOGI(TAG, "Local app: closed during startup, boot flow resumed");
+            return;
+        }
         SetDeviceState(kDeviceStateActivating);
         auto task = [](void* arg) {
             auto app = static_cast<Application*>(arg);

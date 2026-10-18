@@ -135,6 +135,11 @@ private:
     bool protocol_use_websocket_ = false;
     std::atomic<bool> protocol_initializing_{false};
     std::atomic<bool> local_app_active_{false};
+    // A local program opened before XiaoZhi finished starting (no network or not yet
+    // activated). Leaving it resumes the boot flow instead of rebuilding a protocol.
+    std::atomic<bool> local_from_boot_{false};
+    // Network state seen while a local program owned the device (events are deferred).
+    std::atomic<bool> network_up_during_local_{false};
     ~Application();
 
     std::mutex mutex_;
