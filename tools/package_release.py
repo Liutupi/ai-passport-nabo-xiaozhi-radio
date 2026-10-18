@@ -50,7 +50,7 @@ for filename in ['LICENSE', 'THIRD_PARTY_NOTICES.md', 'requirements-flash.txt', 
     '备份留在 private/，请留在本机。第三方说明及字体许可随本包提供。\n', 'utf-8')
 shutil.copytree(root/'docs', dest/'docs', dirs_exist_ok=True)
 shutil.copytree(root/'validation', dest/'validation', dirs_exist_ok=True)
-shutil.copytree(root/'game-art', dest/'game-art', dirs_exist_ok=True, ignore=shutil.ignore_patterns('dive', '._*'))
+shutil.copytree(root/'game-art', dest/'game-art', dirs_exist_ok=True, ignore=shutil.ignore_patterns('dive', 'table', '._*'))
 (dest/'tools').mkdir(exist_ok=True)
 shutil.copy2(root/'tools/flash_release.py', dest/'tools/flash_release.py')
 (dest/'licenses').mkdir(exist_ok=True)

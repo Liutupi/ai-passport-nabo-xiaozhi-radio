@@ -1,7 +1,7 @@
 """Pack NABO table sprites into table_sprites.bin for the assets partition.
 
-Input: ../nabo-table/sprites/<large|small>/<anim>/NN.png (256x256 RGBA, table
-line at y=224), produced by nabo-table/tools/clip_to_sprites.py.
+Input: game-art/table/sprites/<large|small>/<anim>/NN.png (256x256 RGBA, table
+line at y=224), produced by game-art/table/tools/clip_to_sprites.py.
 
 File layout (little endian):
     header   'NTS1', u16 anim_count, u16 frame_count, u32 anims_off, u32 frames_off
@@ -45,7 +45,7 @@ from PIL import Image, ImageFilter
 logger = logging.getLogger(__name__)
 
 REPO = Path(__file__).resolve().parent.parent
-SPRITES = REPO.parent / "nabo-table" / "sprites"
+SPRITES = REPO / "game-art" / "table" / "sprites"
 BOARD = REPO / "xiaozhi-esp32" / "main" / "boards" / "folotoy" / "ai-passport-nabo"
 OUT_BIN = BOARD / "table_assets" / "table_sprites.bin"
 OUT_H = BOARD / "nabo_table_sprite_ids.h"

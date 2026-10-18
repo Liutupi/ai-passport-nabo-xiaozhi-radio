@@ -75,7 +75,7 @@ b18f915d0295181609b225b475511e1e8a5e60d950b2390fc33191e7c0278d40
 
 **开机即玩：** `application.cc`（NABO 板型分支）允许在 starting / wifi_configuring 状态 `BeginLocalApp()`，保持开机状态不变；期间的联网事件只记录下来，`EndLocalApp()` 时继续开机流程（若已联网就补发一次联网事件去激活）。已在没有可用 Wi-Fi 的工牌上验证；"游戏中途联网、退出后激活"尚未在真机验证。
 
-**素材流程：** nabo-table 项目：起始图 → 图生视频 → `tools/clip_to_sprites.py` 抽帧抠图 → 本仓库 `tools/generate_table_sprites.py` 打包。改了素材要重新构建资源镜像，并用 upgrade（写应用+资源）刷写。
+**素材流程：** `game-art/table/`：起始图 → 图生视频（`art/video/`）→ `game-art/table/tools/clip_to_sprites.py` 抽帧抠图 → `tools/generate_table_sprites.py` 打包。改了素材要重新构建资源镜像，并用 upgrade（写应用+资源）刷写。
 
 **画面速度：** 平时每帧 1.5–6.5 ms，28–30 fps；换画面时整屏重画 55–180 ms，会有一下停顿，后续可优化。不要把渲染代码放进 IRAM（深潜试过，开机即 abort 循环）。
 

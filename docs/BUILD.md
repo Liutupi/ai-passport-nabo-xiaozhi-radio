@@ -33,7 +33,7 @@ python scripts/build.py folotoy/ai-passport-nabo --name ai-passport-nabo --langu
 
 NABO RLE、平台/角色精灵、跳跃 PCM、牌桌精灵包 `table_assets/table_sprites.bin`、中文字体均在板型目录，干净检出即可构建，不需要作者的旧 Muse 项目、私有素材路径或移植脚本。
 
-**牌桌素材：** `table_assets/table_sprites.bin` 和 `nabo_table_sprite_ids.h` 由 `python3 tools/generate_table_sprites.py` 生成，输入是与本仓库同级的 `../nabo-table/sprites/`（由 nabo-table 项目的 `tools/clip_to_sprites.py` 从图生视频抽帧得到）。每个动作一套 64 色调色板；大图每帧都是关键帧，直接从 Flash 解码；小图第 0 帧是关键帧，之后是差分帧。脚本会逐帧解码回来比对像素和颜色误差。构建时 CMake 通过 `DEFAULT_ASSETS_EXTRA_FILES` 把 `table_assets/` 打进 `generated_assets.bin`，运行时用 `Assets::GetAssetData("table_sprites.bin")` 原地读取。需要 Pillow、NumPy。
+**牌桌素材：** `table_assets/table_sprites.bin` 和 `nabo_table_sprite_ids.h` 由 `python3 tools/generate_table_sprites.py` 生成，输入是 `game-art/table/sprites/`（先运行 `python3 game-art/table/tools/clip_to_sprites.py` 从 `game-art/table/art/video/` 的图生视频抽帧生成，需要 ffmpeg）。每个动作一套 64 色调色板；大图每帧都是关键帧，直接从 Flash 解码；小图第 0 帧是关键帧，之后是差分帧。脚本会逐帧解码回来比对像素和颜色误差。构建时 CMake 通过 `DEFAULT_ASSETS_EXTRA_FILES` 把 `table_assets/` 打进 `generated_assets.bin`，运行时用 `Assets::GetAssetData("table_sprites.bin")` 原地读取。需要 Pillow、NumPy。
 
 **字体：** 新增界面中文后重新生成。源字体不入库，SHA256 记录在 `game-art/fonts.json`：
 

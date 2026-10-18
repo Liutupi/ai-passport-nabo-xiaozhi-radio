@@ -1,0 +1,154 @@
+{
+  "out_dir": "sprites",
+  "clips": [
+    {
+      "name": "spread",
+      "source": "art/video/received_20261018/source/nabo_cards_spread.mp4",
+      "start": 0.0,
+      "end": 6.04,
+      "fps": 12,
+      "loop": true,
+      "table_y": 616,
+      "cap_top_y": 22
+    },
+    {
+      "name": "cut",
+      "source": "art/video/nabo_i2v_20261018/01_cut_source.mp4",
+      "start": 0.5,
+      "end": 1.9,
+      "fps": 12,
+      "loop": false,
+      "table_y": 616,
+      "cap_top_y": 22
+    },
+    {
+      "name": "idle_cards",
+      "source": "art/video/nabo_i2v_20261018/02_idle_cards_source.mp4",
+      "start": 0.0,
+      "end": 3.0,
+      "fps": 12,
+      "loop": true,
+      "table_y": 616,
+      "cap_top_y": 22
+    },
+    {
+      "name": "deal",
+      "source": "art/video/nabo_i2v_20261018/03_deal_source_v2.mp4",
+      "start": 0.5,
+      "end": 1.3,
+      "fps": 12,
+      "loop": false,
+      "table_y": 616,
+      "cap_top_y": 22,
+      "events": {
+        "release": 6
+      }
+    },
+    {
+      "name": "shake",
+      "source": "art/video/nabo_i2v_20261018/04_shake_source.mp4",
+      "start": 0.25,
+      "end": 2.25,
+      "fps": 12,
+      "loop": true,
+      "table_y": 616,
+      "cap_top_y": 22
+    },
+    {
+      "name": "slam",
+      "source": "art/video/nabo_i2v_20261018/05_slam_source_v2.mp4",
+      "start": 0.0,
+      "end": 1.25,
+      "fps": 12,
+      "loop": false,
+      "table_y": 616,
+      "cap_top_y": 22,
+      "events": {
+        "land": 7
+      }
+    },
+    {
+      "name": "cover_in",
+      "source": "art/video/nabo_i2v_20261018/06_cover_source.mp4",
+      "start": 0.0,
+      "end": 0.75,
+      "fps": 12,
+      "loop": false,
+      "table_y": 616,
+      "cap_top_y": 22
+    },
+    {
+      "name": "cover",
+      "source": "art/video/nabo_i2v_20261018/06_cover_source.mp4",
+      "start": 0.75,
+      "end": 2.5,
+      "fps": 12,
+      "loop": true,
+      "table_y": 616,
+      "cap_top_y": 22
+    },
+    {
+      "name": "idle_empty",
+      "source": "art/video/nabo_i2v_20261018/07_idle_empty_source.mp4",
+      "start": 0.0,
+      "end": 3.0,
+      "fps": 12,
+      "loop": true,
+      "table_y": 616,
+      "cap_top_y": 22
+    },
+    {
+      "name": "open",
+      "source": "art/video/nabo_i2v_20261018/08_open_source.mp4",
+      "start": 0.75,
+      "end": 2.0,
+      "fps": 12,
+      "loop": false,
+      "table_y": 616,
+      "cap_top_y": 22,
+      "events": {
+        "shout": 6
+      }
+    },
+    {
+      "name": "point_l",
+      "source": "art/video/nabo_i2v_20261018/09_point_l_source.mp4",
+      "start": 0.8,
+      "end": 2.0,
+      "fps": 12,
+      "loop": false,
+      "table_y": 616,
+      "cap_top_y": 22
+    },
+    {
+      "name": "point_r",
+      "source": "art/video/nabo_i2v_20261018/10_point_r_source.mp4",
+      "start": 0.6,
+      "end": 1.9,
+      "fps": 12,
+      "loop": false,
+      "table_y": 616,
+      "cap_top_y": 22
+    },
+    {
+      "name": "surprise",
+      "source": "art/video/nabo_i2v_20261018/11_surprise_source.mp4",
+      "start": 0.25,
+      "end": 1.5,
+      "fps": 12,
+      "loop": false,
+      "table_y": 616,
+      "cap_top_y": 22
+    },
+    {
+      "name": "trophy",
+      "source": "art/video/nabo_i2v_20261018/12_trophy_source.mp4",
+      "start": 1.75,
+      "end": 2.9,
+      "fps": 12,
+      "loop": true,
+      "table_y": 616,
+      "cap_top_y": 22
+    }
+  ]
+}

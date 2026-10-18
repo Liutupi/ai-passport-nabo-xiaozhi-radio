@@ -19,3 +19,6 @@ xiaozhi-esp32/releases/
 
 # macOS AppleDouble files on non-APFS volumes
 ._*
+
+# NABO TABLE: frames extracted from the source videos (game-art/table/tools/clip_to_sprites.py)
+game-art/table/sprites/

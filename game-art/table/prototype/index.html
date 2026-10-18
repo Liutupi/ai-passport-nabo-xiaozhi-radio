@@ -1,0 +1,982 @@
+<meta charset="utf-8">
+<title>NABO 牌桌</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Noto+Sans+SC:wght@400;700&family=Space+Mono:wght@400;700&display=swap">
+<style>
+/* 布局：左边是工牌实机外形（240×320 屏 + 右侧三键），右边是规则参数与局面面板；窄屏上下堆叠。单一深色牌桌风格。 */
+:root {
+  --ink: #06110e;
+  --panel: #0b1c18;
+  --line: #1c3530;
+  --fg: #dfeae4;
+  --muted: #84a197;
+  --brass: #c9a24a;
+  --p1: #ff8a3d;
+  --p2: #3db8ff;
+  --display: "Archivo Black", "Arial Black", sans-serif;
+  --body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mono: "Space Mono", ui-monospace, Menlo, monospace;
+  --cw: 480px;
+  color-scheme: dark;
+}
+html, body { background: var(--ink); color: var(--fg); }
+body { font-family: var(--body); font-size: 14px; line-height: 1.6; }
+.wrap { max-width: 1000px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; display: grid; gap: 22px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+header h1 { margin: 0; font-family: var(--display); font-size: 28px; letter-spacing: .02em; font-weight: 400; }
+header h1 span { font-family: var(--body); font-weight: 700; font-size: 18px; letter-spacing: .3em; margin-right: 10px; color: var(--brass); }
+header p { margin: 0; color: var(--muted); font-family: var(--mono); font-size: 12px; }
+.stage { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; justify-content: center; }
+.device {
+  display: flex; align-items: center; gap: 12px; max-width: 100%;
+  padding: 18px 12px 18px 18px; border-radius: 30px;
+  background: linear-gradient(160deg, #1d2621, #0e1512);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 30px 60px -24px rgba(0,0,0,.9);
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.screen { line-height: 0; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 3px #050907, 0 0 0 4px #24302b; }
+canvas#screen { display: block; width: var(--cw); height: calc(var(--cw) * 4 / 3); }
+.keys { display: flex; flex-direction: column; gap: 12px; }
+.key {
+  width: 40px; height: 52px; border-radius: 20px; border: 1px solid #2c3a34;
+  background: linear-gradient(#1f2a25, #131b18); color: var(--muted);
+  font: 700 11px var(--mono); cursor: pointer; padding: 0;
+  box-shadow: 0 2px 0 #070b09;
+}
+.key.ok { height: 64px; color: var(--brass); }
+.key.down { transform: translateY(2px); box-shadow: none; background: #0f1613; color: var(--fg); }
+.key:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.panel { flex: 1 1 300px; min-width: 0; max-width: 420px; display: grid; gap: 18px; }
+.panel section { display: grid; gap: 8px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.panel section:last-child { border-bottom: 0; }
+.panel h2 { margin: 0; font: 700 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.rows { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: baseline; margin: 0; }
+.rows dt { color: var(--muted); font-size: 13px; }
+.rows dd { margin: 0; font-size: 13px; min-width: 0; }
+kbd { font: 700 11px var(--mono); padding: 1px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; color: var(--fg); background: var(--panel); }
+.live { font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.note { margin: 0; color: var(--muted); font-size: 12px; }
+.slider { display: grid; grid-template-columns: 6em 1fr 2.4em; gap: 10px; align-items: center; font-size: 13px; }
+.slider label { color: var(--muted); }
+.slider output { font: 12px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--brass); }
+.toggles { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; }
+.toggles label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+input[type=checkbox] { accent-color: var(--brass); }
+.seedrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.seedrow input { width: 9em; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; font: 12px var(--mono); }
+button.text { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; padding: 3px 10px; font: 12px var(--body); cursor: pointer; }
+button.text:hover { color: var(--fg); }
+#god { font-family: var(--mono); white-space: pre-wrap; }
+#log { margin: 0; padding-left: 1.4em; max-height: 220px; overflow-y: auto; font-size: 13px; color: var(--muted); }
+#log li:first-child { color: var(--fg); }
+.p1 { color: var(--p1); } .p2 { color: var(--p2); }
+@media (max-width: 560px) { :root { --cw: calc(100vw - 2 * max(16px, env(safe-area-inset-left, 0px)) - 82px); } }
+@media (prefers-reduced-motion: reduce) { .key { transition: none; } }
+</style>
+
+<main class="wrap">
+  <header>
+    <h1><span>牌桌</span>NABO TABLE</h1>
+    <p>AI Passport 网页原型 · 240×320 · 三键 · 双人同机 · NABO 为占位造型</p>
+  </header>
+
+  <div class="stage">
+    <div class="device">
+      <div class="screen"><canvas id="screen" width="480" height="640" aria-label="游戏画面"></canvas></div>
+      <div class="keys">
+        <button class="key" id="kUp" aria-label="UP 键">UP</button>
+        <button class="key ok" id="kOk" aria-label="OK 键">OK</button>
+        <button class="key" id="kDown" aria-label="DOWN 键">DOWN</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <section>
+        <h2>操作</h2>
+        <dl class="rows">
+          <dt>UP / DOWN</dt><dd><kbd>↑</kbd> <kbd>↓</kbd> 或 <kbd>W</kbd> <kbd>S</kbd>，按住连续滚动</dd>
+          <dt>OK</dt><dd><kbd>Enter</kbd> <kbd>Space</kbd>，松开时生效</dd>
+          <dt>暂停</dt><dd>对局中长按 OK 2 秒</dd>
+        </dl>
+        <p class="note">两个人传着玩：交接屏出现时把设备交给对方，对方按 OK 才会看到自己的牌或骰子。</p>
+      </section>
+
+      <section>
+        <h2>规则参数</h2>
+        <div class="slider"><label for="tTarget">抢几局</label><input type="range" id="tTarget" min="3" max="7" step="2"><output id="oTarget"></output></div>
+        <div class="slider"><label for="tDice">每人骰子</label><input type="range" id="tDice" min="3" max="6" step="1"><output id="oDice"></output></div>
+        <div class="slider"><label for="tOpen">起叫数量</label><input type="range" id="tOpen" min="1" max="4" step="1"><output id="oOpen"></output></div>
+        <div class="toggles">
+          <label><input type="checkbox" id="oWild"> 1 点万能（叫过 1 就"斋"）</label>
+          <label><input type="checkbox" id="oSound"> 声音</label>
+        </div>
+        <p class="note">骰子数和起叫在下一局生效。叫数顺序：数量优先，同数量比点数；1 点万能时 1 算最大。</p>
+      </section>
+
+      <section>
+        <h2>局面</h2>
+        <dl class="rows live" id="live"></dl>
+        <div class="toggles"><label><input type="checkbox" id="oGod"> 上帝视角（在这里显示双方底牌）</label></div>
+        <div id="god" class="note" hidden></div>
+        <div class="seedrow">
+          <label for="seed">随机种子</label><input id="seed" inputmode="numeric">
+          <button class="text" id="reseed">用这个种子回到封面</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>公开记录</h2>
+        <ol id="log" reversed></ol>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="cards.js"></script>
+<script src="dice3d.js"></script>
+<script src="sound.js"></script>
+<script src="assets/nabo_sprites.js"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const W = 240, H = 320;
+const cv = $('screen'), ctx = cv.getContext('2d');
+ctx.setTransform(2, 0, 0, 2, 0, 0);
+
+// 配色与 ART_BRIEF 第 8 节一致；vest/shirt/skin 只给占位 NABO 用
+const C = {
+  felt: '#0E3B36', feltDark: '#082623', wall: '#0A1A17', rim: '#3A2418', brass: '#C9A24A',
+  p1: '#FF8A3D', p2: '#3DB8FF', card: '#F4F1E8', ink: '#14100E', red: '#D23A3A',
+  back: '#6E2638', muted: '#8FB3A8', vest: '#4B3560', shirt: '#EDE6D6', skin: '#F6E7CF',
+};
+const F_BODY = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+const F_MONO = '"Space Mono",ui-monospace,Menlo,monospace';
+const F_DISP = '"Archivo Black","Arial Black",sans-serif';
+const PCOL = [C.p1, C.p2];
+const PNAME = ['玩家 1', '玩家 2'];
+
+// ---------- 存储（只存本机偏好） ----------
+function load(k, d) { try { const v = localStorage.getItem(k); return v ? { ...d, ...JSON.parse(v) } : { ...d }; } catch { return { ...d }; } }
+function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* 无痕模式等 */ } }
+const SET_DEFAULT = { target: 3, dicePer: 5, minOpen: 2, wild: true, sound: true, god: false };
+const Cfg = load('table.settings', SET_DEFAULT);
+
+// ---------- 可复现随机数（mulberry32），固件移植时用同一算法对拍 ----------
+let seed = (Date.now() % 1000000) >>> 0, rngState = seed;
+function rand() {
+  rngState = (rngState + 0x6D2B79F5) >>> 0;
+  let t = rngState;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+const randInt = n => Math.floor(rand() * n);
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = randInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// 声音在 sound.js（SFX），牌和绒布在 cards.js，立体骰子在 dice3d.js
+
+// ---------- 小工具 ----------
+const clamp01 = x => Math.max(0, Math.min(1, x));
+const easeOut = t => 1 - (1 - t) ** 3;
+const easeIn = t => t * t * t;
+const lerp = (a, b, t) => a + (b - a) * t;
+const lerp2 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
+function rr(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function text(s, x, y, o = {}) {
+  ctx.font = `${o.weight || 400} ${o.size || 12}px ${o.font || F_BODY}`;
+  ctx.fillStyle = o.color || '#fff';
+  ctx.textAlign = o.align || 'left';
+  ctx.textBaseline = o.base || 'middle';
+  ctx.fillText(s, x, y);
+  return ctx.measureText(s).width;
+}
+function circle(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); }
+
+// ---------- 占位 NABO（等 Codex 出帧后替换成精灵） ----------
+// 时长按 ART_BRIEF 第 6 节的帧数 / 12 fps；循环动作的占位时长放慢了一些
+const ANIM = {
+  idle: { dur: 2, loop: true }, shuffle: { dur: 0.9, loop: true }, deal: { dur: 0.33 },
+  shake: { dur: 0.5, loop: true }, slam: { dur: 0.25 }, cover_in: { dur: 0.25, next: 'cover' },
+  cover: { dur: 1.4, loop: true }, open: { dur: 0.45 }, point: { dur: 0.35, hold: true },
+  surprise: { dur: 0.4 }, trophy: { dur: 1, loop: true }, shrug: { dur: 0.4, hold: true },
+};
+const nabo = { anim: 'idle', t: 0, mirror: false, queue: [] };
+function naboPlay(name, opt = {}) {
+  nabo.anim = name; nabo.t = 0; nabo.mirror = !!opt.mirror;
+  nabo.queue = opt.then && opt.then.length ? [...opt.then] : ANIM[name].next ? [[ANIM[name].next, {}]] : [];
+}
+function animDur(name) {
+  const sp = typeof spriteFor === 'function' && spriteFor(name, 'large');
+  return sp && !sp.sheet.loop ? sp.sheet.n / sp.sheet.fps : ANIM[name].dur;
+}
+function naboUpdate(dt) {
+  nabo.t += dt;
+  const a = ANIM[nabo.anim];
+  if (a.loop || a.hold || nabo.t < animDur(nabo.anim)) return;
+  const q = nabo.queue, nx = q.shift() || ['idle', {}];
+  naboPlay(nx[0], { ...nx[1], then: nx[1].then || q });
+}
+function pose(name, t) {
+  const a = ANIM[name], p = a.loop ? (t % a.dur) / a.dur : clamp01(t / a.dur);
+  const TAU = Math.PI * 2, S = Math.sin;
+  const P = { l: [-40, -22], r: [40, -22], dy: 0, eyes: 'open', mouth: 'smile', prop: null, at: null, k: 0 };
+  switch (name) {
+    case 'idle': P.dy = S(p * TAU) * 1.5; P.l = [-40, -22 + P.dy]; P.r = [40, -22 + P.dy]; if (p > 0.92) P.eyes = 'blink'; break;
+    case 'shuffle': { const k = S(p * TAU); P.l = [-28 - 6 * k, -34]; P.r = [28 + 6 * k, -34]; P.prop = 'deck2'; P.k = p; break; }
+    case 'deal': { const e = easeOut(p); P.l = [-32, -34]; P.r = [26 - 16 * e, -34 + 22 * e]; P.prop = 'deal'; P.k = e; break; }
+    case 'shake': { const k = S(p * TAU * 2); P.l = [-20, -66 + 10 * k]; P.r = [20, -66 + 10 * k]; P.prop = 'cup'; P.at = [0, -80 + 10 * k]; P.dy = k * 1.5; P.mouth = 'grin'; break; }
+    case 'slam': { const e = easeIn(p); P.l = [-20, -66 + 46 * e]; P.r = [20, -66 + 46 * e]; P.prop = 'cup'; P.at = [0, -80 + 50 * e]; if (p > 0.8) P.eyes = 'squint'; break; }
+    case 'cover_in': { const e = easeOut(p); P.l = lerp2([-40, -22], [-15, -108], e); P.r = lerp2([40, -22], [15, -108], e); break; }
+    case 'cover': { const k = S(p * TAU) * 3; P.l = [-15 + k, -108]; P.r = [15 + k, -108]; P.head = k; break; }
+    case 'open': { const e = easeOut(clamp01(p * 1.6)); P.r = lerp2([40, -22], [34, -158], e); P.mouth = p > 0.4 ? 'shout' : 'o'; P.eyes = p > 0.4 ? 'wide' : 'open'; P.dy = -4 * S(Math.PI * p); break; }
+    case 'point': { const e = easeOut(p); P.r = lerp2([40, -22], [-86, -62], e); P.mouth = 'grin'; P.head = -4 * e; break; }
+    case 'surprise': P.dy = -8 * S(Math.PI * p); P.l = [-54, -96]; P.r = [54, -96]; P.eyes = 'wide'; P.mouth = 'o'; break;
+    case 'trophy': { const k = S(p * TAU); P.l = [-16, -156 + 3 * k]; P.r = [16, -156 + 3 * k]; P.prop = 'trophy'; P.at = [0, -174 + 3 * k]; P.mouth = 'grin'; P.eyes = 'happy'; P.dy = k; break; }
+    case 'shrug': { const e = easeOut(p); P.l = lerp2([-40, -22], [-64, -48], e); P.r = lerp2([40, -22], [64, -48], e); P.mouth = 'flat'; P.dy = -3 * e; break; }
+  }
+  return P;
+}
+function drawFace(P, hx, hy) {
+  ctx.fillStyle = C.ink; ctx.strokeStyle = C.ink; ctx.lineWidth = 3;
+  for (const sx of [-1, 1]) {
+    const ex = hx + sx * 13, ey = hy - 2;
+    if (P.eyes === 'blink') { ctx.beginPath(); ctx.moveTo(ex - 5, ey); ctx.lineTo(ex + 5, ey); ctx.stroke(); }
+    else if (P.eyes === 'wide') { ctx.fillStyle = '#fff'; circle(ex, ey, 8); ctx.fill(); ctx.stroke(); ctx.fillStyle = C.ink; circle(ex, ey, 3.5); ctx.fill(); }
+    else if (P.eyes === 'happy') { ctx.beginPath(); ctx.arc(ex, ey + 3, 6, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); }
+    else if (P.eyes === 'squint') { ctx.beginPath(); ctx.moveTo(ex - 5 * sx, ey - 4); ctx.lineTo(ex + 4 * sx, ey); ctx.lineTo(ex - 5 * sx, ey + 4); ctx.stroke(); }
+    else { circle(ex, ey, 4.5); ctx.fill(); }
+  }
+  const my = hy + 16;
+  ctx.beginPath();
+  if (P.mouth === 'o') { ctx.ellipse(hx, my, 5, 6.5, 0, 0, Math.PI * 2); ctx.fillStyle = '#5a1f22'; ctx.fill(); ctx.stroke(); }
+  else if (P.mouth === 'shout') { ctx.ellipse(hx, my + 1, 11, 9, 0, 0, Math.PI * 2); ctx.fillStyle = '#5a1f22'; ctx.fill(); ctx.stroke(); }
+  else if (P.mouth === 'grin') { ctx.arc(hx, my - 4, 10, Math.PI * 0.15, Math.PI * 0.85); ctx.closePath(); ctx.fillStyle = '#5a1f22'; ctx.fill(); ctx.stroke(); }
+  else if (P.mouth === 'flat') { ctx.moveTo(hx - 7, my); ctx.lineTo(hx + 7, my); ctx.stroke(); }
+  else { ctx.arc(hx, my - 6, 8, Math.PI * 0.2, Math.PI * 0.8); ctx.stroke(); }
+}
+function drawCup(x, y, s) {
+  // 和视频里 NABO 手上的骰盅一致：梅紫色、略收口的圆筒，圆顶，底部一道黄铜边
+  ctx.save();
+  ctx.strokeStyle = C.ink; ctx.lineWidth = 1.6;
+  const g = ctx.createLinearGradient(x - 18 * s, 0, x + 18 * s, 0);
+  g.addColorStop(0, '#3E1A2C'); g.addColorStop(0.35, '#7A3352'); g.addColorStop(0.6, '#5C2440'); g.addColorStop(1, '#2E1220');
+  ctx.beginPath();
+  ctx.moveTo(x - 15 * s, y - 30 * s);
+  ctx.quadraticCurveTo(x, y - 37 * s, x + 15 * s, y - 30 * s);
+  ctx.lineTo(x + 18 * s, y - 4 * s); ctx.lineTo(x - 18 * s, y - 4 * s); ctx.closePath();
+  ctx.fillStyle = g; ctx.fill(); ctx.stroke();
+  const b = ctx.createLinearGradient(0, y - 6 * s, 0, y);
+  b.addColorStop(0, '#E9C873'); b.addColorStop(1, '#9B7524');
+  rr(x - 19 * s, y - 6 * s, 38 * s, 6 * s, 2 * s); ctx.fillStyle = b; ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,220,240,.18)'; rr(x - 10 * s, y - 29 * s, 4 * s, 20 * s, 2 * s); ctx.fill();
+  ctx.restore();
+}
+function drawTrophy(x, y) {
+  ctx.fillStyle = C.brass; ctx.strokeStyle = C.ink; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(x - 16, y - 18); ctx.lineTo(x + 16, y - 18); ctx.quadraticCurveTo(x + 14, y + 4, x, y + 6);
+  ctx.quadraticCurveTo(x - 14, y + 4, x - 16, y - 18); ctx.fill(); ctx.stroke();
+  rr(x - 3, y + 6, 6, 8, 1); ctx.fill(); ctx.stroke(); rr(x - 10, y + 14, 20, 5, 2); ctx.fill(); ctx.stroke();
+}
+function drawNaboPlaceholder(cx, rimY, h) {
+  const P = pose(nabo.anim, nabo.t), s = h / 150, dy = P.dy;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, W, rimY); ctx.clip();
+  ctx.translate(cx, rimY); ctx.scale(nabo.mirror ? -s : s, s);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = C.ink; ctx.lineWidth = 3;
+  // 躯干 + 领口 + 领结
+  ctx.fillStyle = C.vest; rr(-46, -76 + dy, 92, 96, 28); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C.shirt; ctx.beginPath(); ctx.moveTo(-17, -76 + dy); ctx.lineTo(17, -76 + dy); ctx.lineTo(0, -42 + dy); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C.brass; ctx.beginPath(); ctx.moveTo(0, -70 + dy); ctx.lineTo(-11, -77 + dy); ctx.lineTo(-11, -63 + dy); ctx.closePath();
+  ctx.moveTo(0, -70 + dy); ctx.lineTo(11, -77 + dy); ctx.lineTo(11, -63 + dy); ctx.closePath(); ctx.fill(); ctx.stroke();
+  // 头
+  const hx = P.head || 0, hy = -112 + dy;
+  ctx.fillStyle = C.skin; circle(hx, hy, 38); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C.vest; ctx.beginPath(); ctx.arc(hx, hy, 38, Math.PI * 1.08, Math.PI * 1.92); ctx.quadraticCurveTo(hx, hy - 22, hx - 36, hy - 12); ctx.fill(); ctx.stroke();
+  drawFace(P, hx, hy);
+  // 道具（手后面的部分）
+  if (P.prop === 'cup') drawCup(P.at[0], P.at[1], 1.1);
+  if (P.prop === 'trophy') drawTrophy(P.at[0], P.at[1]);
+  // 手臂 + 手
+  for (const [side, hand] of [[-1, P.l], [1, P.r]]) {
+    const sh = [side * 38, -60 + dy];
+    ctx.lineWidth = 17; ctx.strokeStyle = C.ink; ctx.beginPath(); ctx.moveTo(...sh); ctx.lineTo(...hand); ctx.stroke();
+    ctx.lineWidth = 11; ctx.strokeStyle = C.vest; ctx.beginPath(); ctx.moveTo(...sh); ctx.lineTo(...hand); ctx.stroke();
+    ctx.lineWidth = 3; ctx.strokeStyle = C.ink; ctx.fillStyle = C.skin; circle(hand[0], hand[1], 11); ctx.fill(); ctx.stroke();
+  }
+  if (P.prop === 'deck2') {
+    for (const sx of [-1, 1]) drawCard(sx * (30 + 6 * Math.sin(P.k * Math.PI * 2)) - 9, -50, 18, 25, null);
+    const f = (P.k * 3) % 1; drawCard(-9 + (f < 0.5 ? -1 : 1) * 10 * (1 - f), -52 + 20 * f, 18, 25, null);
+  }
+  if (P.prop === 'deal') { drawCard(P.l[0] - 9, P.l[1] - 16, 18, 25, null); if (P.k < 0.7) drawCard(P.r[0] - 9, P.r[1] - 16, 18, 25, null); }
+  ctx.restore();
+}
+
+// ---------- 真 NABO 帧（图生视频处理后，见 tools/clip_to_sprites.py）；还没做出来的动作用占位 ----------
+// 游戏动作名 → 精灵动作名。没有的就退回占位画法。
+const SPRITE_MAP = {
+  shuffle: () => (G.scene === 'menu' ? 'spread' : 'cut'),   // 视频 riffle 失败：封面用展牌，开局用切牌
+  idle: () => (G.game === 'bj' ? 'idle_cards' : 'idle_empty'),
+  deal: 'deal', shake: 'shake', slam: 'slam', cover_in: 'cover_in', cover: 'cover', open: 'open',
+  point: () => (nabo.mirror ? 'point_r' : 'point_l'),
+  surprise: 'surprise', trophy: 'trophy', shrug: 'idle_empty',
+};
+const spriteImgs = {};
+// 先把所有精灵条加载好，免得第一次播放时闪一下占位
+for (const [size, anims] of Object.entries(window.NABO_SPRITES || {}))
+  for (const [key, sheet] of Object.entries(anims)) { const im = new Image(); im.src = sheet.img; spriteImgs[size + '/' + key] = im; }
+function spriteFor(anim, size) {
+  const m = SPRITE_MAP[anim], key = typeof m === 'function' ? m() : m;
+  // 这个尺寸没打包时，借另一个尺寸缩放来用
+  const other = size === 'large' ? 'small' : 'large', S = window.NABO_SPRITES || {};
+  if (key && !(S[size] && S[size][key]) && S[other] && S[other][key]) size = other;
+  const sheet = key && S[size] && S[size][key];
+  if (!sheet) return null;
+  const id = size + '/' + key;
+  if (!spriteImgs[id]) { spriteImgs[id] = new Image(); spriteImgs[id].src = sheet.img; }
+  return spriteImgs[id].complete && spriteImgs[id].naturalWidth ? { sheet, img: spriteImgs[id], size } : null;
+}
+function drawNabo(cx, rimY, h) {
+  const sp = spriteFor(nabo.anim, h >= 100 ? 'large' : 'small');
+  if (!sp) { drawNaboPlaceholder(cx, rimY, h); return; }
+  const { sheet, img, size } = sp, n = sheet.n;
+  const f = Math.floor(nabo.t * sheet.fps);
+  const i = sheet.loop ? f % n : Math.min(n - 1, f);
+  // 帧本身按 150 / 72 px 高做好了；h 和档位不同时按比例缩放
+  const k = h / (size === 'large' ? 150 : 72);
+  ctx.drawImage(img, i * sheet.w, 0, sheet.w, sheet.h, cx + sheet.ox * k, rimY + sheet.oy * k, sheet.w * k, sheet.h * k);
+}
+
+// ---------- 小骰子图标（叫数文字里用；大骰子是 dice3d.js 的立体版） ----------
+const PIPS = { 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+  5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]] };
+function drawDie(x, y, s, v, o = {}) {
+  ctx.save();
+  if (o.dim) ctx.globalAlpha = 0.35;
+  rr(x, y, s, s, s * 0.2);
+  ctx.fillStyle = C.card; ctx.fill();
+  ctx.lineWidth = o.hl ? 2.5 : 1.2; ctx.strokeStyle = o.hl || C.ink; ctx.stroke();
+  // 中式骰子：1 点和 4 点是红色
+  ctx.fillStyle = (v === 1 || v === 4) ? C.red : C.ink;
+  const r = v === 1 ? s * 0.13 : s * 0.085, d = s * 0.26;
+  for (const [px, py] of PIPS[v]) { circle(x + s / 2 + px * d, y + s / 2 + py * d, r); ctx.fill(); }
+  ctx.restore();
+}
+function bidLabel(x, y, q, f, o = {}) {
+  // "4 个 ⚄"，点数用小骰子图标表示
+  const size = o.size || 14, ds = Math.round(size * 1.05);
+  let w = text(`${q} 个`, 0, -999, { size, weight: 700 });
+  const total = w + 5 + ds;
+  let sx = o.align === 'center' ? x - total / 2 : o.align === 'right' ? x - total : x;
+  text(`${q} 个`, sx, y, { size, weight: 700, color: o.color || C.card });
+  drawDie(sx + w + 5, y - ds / 2, ds, f);
+  return total;
+}
+
+// ---------- 场景公共绘制 ----------
+function drawRoom(rimY) {
+  const g = ctx.createLinearGradient(0, 0, 0, rimY);
+  g.addColorStop(0, '#07130F'); g.addColorStop(1, C.wall);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, rimY);
+  FELT.draw(ctx, rimY);
+  // 桌沿在绒布上投下的一道阴影
+  const sh = ctx.createLinearGradient(0, rimY, 0, rimY + 14);
+  sh.addColorStop(0, 'rgba(0,0,0,.45)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = sh; ctx.fillRect(0, rimY, W, 14);
+}
+function drawRim(rimY) {
+  const g = ctx.createLinearGradient(0, rimY - 4, 0, rimY + 5);
+  g.addColorStop(0, '#5A3A26'); g.addColorStop(0.5, C.rim); g.addColorStop(1, '#22140C');
+  ctx.fillStyle = g; ctx.fillRect(0, rimY - 4, W, 9);
+  ctx.fillStyle = 'rgba(255,230,190,.18)'; ctx.fillRect(0, rimY - 4, W, 1);
+  ctx.fillStyle = C.brass; ctx.fillRect(0, rimY + 5, W, 1);
+}
+function drawScores() {
+  text(String(G.score[0]), 10, 16, { size: 18, font: F_DISP, color: C.p1 });
+  text(String(G.score[1]), W - 10, 16, { size: 18, font: F_DISP, color: C.p2, align: 'right' });
+  text(`抢 ${Cfg.target}`, W / 2, 10, { size: 9, color: C.muted, align: 'center' });
+}
+function playerChip(p, label) {
+  ctx.font = `700 11px ${F_BODY}`;
+  const w = ctx.measureText(label).width + 16, x = 8;
+  rr(x, 30, w, 18, 9); ctx.fillStyle = PCOL[p]; ctx.fill();
+  text(label, x + 8, 39.5, { size: 11, weight: 700, color: C.ink });
+}
+function choices(y, labels, cursor, color) {
+  // 两个并排的选项，UP / DOWN 切换
+  const w = 92, gap = 12, x0 = (W - (w * 2 + gap)) / 2;
+  labels.forEach((s, i) => {
+    const x = x0 + i * (w + gap), sel = cursor === i;
+    rr(x, y - 10, w, 20, 10);
+    ctx.fillStyle = sel ? color : 'rgba(255,255,255,.06)'; ctx.fill();
+    text(s, x + w / 2, y + 0.5, { size: 11, weight: 700, color: sel ? C.ink : C.card, align: 'center' });
+  });
+}
+function resultBanner(main, why, color) {
+  ctx.fillStyle = 'rgba(4,12,10,.92)'; ctx.fillRect(0, 266, W, 54);
+  ctx.fillStyle = color; ctx.fillRect(0, 266, W, 2);
+  text(`${main} · ${why}`, W / 2, 281, { size: 12, weight: 700, color, align: 'center' });
+  choices(304, [matchOver() ? '看总比分' : '下一局', '回封面'], G.choice, color);
+}
+const PAUSE_TIP = '长按 OK 暂停';
+function hint(s) { text(s, W / 2, 310, { size: 10, color: C.muted, align: 'center' }); }
+
+// ---------- 游戏状态 ----------
+const G = { scene: 'menu', t: 0, menu: 0, game: null, score: [0, 0], round: 0, starter: 0, loser: 0, turn: 0, handoffTo: 0, pause: null, choice: 0, bj: null, dc: null, result: null };
+let clock = 0;
+const logItems = [];
+function log(html) { logItems.unshift(html); if (logItems.length > 40) logItems.pop(); renderLog(); }
+const pn = p => `<span class="p${p + 1}">${PNAME[p]}</span>`;
+function go(scene) { G.scene = scene; G.t = 0; G.sfxMark = 0; }
+
+function startMatch(game) {
+  G.game = game; G.score = [0, 0]; G.round = 0; G.loser = 0;
+  logItems.length = 0;
+  log(`开始 ${game === 'bj' ? '21 点' : '大话骰'}，抢 ${Cfg.target} 局`);
+  nextRound();
+}
+function nextRound() {
+  G.round++; G.result = null;
+  if (G.game === 'bj') {
+    G.starter = (G.round - 1) % 2;
+    const deck = [];
+    for (let s = 0; s < 4; s++) for (let r = 1; r <= 13; r++) deck.push({ r, s });
+    G.bj = { deck: shuffle(deck), hands: [[], []], stood: [false, false], phase: 'choose', cursor: 0, dealt: 0 };
+    go('bjDeal'); naboPlay('shuffle'); SFX.shuffle();
+  } else {
+    G.starter = G.round === 1 ? 0 : G.loser;
+    const roll = () => Array.from({ length: Cfg.dicePer }, () => 1 + randInt(6));
+    const yaws = () => Array.from({ length: Cfg.dicePer }, () => DICE3D.randomYaw(rand));
+    G.dc = { yaw: [yaws(), yaws()], dice: [roll(), roll()], per: Cfg.dicePer, minOpen: Cfg.minOpen, wild: Cfg.wild, bids: [], qList: [], qi: 0, fList: [], fi: 0, step: 'qty', caller: -1 };
+    go('diceRoll'); naboPlay('shake'); SFX.rattle();
+  }
+  log(`第 ${G.round} 局，${pn(G.starter)} 先手`);
+}
+function handoff(p) { G.handoffTo = p; go('handoff'); naboPlay('cover_in'); }
+function beginTurn(p) {
+  G.turn = p;
+  if (G.game === 'bj') { G.bj.phase = 'choose'; G.bj.cursor = 0; go('bjTurn'); }
+  else { buildBidList(); go('diceTurn'); }
+  naboPlay('idle');
+}
+function winRound(w, why) {
+  G.result = { winner: w, why }; G.choice = 0;
+  if (w === null) { naboPlay('shrug'); log(`平局：${why}`); return; }
+  G.score[w]++; G.loser = 1 - w;
+  naboPlay('point', { mirror: w === 1 });
+  SFX.win();
+  log(`${pn(w)} 赢下第 ${G.round} 局：${why}（${G.score[0]} : ${G.score[1]}）`);
+}
+function matchOver() { const w = G.result && G.result.winner; return w !== null && w !== undefined && G.score[w] >= Cfg.target; }
+function afterResult() {
+  const w = G.result.winner;
+  if (G.choice === 1) { log('回到封面'); toMenu(); return; }
+  if (matchOver()) { G.choice = 0; go('end'); naboPlay('trophy'); log(`${pn(w)} 获胜 ${G.score[0]} : ${G.score[1]}`); }
+  else nextRound();
+}
+
+// ---------- 21 点 ----------
+function handTotal(hand) {
+  let t = 0, ace = false;
+  for (const c of hand) { t += Math.min(10, c.r); if (c.r === 1) ace = true; }
+  const soft = ace && t + 10 <= 21;
+  return { total: soft ? t + 10 : t, hard: t, soft, bust: t > 21 };
+}
+const BJ_COL_X = [8, 124], BJ_TOP = 112;
+function bjSlot(p, i, n) {
+  const dy = n > 1 ? Math.min(20, 88 / (n - 1)) : 0;
+  return [BJ_COL_X[p] + 18 + (i % 2) * 6, BJ_TOP + 16 + i * dy];
+}
+function drawBjTable(faceT) {
+  // 公开牌桌：两列，玩家 1 在左、玩家 2 在右；faceT 为 null 时全部盖着
+  for (let p = 0; p < 2; p++) {
+    const hand = G.bj.hands[p];
+    text(PNAME[p], BJ_COL_X[p] + 4, BJ_TOP, { size: 11, weight: 700, color: PCOL[p] });
+    const tag = G.bj.stood[p] ? '已停牌' : `${hand.length} 张`;
+    text(tag, BJ_COL_X[p] + 104, BJ_TOP, { size: 10, color: C.muted, align: 'right' });
+    hand.forEach((c, i) => {
+      const [x, y] = bjSlot(p, i, hand.length);
+      const age = clock - c.born;
+      if (age < 0) return;
+      if (age < 0.3) { const e = easeOut(age / 0.3); drawCard(lerp(111, x, e), lerp(70, y, e), 36, 50, null); return; }
+      if (faceT === null) drawCard(x, y, 36, 50, null);
+      else drawCardFlip(x, y, 36, 50, c, faceT(p, i));
+    });
+  }
+}
+function bjDealUpdate() {
+  const order = [G.starter, 1 - G.starter, G.starter, 1 - G.starter];
+  const t0 = Math.max(0.8, animDur('shuffle'));   // 切牌做完再发牌
+  const due = Math.floor((G.t - t0) / 0.35) + 1;
+  while (G.bj.dealt < Math.min(4, due)) {
+    const p = order[G.bj.dealt++];
+    G.bj.hands[p].push({ ...G.bj.deck.pop(), born: clock });
+    naboPlay('deal'); SFX.card();
+  }
+  if (G.bj.dealt === 4 && G.t > t0 + 4 * 0.35 + 0.35) handoff(G.starter);
+}
+function bjHit() {
+  const b = G.bj, p = G.turn;
+  b.hands[p].push({ ...b.deck.pop(), born: clock });
+  b.phase = 'hitShow'; SFX.card(); setTimeout(SFX.flip, 130);
+  log(`${pn(p)} 要了一张牌（现在 ${b.hands[p].length} 张）`);
+}
+function bjEndTurn() {
+  const b = G.bj, p = G.turn, o = 1 - p;
+  if (b.stood[0] && b.stood[1]) { go('bjReveal'); naboPlay('open'); SFX.open(); return; }
+  if (!b.stood[o]) handoff(o);
+  else { b.phase = 'choose'; b.cursor = 0; }
+}
+function bjKey(k) {
+  const b = G.bj, p = G.turn, bust = handTotal(b.hands[p]).bust;
+  if (b.phase === 'hitShow') { if (k === 'ok') { SFX.ok(); bjEndTurn(); } return; }
+  if (k === 'up' || k === 'down') { if (!bust) { b.cursor = 1 - b.cursor; SFX.move(); } return; }
+  if (k !== 'ok') return;
+  SFX.ok();
+  if (b.cursor === 0 && !bust) { bjHit(); return; }
+  b.stood[p] = true; log(`${pn(p)} 停牌`);
+  bjEndTurn();
+}
+function drawBjTurn() {
+  const b = G.bj, p = G.turn, o = 1 - p, hand = b.hands[p], ht = handTotal(hand);
+  drawRoom(92); drawRim(92); drawNabo(W / 2, 92, 72); drawScores();
+  playerChip(p, `${PNAME[p]} · 你的牌`);
+  const n = hand.length, cw = 44, ch = 62;
+  const step = n > 1 ? Math.min(50, (W - 32 - cw) / (n - 1)) : 0;
+  const x0 = (W - (cw + step * (n - 1))) / 2;
+  hand.forEach((c, i) => {
+    const age = clock - c.born, x = x0 + i * step, y = 106;
+    if (age < 0.45) drawCardFlip(x, y - 10 * (1 - clamp01(age / 0.45)), cw, ch, c, clamp01((age - 0.1) / 0.35));
+    else drawCard(x, y, cw, ch, c);
+  });
+  const col = ht.bust ? C.red : C.card;
+  const w = text(String(ht.total), 18, 196, { size: 34, font: F_DISP, color: col });
+  text('点', 24 + w, 202, { size: 12, color: C.muted });
+  if (ht.bust) text('爆牌了，只能停牌', 52 + w, 200, { size: 12, weight: 700, color: C.red });
+  else if (ht.soft) text(`A 记 11（也可看作 ${ht.hard}）`, 52 + w, 200, { size: 11, color: C.muted });
+  text(`${PNAME[o]}：${b.hands[o].length} 张${b.stood[o] ? ' · 已停牌' : ''}`, 18, 228, { size: 11, color: PCOL[o] });
+  if (b.phase === 'hitShow') {
+    const c = hand[n - 1];
+    text(`拿到 ${SUITS[c.s]}${RANKS[c.r]}`, W / 2, 256, { size: 14, weight: 700, color: C.card, align: 'center' });
+    hint((b.stood[o] ? 'OK 继续' : `OK 盖牌，交给${PNAME[o]}`) + ` · ${PAUSE_TIP}`);
+    return;
+  }
+  const labels = ['要牌', '停牌'];
+  for (let i = 0; i < 2; i++) {
+    const x = 18 + i * 108, sel = b.cursor === i, off = i === 0 && ht.bust;
+    rr(x, 244, 96, 36, 8);
+    ctx.fillStyle = sel ? PCOL[p] : 'rgba(255,255,255,.05)'; ctx.fill();
+    ctx.lineWidth = 1; ctx.strokeStyle = sel ? PCOL[p] : 'rgba(255,255,255,.18)'; ctx.stroke();
+    text(labels[i], x + 48, 262, { size: 15, weight: 700, color: off ? 'rgba(255,255,255,.2)' : sel ? C.ink : C.card, align: 'center' });
+  }
+  hint(`↑↓ 选择 · OK 确认 · ${PAUSE_TIP}`);
+}
+const BJ_FLIP0 = 0.5, BJ_FLIP_STEP = 0.12;
+function bjFlipT(p, i) {
+  const idx = p === 0 ? i : G.bj.hands[0].length + i;
+  return clamp01((G.t - BJ_FLIP0 - idx * BJ_FLIP_STEP) / 0.25);
+}
+function bjRevealUpdate() {
+  const n = G.bj.hands[0].length + G.bj.hands[1].length;
+  const started = Math.min(n, Math.max(0, Math.floor((G.t - BJ_FLIP0) / BJ_FLIP_STEP) + 1));
+  if (started > G.sfxMark) { G.sfxMark = started; SFX.flip(); }
+  if (G.result || G.t < BJ_FLIP0 + n * BJ_FLIP_STEP + 0.4) return;
+  const [a, b] = G.bj.hands.map(handTotal);
+  const show = t => t.bust ? `${t.total} 爆` : String(t.total);
+  const why = `${show(a)} 对 ${show(b)}`;
+  if (a.bust && b.bust) winRound(null, `双方爆牌（${why}）`);
+  else if (a.bust) winRound(1, why);
+  else if (b.bust) winRound(0, why);
+  else if (a.total === b.total) winRound(null, `点数相同（${why}）`);
+  else winRound(a.total > b.total ? 0 : 1, why);
+}
+function drawBjPublic() {
+  drawRoom(92); drawRim(92); drawNabo(W / 2, 92, 72); drawScores();
+  const reveal = G.scene === 'bjReveal';
+  drawBjTable(reveal ? bjFlipT : null);
+  if (reveal && G.result) {
+    for (let p = 0; p < 2; p++) {
+      const t = handTotal(G.bj.hands[p]);
+      text(t.bust ? '爆' : String(t.total), BJ_COL_X[p] + 104, 150, { size: 22, font: F_DISP, color: t.bust ? C.red : C.card, align: 'right' });
+    }
+    const w = G.result.winner;
+    resultBanner(w === null ? '平局' : `${PNAME[w]} 赢`, G.result.why, w === null ? C.brass : PCOL[w]);
+  } else if (G.scene === 'bjDeal') hint('NABO 正在发牌');
+}
+
+// ---------- 大话骰 ----------
+const faceRank = (f, wild) => (wild && f === 1 ? 7 : f);
+const bidKey = (b, wild) => b.q * 10 + faceRank(b.f, wild);
+function isZhai() { return G.dc.wild && G.dc.bids.some(b => b.f === 1); }
+function countFace(f) {
+  const d = G.dc, wildOn = d.wild && !isZhai() && f !== 1;
+  return d.dice.flat().filter(v => v === f || (wildOn && v === 1)).length;
+}
+// 叫数分两步：先选数量（往下到底是「开！」），再选点数（往下到底是「返回」）
+function legalFaces(q) {
+  const d = G.dc, last = d.bids[d.bids.length - 1], lk = last ? bidKey(last, d.wild) : -1;
+  if (q < d.minOpen) return [];
+  return [1, 2, 3, 4, 5, 6].filter(f => bidKey({ q, f }, d.wild) > lk).sort((a, b) => faceRank(a, d.wild) - faceRank(b, d.wild));
+}
+function buildBidList() {
+  const d = G.dc, last = d.bids[d.bids.length - 1], qs = [];
+  if (last) qs.push('open');
+  for (let q = d.minOpen; q <= d.per * 2; q++) if (legalFaces(q).length) qs.push(q);
+  d.qList = qs; d.step = 'qty';
+  d.qi = last && qs.length > 1 ? 1 : 0;  // 默认停在最小的合法数量，不默认停在「开」
+}
+function enterFaceStep() {
+  const d = G.dc, last = d.bids[d.bids.length - 1], q = d.qList[d.qi];
+  d.fList = ['back', ...legalFaces(q)]; d.step = 'face';
+  const keep = last ? d.fList.indexOf(last.f) : -1;
+  d.fi = keep > 0 ? keep : 1;  // 能沿用上一个点数就沿用，否则选最小的合法点数
+}
+function diceRollUpdate() {
+  if (nabo.anim === 'shake' && G.t >= 1.1) { naboPlay('slam'); setTimeout(SFX.slam, 180); }
+  if (G.t > 1.1 + Math.max(0.8, animDur('slam'))) handoff(G.starter);
+}
+function diceKey(k) {
+  const d = G.dc, p = G.turn;
+  if (k === 'up' || k === 'down') {
+    const dir = k === 'up' ? 1 : -1;
+    const [key, list] = d.step === 'qty' ? ['qi', d.qList] : ['fi', d.fList];
+    const n = Math.max(0, Math.min(list.length - 1, d[key] + dir));
+    if (n !== d[key]) { d[key] = n; SFX.move(); }
+    return;
+  }
+  if (k !== 'ok') return;
+  if (d.step === 'qty') {
+    if (d.qList[d.qi] !== 'open') { enterFaceStep(); SFX.ok(); return; }
+    d.caller = p; const last = d.bids[d.bids.length - 1];
+    log(`${pn(p)} 开 ${pn(last.p)} 的「${last.q} 个 ${last.f}」`);
+    go('diceReveal'); naboPlay('open'); SFX.open();
+    return;
+  }
+  const f = d.fList[d.fi];
+  if (f === 'back') { d.step = 'qty'; SFX.ok(); return; }
+  const q = d.qList[d.qi];
+  d.bids.push({ p, q, f }); SFX.ok();
+  log(`${pn(p)} 叫 ${q} 个 ${f}${f === 1 && d.wild ? '（斋）' : ''}`);
+  handoff(1 - p);
+}
+function diceRow(dice, cx, y, s, o = {}) {
+  const gap = 6, perRow = dice.length > 3 && o.cols ? Math.ceil(dice.length / 2) : dice.length;
+  dice.forEach((v, i) => {
+    const r = Math.floor(i / perRow), c = i % perRow, n = Math.min(perRow, dice.length - r * perRow);
+    const x = cx - (n * s + (n - 1) * gap) / 2 + c * (s + gap);
+    DICE3D.draw(ctx, x, y + r * (s + gap), s, v, o.yaw ? o.yaw[i] : 22, o.style ? o.style(v) : {});
+  });
+}
+function drawLastBid(y) {
+  const d = G.dc, last = d.bids[d.bids.length - 1];
+  if (!last) { text('还没人叫，你先叫', W / 2, y + 12, { size: 13, weight: 700, color: C.card, align: 'center' }); return; }
+  text(`${PNAME[last.p]} 叫`, W / 2, y, { size: 10, color: PCOL[last.p], align: 'center' });
+  bidLabel(W / 2, y + 20, last.q, last.f, { size: 18, align: 'center' });
+  if (isZhai()) text('斋', W / 2 + 62, y + 20, { size: 11, weight: 700, color: C.brass });
+}
+function drawDiceTurn() {
+  const d = G.dc, p = G.turn;
+  drawRoom(92); drawRim(92); drawNabo(W / 2, 92, 72); drawScores();
+  playerChip(p, `${PNAME[p]} · 你的骰子`);
+  diceRow(d.dice[p], W / 2, 104, 30, { yaw: d.yaw[p] });
+  drawLastBid(146);
+  drawBidPicker(p);
+}
+function arrows(cx, top, bottom, upOn, downOn) {
+  text('▲', cx, top, { size: 9, color: upOn ? C.card : 'rgba(255,255,255,.15)', align: 'center' });
+  text('▼', cx, bottom, { size: 9, color: downOn ? C.card : 'rgba(255,255,255,.15)', align: 'center' });
+}
+function drawBidPicker(p) {
+  const d = G.dc, col = PCOL[p], cy = 222;
+  const qv = d.qList[d.qi];
+  if (d.step === 'qty' && qv === 'open') {
+    rr(60, cy - 20, W - 120, 40, 12); ctx.fillStyle = C.brass; ctx.fill();
+    text('开！', W / 2, cy + 1, { size: 22, weight: 700, color: C.ink, align: 'center' });
+    arrows(W / 2, cy - 30, cy + 30, d.qList.length > 1, false);
+    text('按 ▲ 改为加注', W / 2, 270, { size: 11, color: C.muted, align: 'center' });
+  } else {
+    // [数量] 个 [点数]：正在调的那一格有颜色和上下箭头
+    const qa = d.step === 'qty', fv = d.step === 'face' ? d.fList[d.fi] : null;
+    rr(50, cy - 22, 56, 44, 10); ctx.fillStyle = qa ? col : 'rgba(255,255,255,.06)'; ctx.fill();
+    text(String(qv), 78, cy + 2, { size: 26, font: F_DISP, color: qa ? C.ink : C.card, align: 'center' });
+    text('个', W / 2, cy + 1, { size: 15, weight: 700, color: C.card, align: 'center' });
+    rr(134, cy - 22, 56, 44, 10); ctx.fillStyle = !qa ? col : 'rgba(255,255,255,.06)'; ctx.fill();
+    if (qa) text('?', 162, cy + 2, { size: 22, font: F_DISP, color: C.muted, align: 'center' });
+    else if (fv === 'back') text('返回', 162, cy + 1, { size: 13, weight: 700, color: C.ink, align: 'center' });
+    else {
+      DICE3D.draw(ctx, 146, cy - 16, 32, fv, 24);
+      if (fv === 1 && d.wild) text('斋', 196, cy, { size: 11, weight: 700, color: C.brass });
+    }
+    if (qa) arrows(78, cy - 31, cy + 31, d.qi < d.qList.length - 1, d.qi > 0);
+    else arrows(162, cy - 31, cy + 31, d.fi < d.fList.length - 1, d.fi > 0);
+    const tip = qa ? (d.qi > 0 && d.qList[0] === 'open' ? '▼ 到底是「开！」' : '')
+      : fv === 'back' ? 'OK 回去改数量' : `OK 叫出「${qv} 个 ${fv}」`;
+    if (tip) text(tip, W / 2, 270, { size: 11, color: C.muted, align: 'center' });
+  }
+  hint(d.step === 'qty' ? `↑↓ 选数量 · OK 下一步 · ${PAUSE_TIP}` : `↑↓ 选点数 · OK 确认 · ${PAUSE_TIP}`);
+}
+const DC_COL_X = [62, 178];
+function drawDicePublic() {
+  const d = G.dc;
+  drawRoom(92); drawRim(92); drawNabo(W / 2, 92, 72); drawScores();
+  const reveal = G.scene === 'diceReveal';
+  const last = d.bids[d.bids.length - 1];
+  const lift = reveal ? easeOut(clamp01((G.t - 0.45) / 0.35)) : 0;
+  const hlOn = reveal && G.t > 0.9;
+  const wildOn = d.wild && !isZhai() && last && last.f !== 1;
+  for (let p = 0; p < 2; p++) {
+    const cx = DC_COL_X[p];
+    text(PNAME[p], cx, 112, { size: 11, weight: 700, color: PCOL[p], align: 'center' });
+    if (G.scene === 'diceRoll') {
+      const land = clamp01((G.t - 1.25) / 0.2);
+      if (land > 0) drawCup(cx, 190 - 8 * (1 - land), 1.3);
+      continue;
+    }
+    if (reveal) diceRow(d.dice[p], cx, 138, 24, {
+      cols: true, yaw: d.yaw[p],
+      style: v => !hlOn ? {} : (v === last.f || (wildOn && v === 1)) ? { hl: C.brass } : { dim: true },
+    });
+    if (lift < 1) { ctx.save(); ctx.globalAlpha = 1 - lift; drawCup(cx, 190 - 70 * lift, 1.3); ctx.restore(); }
+  }
+  if (last) {
+    text(`${PNAME[last.p]} 叫`, W / 2, 210, { size: 10, color: PCOL[last.p], align: 'center' });
+    bidLabel(W / 2, 229, last.q, last.f, { size: 16, align: 'center' });
+  }
+  if (reveal && hlOn && last) text(`实际 ${countFace(last.f)} 个${wildOn ? '（含万能 1）' : ''}`, W / 2, 251, { size: 12, weight: 700, color: C.brass, align: 'center' });
+  if (reveal && G.result) {
+    const w = G.result.winner;
+    resultBanner(`${PNAME[w]} 赢`, G.result.why, PCOL[w]);
+  } else if (G.scene === 'diceRoll') hint('NABO 正在摇盅');
+}
+function diceRevealUpdate() {
+  if (!G.sfxMark && G.t >= 0.4) { G.sfxMark = 1; SFX.lift(); }
+  if (G.result || G.t < 1.3) return;
+  const d = G.dc, last = d.bids[d.bids.length - 1], actual = countFace(last.f);
+  const ok = actual >= last.q;
+  winRound(ok ? last.p : d.caller, ok ? `叫中了：实际 ${actual} 个 ≥ ${last.q} 个` : `开中了：实际只有 ${actual} 个`);
+}
+
+// ---------- 封面、交接、结束、暂停 ----------
+const MENU = [
+  { id: 'bj', label: () => '21 点', anim: 'shuffle' },
+  { id: 'dice', label: () => '大话骰', anim: 'shake' },
+  { id: 'target', label: () => `抢 ${Cfg.target} 局`, anim: 'idle' },
+];
+function menuSelect(i) { G.menu = i; if (nabo.anim !== MENU[i].anim) naboPlay(MENU[i].anim); }
+function drawMenu() {
+  drawRoom(168); drawRim(168); drawNabo(W / 2, 168, 150);
+  text('NABO', W / 2 - 34, 194, { size: 22, font: F_DISP, color: C.card, align: 'center' });
+  text('牌桌', W / 2 + 34, 195, { size: 20, weight: 700, color: C.brass, align: 'center' });
+  MENU.forEach((m, i) => {
+    const y = 222 + i * 26, sel = G.menu === i;
+    if (sel) { rr(56, y - 10, W - 112, 22, 11); ctx.fillStyle = C.brass; ctx.fill(); }
+    text(m.label(), W / 2, y + 1, { size: 14, weight: 700, color: sel ? C.ink : C.card, align: 'center' });
+  });
+  hint('↑↓ 选择 · OK 进入');
+}
+function menuKey(k) {
+  if (k === 'up' || k === 'down') { menuSelect((G.menu + (k === 'down' ? 1 : MENU.length - 1)) % MENU.length); SFX.move(); return; }
+  if (k !== 'ok') return;
+  SFX.ok();
+  const id = MENU[G.menu].id;
+  if (id === 'target') { Cfg.target = Cfg.target >= 7 ? 3 : Cfg.target + 2; save('table.settings', Cfg); syncPanel(); return; }
+  startMatch(id);
+}
+function publicInfo() {
+  if (G.game === 'bj') {
+    const b = G.bj;
+    return [0, 1].map(p => `${PNAME[p]} ${b.hands[p].length} 张${b.stood[p] ? ' 已停' : ''}`).join('  ·  ');
+  }
+  return null;
+}
+function drawHandoff() {
+  const p = G.handoffTo;
+  drawRoom(170); drawRim(170); drawNabo(W / 2, 170, 150); drawScores();
+  text('请交给', W / 2, 196, { size: 12, color: C.muted, align: 'center' });
+  text(PNAME[p], W / 2, 222, { size: 26, weight: 700, color: PCOL[p], align: 'center' });
+  const info = publicInfo();
+  if (info) text(info, W / 2, 252, { size: 10, color: C.muted, align: 'center' });
+  else {
+    const last = G.dc.bids[G.dc.bids.length - 1];
+    if (last) { text(`${PNAME[last.p]} 叫`, W / 2 - 34, 256, { size: 11, color: PCOL[last.p], align: 'right' }); bidLabel(W / 2 - 26, 256, last.q, last.f, { size: 13 }); }
+    else text('第一个叫数', W / 2, 256, { size: 11, color: C.muted, align: 'center' });
+  }
+  rr(48, 276, W - 96, 24, 12); ctx.fillStyle = PCOL[p]; ctx.fill();
+  text('准备好按 OK', W / 2, 288.5, { size: 12, weight: 700, color: C.ink, align: 'center' });
+  text(PAUSE_TIP, W / 2, 312, { size: 9, color: C.muted, align: 'center' });
+}
+function drawEnd() {
+  const w = G.score[0] >= Cfg.target ? 0 : 1;
+  drawRoom(186); drawRim(186); drawNabo(W / 2, 186, 150);
+  text(`${PNAME[w]} 获胜`, W / 2, 218, { size: 24, weight: 700, color: PCOL[w], align: 'center' });
+  text(`${G.score[0]}`, W / 2 - 22, 254, { size: 24, font: F_DISP, color: C.p1, align: 'right' });
+  text(':', W / 2, 252, { size: 20, font: F_DISP, color: C.muted, align: 'center' });
+  text(`${G.score[1]}`, W / 2 + 22, 254, { size: 24, font: F_DISP, color: C.p2 });
+  choices(290, ['再来一场', '回封面'], G.choice, PCOL[w]);
+}
+function toMenu() { G.game = null; go('menu'); menuSelect(G.menu === 2 ? 0 : G.menu); }
+const PAUSE_ITEMS = ['继续', '回到封面'];
+function drawPause() {
+  ctx.fillStyle = C.wall; ctx.fillRect(0, 0, W, H);  // 不透明：暂停时不能露出私密画面
+  text('暂停', W / 2, 118, { size: 20, weight: 700, color: C.card, align: 'center' });
+  PAUSE_ITEMS.forEach((s, i) => {
+    const y = 156 + i * 30, sel = G.pause.cursor === i;
+    if (sel) { rr(64, y - 11, W - 128, 24, 12); ctx.fillStyle = C.brass; ctx.fill(); }
+    text(s, W / 2, y + 1, { size: 14, weight: 700, color: sel ? C.ink : C.card, align: 'center' });
+  });
+  hint('↑↓ 选择 · OK 确认');
+}
+function pauseKey(k) {
+  if (k === 'up' || k === 'down') { G.pause.cursor = 1 - G.pause.cursor; SFX.move(); return; }
+  if (k !== 'ok') return;
+  SFX.ok();
+  const c = G.pause.cursor; G.pause = null;
+  if (c === 1) { log('回到封面'); toMenu(); }
+}
+
+// ---------- 输入：UP/DOWN 按下生效并可连发，OK 松开生效，长按 2 秒暂停 ----------
+function act(k) {
+  if (G.pause) { pauseKey(k); return; }
+  switch (G.scene) {
+    case 'menu': menuKey(k); break;
+    case 'handoff': if (k === 'ok') { SFX.ok(); beginTurn(G.handoffTo); } break;
+    case 'bjTurn': bjKey(k); break;
+    case 'diceTurn': diceKey(k); break;
+    case 'bjReveal': case 'diceReveal':
+      if (!G.result) break;
+      if (k === 'ok') { SFX.ok(); afterResult(); } else { G.choice = 1 - G.choice; SFX.move(); }
+      break;
+    case 'end':
+      if (k !== 'ok') { G.choice = 1 - G.choice; SFX.move(); break; }
+      SFX.ok();
+      if (G.choice === 0) startMatch(G.game); else toMenu();
+      break;
+    default: break;
+  }
+}
+const held = { up: null, down: null, ok: null }, nextRep = { up: 0, down: 0 };
+let okLong = false;
+const canPause = () => !G.pause && !['menu', 'end'].includes(G.scene);
+function keyDown(k) {
+  if (held[k] !== null) return;
+  held[k] = clock;
+  KEYBTN[k].classList.add('down');
+  if (k === 'ok') { okLong = false; return; }
+  nextRep[k] = clock + 0.35;
+  act(k);
+}
+function keyUp(k) {
+  if (held[k] === null) return;
+  held[k] = null;
+  KEYBTN[k].classList.remove('down');
+  if (k === 'ok' && !okLong) act('ok');
+}
+function inputUpdate() {
+  for (const k of ['up', 'down']) if (held[k] !== null && clock >= nextRep[k]) { nextRep[k] = clock + 0.09; act(k); }
+  if (held.ok !== null && !okLong && canPause() && clock - held.ok >= 2) { okLong = true; G.pause = { cursor: 0 }; SFX.ok(); }
+}
+function drawHoldRing() {
+  if (held.ok === null || okLong || !canPause()) return;
+  const h = clock - held.ok; if (h < 0.4) return;
+  const f = clamp01((h - 0.4) / 1.6);
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.15)'; circle(W - 18, H - 18, 9); ctx.stroke();
+  ctx.strokeStyle = C.brass; ctx.beginPath(); ctx.arc(W - 18, H - 18, 9, -Math.PI / 2, -Math.PI / 2 + f * Math.PI * 2); ctx.stroke();
+}
+const KEYMAP = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', Enter: 'ok', Space: 'ok', KeyK: 'ok' };
+const KEYBTN = { up: $('kUp'), down: $('kDown'), ok: $('kOk') };
+window.addEventListener('keydown', e => {
+  const k = KEYMAP[e.code];
+  if (!k || e.target.closest('input, select, textarea')) return;
+  e.preventDefault(); if (!e.repeat) keyDown(k);
+});
+window.addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) { e.preventDefault(); keyUp(k); } });
+window.addEventListener('blur', () => Object.keys(held).forEach(keyUp));
+for (const [k, el] of Object.entries(KEYBTN)) {
+  el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture(e.pointerId); keyDown(k); });
+  el.addEventListener('pointerup', () => keyUp(k));
+  el.addEventListener('pointercancel', () => keyUp(k));
+  el.addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'Space') e.stopPropagation(); });
+}
+
+// ---------- 主循环 ----------
+function update(dt) {
+  clock += dt; G.t += dt;
+  naboUpdate(dt); inputUpdate();
+  if (G.pause) return;
+  if (G.scene === 'bjDeal') bjDealUpdate();
+  else if (G.scene === 'bjReveal') bjRevealUpdate();
+  else if (G.scene === 'diceRoll') diceRollUpdate();
+  else if (G.scene === 'diceReveal') diceRevealUpdate();
+}
+function draw() {
+  switch (G.scene) {
+    case 'menu': drawMenu(); break;
+    case 'handoff': drawHandoff(); break;
+    case 'bjDeal': case 'bjReveal': drawBjPublic(); break;
+    case 'bjTurn': drawBjTurn(); break;
+    case 'diceRoll': case 'diceReveal': drawDicePublic(); break;
+    case 'diceTurn': drawDiceTurn(); break;
+    case 'end': drawEnd(); break;
+  }
+  if (G.pause) drawPause();
+  drawHoldRing();
+}
+let last = performance.now(), panelT = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  update(dt); draw();
+  if ((panelT += dt) > 0.2) { panelT = 0; renderLive(); }
+  requestAnimationFrame(frame);
+}
+
+// ---------- 面板 ----------
+const SLIDERS = [['tTarget', 'oTarget', 'target'], ['tDice', 'oDice', 'dicePer'], ['tOpen', 'oOpen', 'minOpen']];
+function syncPanel() {
+  for (const [i, o, k] of SLIDERS) { $(i).value = Cfg[k]; $(o).textContent = Cfg[k]; }
+  $('oWild').checked = Cfg.wild; $('oSound').checked = Cfg.sound; $('oGod').checked = Cfg.god;
+  $('god').hidden = !Cfg.god; $('seed').value = seed;
+}
+for (const [i, , k] of SLIDERS) $(i).addEventListener('input', e => { Cfg[k] = Number(e.target.value); save('table.settings', Cfg); syncPanel(); });
+for (const [id, k] of [['oWild', 'wild'], ['oSound', 'sound'], ['oGod', 'god']])
+  $(id).addEventListener('change', e => { Cfg[k] = e.target.checked; save('table.settings', Cfg); syncPanel(); });
+$('reseed').addEventListener('click', () => {
+  const v = parseInt($('seed').value, 10);
+  if (Number.isFinite(v)) seed = v >>> 0;
+  rngState = seed; G.pause = null; log(`种子 ${seed}`); toMenu(); syncPanel();
+});
+const SCENE_NAME = { menu: '封面', handoff: '交接屏', bjDeal: '21 点 · 发牌', bjTurn: '21 点 · 私密回合', bjReveal: '21 点 · 开牌',
+  diceRoll: '大话骰 · 摇盅', diceTurn: '大话骰 · 私密回合', diceReveal: '大话骰 · 开盅', end: '整场结束' };
+let liveCache = '';
+function renderLive() {
+  const rows = [['画面', SCENE_NAME[G.scene] + (G.pause ? '（暂停）' : '')], ['NABO 动作', nabo.anim + (nabo.mirror ? '（镜像）' : '')]];
+  if (G.game) rows.push(['比分', `${G.score[0]} : ${G.score[1]} · 第 ${G.round} 局`]);
+  if (G.game === 'bj' && G.bj) rows.push(['牌堆剩余', `${G.bj.deck.length} 张`]);
+  if (G.game === 'dice' && G.dc) rows.push(['叫数次数', String(G.dc.bids.length)]);
+  rows.push(['种子', String(seed)]);
+  let god = '';
+  if (Cfg.god && G.game === 'bj' && G.bj) god = G.bj.hands.map((h, p) => `${PNAME[p]}：${h.map(c => SUITS[c.s] + RANKS[c.r]).join(' ')}  = ${handTotal(h).total}`).join('\n');
+  if (Cfg.god && G.game === 'dice' && G.dc) god = G.dc.dice.map((d, p) => `${PNAME[p]}：${d.join(' ')}`).join('\n');
+  const html = rows.map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('');
+  if (html + god !== liveCache) { liveCache = html + god; $('live').innerHTML = html; $('god').textContent = god || '（对局开始后显示）'; }
+}
+function renderLog() { $('log').innerHTML = logItems.map(s => `<li>${s}</li>`).join(''); }
+
+// 调试钩子：TABLE.press('ok')、TABLE.hold('ok', 2100)、TABLE.state()
+window.TABLE = {
+  press(k) { keyDown(k); keyUp(k); },
+  hold(k, ms) { keyDown(k); const end = held[k] + ms / 1000; const tick = () => { if (clock >= end) keyUp(k); else requestAnimationFrame(tick); }; tick(); },
+  state: () => JSON.parse(JSON.stringify({ scene: G.scene, score: G.score, round: G.round, turn: G.turn, pause: G.pause, result: G.result, bj: G.bj && { hands: G.bj.hands, stood: G.bj.stood, phase: G.bj.phase }, dc: G.dc && { dice: G.dc.dice, bids: G.dc.bids, step: G.dc.step, q: G.dc.qList[G.dc.qi], f: G.dc.fList[G.dc.fi] } })),
+  get G() { return G; },
+  // 页面在后台时 rAF 不跑，用它手动快进（秒）
+  advance(sec) { for (let i = 0; i < Math.round(sec * 60); i++) update(1 / 60); draw(); },
+};
+
+syncPanel(); menuSelect(0);
+Promise.allSettled([`700 12px ${F_BODY}`, `12px ${F_MONO}`, `12px ${F_DISP}`].map(f => document.fonts.load(f))).finally(() => requestAnimationFrame(frame));
+</script>
