@@ -1,0 +1,42 @@
+name: Firmware build
+# Builds the frozen release configuration with ESP-IDF 6.0.2 and uploads the
+# four flash images plus a merged 0x0 image. A build is not device validation.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['fix/**', 'release/**']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    container: espressif/idf:v6.0.2
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Build
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          python tools/build.py
+      - name: Collect images
+        shell: bash
+        run: |
+          . "$IDF_PATH/export.sh"
+          B=xiaozhi-esp32/build-release
+          mkdir -p out
+          cp "$B/bootloader/bootloader.bin" out/bootloader.bin
+          cp "$B/partition_table/partition-table.bin" out/partition-table.bin
+          cp "$B/xiaozhi.bin" out/xiaozhi.bin
+          cp "$B/generated_assets.bin" out/assets.bin
+          python -m esptool --chip esp32c3 merge-bin -o out/full-0x0.bin --flash-size 8MB \
+            0x0 out/bootloader.bin 0x8000 out/partition-table.bin \
+            0x10000 out/xiaozhi.bin 0x400000 out/assets.bin
+          cp "$B/xiaozhi.elf" out/xiaozhi.elf
+          (cd out && sha256sum *.bin > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          ls -l out
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: firmware-${{ github.sha }}
+          path: out/
+          retention-days: 30

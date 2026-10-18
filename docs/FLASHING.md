@@ -14,11 +14,11 @@
 | assets.bin | `0x400000` | `0x300000` |
 | 原 files（不附带、不覆盖） | `0x700000` | `0x100000` |
 
-Release ZIP 是独立镜像集合，不是可直接写到 `0x0` 的单个文件。不要使用 `erase-flash`，不要把已有设备的 8 MB 整片备份传播给别人。
+Release ZIP 是独立镜像集合，不是可直接写到 `0x0` 的单个文件。另附的 `…-full.bin` 是给网页刷机工具用的 `0x0` 完整固件，它会把 NVS 写成空白（清空配网、激活和成绩），只适合新装或愿意重新激活的工牌。不要使用 `erase-flash`，不要把已有设备的 8 MB 整片备份传播给别人。
 
 ## 准备
 
-下载并解压 `ai-passport-nabo-xiaozhi-dive-v1.3.0.zip`。在解压目录执行：
+下载并解压 `ai-passport-nabo-xiaozhi-dive-v1.3.1.zip`。在解压目录执行：
 
 ```powershell
 python -m pip install -r requirements-flash.txt

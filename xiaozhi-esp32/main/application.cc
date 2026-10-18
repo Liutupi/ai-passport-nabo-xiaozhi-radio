@@ -550,6 +550,22 @@ void Application::CheckNewVersion() {
             ShowActivationCode(ota_->GetActivationCode(), ota_->GetActivationMessage());
         }
 
+#if CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO
+        // The activation poll is another HTTPS handshake. On the C3 it cannot
+        // coexist with the Opus/I2S tasks that just spoke the code (heap ~28 KB
+        // aborted in Activate on a freshly erased NVS). Let the code finish,
+        // then free the audio stacks exactly as InitializeProtocol does.
+        for (int i = 0; i < 150 && !audio_service_.IsIdle(); ++i) {
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+        audio_service_.Stop();
+        bool audio_stopped = audio_service_.WaitStopped(2000);
+        if (!audio_stopped) {
+            ESP_LOGE(TAG, "Cannot join audio tasks before activation");
+        }
+        ESP_LOGI(TAG, "Activation handshake heap=%u", (unsigned)esp_get_free_heap_size());
+#endif
+
         // This will block the loop until the activation is done or timeout
         for (int i = 0; i < 10; ++i) {
             ESP_LOGI(TAG, "Activating... %d/%d", i + 1, 10);
@@ -565,6 +581,13 @@ void Application::CheckNewVersion() {
                 break;
             }
         }
+#if CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO
+        // The next version check may show (and speak) the code again; an idle
+        // service costs no Opus decoder. InitializeProtocol stops it again.
+        if (audio_stopped) {
+            audio_service_.Start();
+        }
+#endif
     }
 }
 
