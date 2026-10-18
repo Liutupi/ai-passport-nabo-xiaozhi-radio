@@ -9,9 +9,10 @@ static nt_t g;
 
 nt_t *host_model(void) { return &g; }
 
-void host_init(unsigned seed, int target, int per, int min_open, int wild, float cut_s, float slam_s)
+void host_init(unsigned seed, int players, int target, int per, int min_open, int wild, float cut_s, float slam_s)
 {
     nt_config_t cfg = {0};
+    cfg.players = (uint8_t)players;
     cfg.target = (uint8_t)target;
     cfg.dice_per = (uint8_t)per;
     cfg.min_open = (uint8_t)min_open;
@@ -43,29 +44,33 @@ static int ints(char *out, int len, int cap, const uint8_t *v, int n)
 int host_snap(char *out, int cap)
 {
     int len = 0;
-    int w = !g.result.has ? -2 : g.result.winner;
-    PUT("{\"sc\":%d,\"g\":%d,\"score\":[%d,%d],\"round\":%d,\"starter\":%d,\"turn\":%d,\"ho\":%d,\"pause\":%d,"
-        "\"choice\":%d,\"menu\":%d,\"target\":%d,\"w\":%d",
-        g.scene, g.game, g.score[0], g.score[1], g.round, g.starter, g.turn, g.handoff_to,
-        g.paused ? g.pause_cursor : -1, g.choice, g.menu, g.cfg.target, w);
+    int w = !g.result.has ? -2 : g.result.winners, lo = !g.result.has ? -2 : g.result.loser;
+    PUT("{\"sc\":%d,\"g\":%d,\"np\":%d,\"score\":", g.scene, g.game, g.np);
+    len = ints(out, len, cap, g.score, g.np);
+    PUT(",\"round\":%d,\"starter\":%d,\"turn\":%d,\"ho\":%d,\"pause\":%d,"
+        "\"choice\":%d,\"menu\":%d,\"target\":%d,\"players\":%d,\"w\":%d,\"lo\":%d",
+        g.round, g.starter, g.turn, g.handoff_to, g.paused ? g.pause_cursor : -1, g.choice, g.menu, g.cfg.target,
+        g.cfg.players, w, lo);
     if (g.game == NT_GAME_BJ) {
         PUT(",\"bj\":{\"h\":[");
-        for (int p = 0; p < 2; p++) {
+        for (int p = 0; p < g.np; p++) {
             PUT("%s[", p ? "," : "");
             for (int i = 0; i < g.bj.hand_n[p]; i++) PUT("%s%d", i ? "," : "", g.bj.hand[p][i].r * 10 + g.bj.hand[p][i].s);
             PUT("]");
         }
-        PUT("],\"st\":[%d,%d],\"ph\":%d,\"cu\":%d,\"d\":%d,\"n\":%d}", g.bj.stood[0], g.bj.stood[1], g.bj.phase,
-            g.bj.cursor, g.bj.dealt, g.bj.deck_n);
+        PUT("],\"st\":[");
+        for (int p = 0; p < g.np; p++) PUT("%s%d", p ? "," : "", g.bj.stood[p]);
+        PUT("],\"ph\":%d,\"cu\":%d,\"d\":%d,\"n\":%d}", g.bj.phase, g.bj.cursor, g.bj.dealt, g.bj.deck_n);
     }
     if (g.game == NT_GAME_DICE) {
         const nt_dice_t *d = &g.dc;
         PUT(",\"dc\":{\"d\":[");
-        len = ints(out, len, cap, d->dice[0], d->per);
-        PUT(",");
-        len = ints(out, len, cap, d->dice[1], d->per);
+        for (int p = 0; p < g.np; p++) {
+            if (p) PUT(",");
+            len = ints(out, len, cap, d->dice[p], d->per);
+        }
         PUT("],\"y\":[");
-        for (int p = 0; p < 2; p++) {
+        for (int p = 0; p < g.np; p++) {
             PUT("%s[", p ? "," : "");
             for (int i = 0; i < d->per; i++) PUT("%s%.0f", i ? "," : "", (double)d->yaw[p][i] * 1000);
             PUT("]");
@@ -92,3 +97,21 @@ void host_add_bid(int p, int q, int f)
 }
 
 int host_count(int face) { return nt_count_face(&g, face); }
+
+// 21 points: give player p the ranks in order (suits all spades), then reveal and score.
+void host_set_hand(int p, const int *ranks, int n)
+{
+    for (int i = 0; i < n; i++) g.bj.hand[p][i] = (nt_card_t){(uint8_t)ranks[i], 0, -10};
+    g.bj.hand_n[p] = (uint8_t)n;
+    g.bj.stood[p] = true;
+}
+
+void host_bj_reveal(void)
+{
+    memset(&g.result, 0, sizeof(g.result));
+    nt_go(&g, NT_BJ_REVEAL);
+    for (int i = 0; i < 600 && !g.result.has; i++) nt_update(&g, 1.0 / 60);
+}
+
+void host_set_score(int p, int v) { g.score[p] = (uint8_t)v; }
+int host_match_over(void) { return nt_match_over(&g); }

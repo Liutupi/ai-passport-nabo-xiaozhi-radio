@@ -34,7 +34,7 @@ subprocess.run([CC, '-std=gnu11', '-O2', '-shared', SHARED_EXPORT, '-Wall', '-We
                 '-Wno-missing-field-initializers', '-I', str(HOST), '-I', str(BOARD)] + [str(s) for s in SOURCES]
                + ['-lm', '-o', str(library)], check=True)
 lib = ctypes.CDLL(str(library))
-lib.host_init.argtypes = [ctypes.c_uint, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+lib.host_init.argtypes = [ctypes.c_uint, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
                           ctypes.c_float, ctypes.c_float]
 lib.host_key.argtypes = [ctypes.c_int]
 lib.host_frames.argtypes = [ctypes.c_int]
@@ -53,7 +53,8 @@ def snap():
 
 
 def start(cfg, seed):
-    lib.host_init(seed, cfg['target'], cfg['dicePer'], cfg['minOpen'], int(cfg['wild']), CUT_S, SLAM_S)
+    lib.host_init(seed, cfg.get('players', 2), cfg['target'], cfg['dicePer'], cfg['minOpen'], int(cfg['wild']),
+                  CUT_S, SLAM_S)
 
 
 def step(s):
@@ -86,7 +87,9 @@ class Replay(unittest.TestCase):
 
     def test_traces(self):
         names = sorted(p.name for p in (HOST / 'golden').glob('t*.json'))
-        self.assertGreaterEqual(len(names), 6)
+        self.assertGreaterEqual(len(names), 10)
+        players = {json.loads((HOST / 'golden' / n).read_text())['cfg']['players'] for n in names}
+        self.assertEqual(players, {2, 3, 4})
         for name in names:
             with self.subTest(trace=name):
                 self.replay(name)
@@ -154,6 +157,129 @@ class Rules(unittest.TestCase):
         self.assertEqual(lib.host_count(2), 2)
         self.assertEqual(lib.host_count(1), 3)
 
+
+
+def start_game(players, game, **cfg):
+    """Cover -> pick the player count -> start 21 points (game 0) or liar's dice (game 1)."""
+    c = {'target': 3, 'dicePer': 5, 'minOpen': 2, 'wild': True, 'players': players}
+    c.update(cfg)
+    start(c, 42)
+    for _ in range(game):
+        lib.host_key(KEYS['down'])
+    lib.host_key(KEYS['ok'])
+
+
+def bj_round(hands):
+    ints = ctypes.c_int * 12
+    for p, ranks in enumerate(hands):
+        lib.host_set_hand(p, ints(*ranks), len(ranks))
+    lib.host_bj_reveal()
+    return snap()
+
+
+class MultiPlayer(unittest.TestCase):
+    def test_player_count_cycles_and_asks_to_persist(self):
+        start({'target': 3, 'dicePer': 5, 'minOpen': 2, 'wild': True}, 1)
+        lib.host_key(KEYS['down'])
+        lib.host_key(KEYS['down'])                 # the player-count item
+        lib.host_events()
+        seen = []
+        for _ in range(3):
+            lib.host_key(KEYS['ok'])
+            seen.append(snap()['players'])
+            self.assertTrue(lib.host_events() & EV_SETTINGS)
+        self.assertEqual(seen, [3, 4, 2])
+
+    def test_deal_goes_round_from_the_starter(self):
+        start_game(4, 0)
+        lib.host_frames(600)
+        s = snap()
+        self.assertEqual(s['np'], 4)
+        self.assertEqual([len(h) for h in s['bj']['h']], [2, 2, 2, 2])
+        self.assertEqual(s['ho'], 0)                    # round 1: player 1 starts
+
+    def test_turns_pass_to_the_next_player_still_drawing(self):
+        start_game(3, 0)
+        lib.host_frames(600)
+        lib.host_key(KEYS['ok'])                        # player 1 takes the badge
+        lib.host_key(KEYS['down'])
+        lib.host_key(KEYS['ok'])                        # stands
+        self.assertEqual(snap()['ho'], 1)
+        lib.host_key(KEYS['ok'])
+        lib.host_key(KEYS['down'])
+        lib.host_key(KEYS['ok'])                        # player 2 stands
+        self.assertEqual(snap()['ho'], 2)
+        lib.host_key(KEYS['ok'])
+        lib.host_key(KEYS['ok'])                        # player 3 hits ...
+        lib.host_key(KEYS['ok'])                        # ... and, alone now, keeps the badge
+        s = snap()
+        self.assertEqual((s['sc'], s['turn']), (3, 2))
+
+    def test_tied_highest_totals_all_score(self):
+        start_game(3, 0)
+        s = bj_round([[10, 10], [7, 13, 3], [10, 8]])   # 20, 20, 18
+        self.assertEqual(s['w'], 0b011)
+        self.assertEqual(s['score'], [1, 1, 0])
+
+    def test_everyone_on_the_same_total_or_bust_is_a_tie(self):
+        start_game(2, 0)
+        s = bj_round([[10, 9], [9, 10]])                # two players, 19 each: no score, as before
+        self.assertEqual((s['w'], s['score']), (0, [0, 0]))
+        start_game(4, 0)
+        s = bj_round([[10, 10, 5]] * 4)                 # all bust
+        self.assertEqual((s['w'], s['score']), (0, [0, 0, 0, 0]))
+
+    def test_a_shared_lead_at_the_target_plays_on(self):
+        start_game(3, 0)
+        lib.host_set_score(0, 2)
+        lib.host_set_score(1, 2)
+        s = bj_round([[10, 10], [10, 10], [10, 5]])
+        self.assertEqual(s['score'], [3, 3, 0])
+        self.assertFalse(lib.host_match_over())         # 3 : 3 is not decided yet
+        s = bj_round([[10, 10], [10, 8], [10, 5]])
+        self.assertTrue(lib.host_match_over())
+
+    def test_liars_dice_penalises_whoever_was_wrong(self):
+        start_game(3, 1)
+        lib.host_frames(200)
+        lib.host_key(KEYS['ok'])                        # player 1 takes the badge
+        s = snap()['dc']
+        self.assertEqual(s['q'][0], 3)                  # three players: the opening bid is at least 3
+        self.assertEqual(s['q'][-1], 15)                # up to every die on the table
+        lib.host_key(KEYS['ok'])
+        lib.host_key(KEYS['ok'])                        # bid 3 of the lowest face
+        self.assertEqual(snap()['ho'], 1)
+        lib.host_key(KEYS['ok'])                        # player 2 ...
+        lib.host_key(KEYS['down'])
+        lib.host_key(KEYS['ok'])                        # ... opens
+        lib.host_frames(120)
+        s = snap()
+        q, f = s['dc']['b'][-1][1:]
+        held = lib.host_count(f) >= q
+        loser = 1 if held else 0
+        self.assertEqual(s['lo'], loser)
+        self.assertEqual(s['score'], [int(loser == 0), int(loser == 1), 0])
+        lib.host_key(KEYS['ok'])                        # next round: the loser calls first
+        lib.host_frames(200)
+        self.assertEqual(snap()['ho'], loser)
+
+    def test_liars_dice_ends_at_the_penalty_limit(self):
+        start_game(4, 1)
+        lib.host_set_score(0, 2)
+        lib.host_set_score(1, 2)                        # whoever loses this open reaches 3
+        lib.host_frames(200)
+        lib.host_key(KEYS['ok'])
+        lib.host_key(KEYS['ok'])
+        lib.host_key(KEYS['ok'])                        # player 1 bids
+        lib.host_key(KEYS['ok'])
+        lib.host_key(KEYS['down'])
+        lib.host_key(KEYS['ok'])                        # player 2 opens
+        lib.host_frames(120)
+        s = snap()
+        self.assertEqual(max(s['score']), 3)
+        self.assertTrue(lib.host_match_over())
+        lib.host_key(KEYS['ok'])
+        self.assertEqual(snap()['sc'], 8)               # the end screen
 
 if __name__ == '__main__':
     unittest.main()

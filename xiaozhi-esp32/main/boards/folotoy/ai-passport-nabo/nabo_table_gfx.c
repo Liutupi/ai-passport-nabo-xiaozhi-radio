@@ -12,7 +12,7 @@ static uint32_t mix(uint32_t h, uint32_t v)
 
 static ntg_op_t *add(ntg_t *g, int kind, int x0, int y0, int x1, int y1)
 {
-    if (g->n >= NTG_MAX_OPS) return NULL;
+    if (g->n >= NTG_MAX_OPS) { g->overflow = true; return NULL; }
     ntg_op_t *op = &g->ops[g->n++];
     memset(op, 0, sizeof(*op));
     op->kind = (uint8_t)kind;
@@ -48,6 +48,7 @@ void ntg_begin(ntg_t *g, int scene_id)
     g->glyphs.used = 0;
     g->dice_n = 0;
     g->card_n = 0;
+    g->overflow = false;
     g->scene_id = scene_id;
 }
 
@@ -77,7 +78,7 @@ bool ntg_text(ntg_t *g, const lv_font_t *font, const char *utf8, int x, int y, n
 {
     if (!font || !utf8 || !*utf8) return true;
     nt_text_t t;
-    if (!nt_text_layout(&g->glyphs, &t, font, utf8, x, y, align)) return false;
+    if (!nt_text_layout(&g->glyphs, &t, font, utf8, x, y, align)) { g->overflow = true; return false; }
     ntg_op_t *op = add(g, NTG_TEXT, t.x0, t.y0, t.x1, t.y1);
     if (!op) return false;
     op->u.text.t = t;
@@ -92,7 +93,7 @@ static const char *const RANK_STR[14] = {"", "A", "2", "3", "4", "5", "6", "7", 
 
 bool ntg_card(ntg_t *g, int x, int y, int w, int h, int rank, int suit, bool face, int squash)
 {
-    if (g->card_n >= NTG_MAX_CARDS) return false;
+    if (g->card_n >= NTG_MAX_CARDS) { g->overflow = true; return false; }
     int pad = w / 8 + 2;   // soft shadow below and to the right
     ntg_op_t *op = add(g, NTG_CARD, x - 1, y - 1, x + w + pad, y + h + pad);
     if (!op) return false;
@@ -114,7 +115,7 @@ bool ntg_card(ntg_t *g, int x, int y, int w, int h, int rank, int suit, bool fac
 
 bool ntg_die(ntg_t *g, int value, int cx, int cy, int half, int yaw_deg, bool dim)
 {
-    if (g->dice_n >= NTG_MAX_DICE) return false;
+    if (g->dice_n >= NTG_MAX_DICE) { g->overflow = true; return false; }
     nabo_dice_die_t *d = &g->dice[g->dice_n];
     // 58 degrees: steeper than the dice app's 47 so the top face reads at a glance.
     uint16_t yaw = (uint16_t)(((yaw_deg % 360) + 360) % 360 * 65536 / 360);

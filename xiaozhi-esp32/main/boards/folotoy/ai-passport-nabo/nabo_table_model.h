@@ -1,6 +1,6 @@
 #pragma once
-// NABO TABLE rules: cover menu, hand-off screens, 21 points and liar's dice for two players
-// sharing one badge. Pure logic, a port of nabo-table/prototype/index.html: the same seed and
+// NABO TABLE rules: cover menu, hand-off screens, 21 points and liar's dice for two to four
+// players passing one badge around. Pure logic, a port of nabo-table/prototype/index.html: the same seed and
 // the same key presses give the same deals, rolls and results. No display, audio or RTOS here.
 #include <stdbool.h>
 #include <stdint.h>
@@ -9,10 +9,12 @@
 extern "C" {
 #endif
 
+#define NT_MIN_PLAYERS 2
+#define NT_MAX_PLAYERS 4
 #define NT_MAX_HAND 12   // 4 aces, 4 twos, 3 threes reach 21; one more card busts
 #define NT_MAX_DICE 6
-#define NT_MAX_BIDS 80   // bids strictly increase over 12 quantities x 6 faces
-#define NT_MAX_QTY 13    // "open" + quantities up to 2 x 6 dice
+#define NT_MAX_BIDS 160  // bids strictly increase over 24 quantities x 6 faces
+#define NT_MAX_QTY 25    // "open" + quantities up to 4 x 6 dice
 
 typedef enum { NT_KEY_UP, NT_KEY_DOWN, NT_KEY_OK, NT_KEY_OK_LONG } nt_key_t;
 
@@ -21,7 +23,7 @@ typedef enum {
 } nt_scene_t;
 
 typedef enum { NT_GAME_NONE, NT_GAME_BJ, NT_GAME_DICE } nt_game_t;
-typedef enum { NT_MENU_BJ, NT_MENU_DICE, NT_MENU_TARGET, NT_MENU_COUNT } nt_menu_item_t;
+typedef enum { NT_MENU_BJ, NT_MENU_DICE, NT_MENU_PLAYERS, NT_MENU_TARGET, NT_MENU_COUNT } nt_menu_item_t;
 
 // NABO's dealer animations. The renderer picks the sprite (e.g. SHUFFLE is the card spread on
 // the cover and the cut at the start of a round; POINT with mirror set means point right).
@@ -43,13 +45,14 @@ enum {
     NT_EV_OPEN = 1 << 8,
     NT_EV_LIFT = 1 << 9,      // cups lifted at the reveal
     NT_EV_WIN = 1 << 10,
-    NT_EV_SETTINGS = 1 << 11, // the target score changed: persist it
+    NT_EV_SETTINGS = 1 << 11, // the player count or the target changed: persist them
 };
 
 typedef struct {
-    uint8_t target;     // rounds needed to win the match: 3, 5 or 7
+    uint8_t target;     // 21 points: rounds needed to win; liar's dice: penalties that lose. 3, 5 or 7
+    uint8_t players;    // 2..4, chosen on the cover
     uint8_t dice_per;   // dice per player, 3..6
-    uint8_t min_open;   // smallest quantity a bid may use
+    uint8_t min_open;   // smallest quantity a bid may use (raised to the player count)
     bool wild;          // ones count as any face until someone bids ones ("zhai")
     float anim_s[NT_ANIM_COUNT];  // one-shot lengths in seconds; 0 = built-in default
 } nt_config_t;
@@ -64,17 +67,17 @@ typedef enum { NT_STEP_QTY, NT_STEP_FACE } nt_bid_step_t;
 typedef struct {
     uint8_t deck[52][2];
     uint8_t deck_n;
-    nt_card_t hand[2][NT_MAX_HAND];
-    uint8_t hand_n[2];
-    bool stood[2];
+    nt_card_t hand[NT_MAX_PLAYERS][NT_MAX_HAND];
+    uint8_t hand_n[NT_MAX_PLAYERS];
+    bool stood[NT_MAX_PLAYERS];
     nt_bj_phase_t phase;
     uint8_t cursor;     // 0 = hit, 1 = stand
     uint8_t dealt;
 } nt_bj_t;
 
 typedef struct {
-    uint8_t dice[2][NT_MAX_DICE];
-    float yaw[2][NT_MAX_DICE];   // display angle of each die, degrees
+    uint8_t dice[NT_MAX_PLAYERS][NT_MAX_DICE];
+    float yaw[NT_MAX_PLAYERS][NT_MAX_DICE];   // display angle of each die, degrees
     uint8_t per, min_open;
     bool wild;
     nt_bid_t bids[NT_MAX_BIDS];
@@ -89,9 +92,10 @@ typedef struct {
 
 typedef struct {
     bool has;
-    int8_t winner;               // -1 = tie
-    // 21 points: both totals; liar's dice: the counted faces against the last bid.
-    nt_total_t bj[2];
+    uint8_t winners;             // bit per player; 0 = tie, nobody scores
+    int8_t loser;                // liar's dice: who takes the penalty point; -1 in 21 points
+    // 21 points: every total; liar's dice: the counted faces against the last bid.
+    nt_total_t bj[NT_MAX_PLAYERS];
     uint8_t actual, bid_q, bid_f;
     bool bid_held;
 } nt_result_t;
@@ -103,7 +107,8 @@ typedef struct {
     nt_scene_t scene;
     nt_game_t game;
     uint8_t menu;
-    uint8_t score[2];
+    uint8_t np;                  // players in this match (cfg.players when it started)
+    uint8_t score[NT_MAX_PLAYERS];   // 21 points: rounds won; liar's dice: penalty points
     uint8_t round, starter, loser, turn, handoff_to;
     bool paused;
     uint8_t pause_cursor;        // 0 = continue, 1 = back to cover
@@ -124,8 +129,16 @@ void nt_update(nt_t *g, double dt);
 uint32_t nt_take_events(nt_t *g);
 
 nt_total_t nt_hand_total(const nt_card_t *hand, int n);
+bool nt_bj_can_hit(const nt_t *g, int p);   // not bust, and the deck still has a card
 bool nt_can_pause(const nt_t *g);
 bool nt_match_over(const nt_t *g);
+// The player the match is about: 21 points, the leader; liar's dice, the most penalised.
+int nt_match_focus(const nt_t *g);
+int nt_next_player(const nt_t *g, int p);
+// Seats: 2 players sit left and right; 3 or 4 sit in a 2 x 2 grid (the third alone, centred).
+// Odd players sit on the right, so NABO points right at them.
+static inline bool nt_seat_right(int p) { return p & 1; }
+int nt_popcount(unsigned v);
 const nt_bid_t *nt_last_bid(const nt_t *g);
 bool nt_zhai(const nt_t *g);
 int nt_count_face(const nt_t *g, int face);
@@ -145,7 +158,9 @@ double nt_rand(nt_t *g);
 void nt_go(nt_t *g, nt_scene_t scene);
 void nt_play(nt_t *g, nt_anim_t a, bool mirror);
 void nt_handoff(nt_t *g, int p);
-void nt_win_round(nt_t *g, int winner);
+// Scores the round: winners (bit per player) gain a round in 21 points; in liar's dice the
+// loser gains a penalty point. winners == 0 and loser < 0 is a tie.
+void nt_finish_round(nt_t *g, unsigned winners, int loser);
 
 #ifdef __cplusplus
 }

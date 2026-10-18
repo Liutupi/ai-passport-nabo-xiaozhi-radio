@@ -10,11 +10,21 @@
 #define NT_COL_RED ntg_rgb(210, 58, 58)
 #define NT_COL_P1 ntg_rgb(255, 138, 61)
 #define NT_COL_P2 ntg_rgb(61, 184, 255)
+#define NT_COL_P3 ntg_rgb(255, 111, 168)
+#define NT_COL_P4 ntg_rgb(142, 219, 90)
 #define NT_COL_WALL ntg_rgb(10, 26, 23)
 #define NT_PLAY_RIM 92
 
-extern const char *const NT_PNAME[2];
+extern const char *const NT_PNAME[NT_MAX_PLAYERS];
 uint16_t nt_pcol(int p);
+// Three or four players sit in a 2 x 2 grid of cells NT_CELL_W wide: left column x 8, right
+// column x 124, the third of three alone in the middle of the second row.
+#define NT_CELL_W 108
+int nt_cell_x(const nt_t *m, int p);
+
+typedef struct { const char *text; uint16_t color; } nt_seg_t;
+// One line of differently coloured pieces joined by " · ", vertical middle at y.
+void nt_seg_line(ntg_t *g, const nt_fonts_t *f, int x, int y, const nt_seg_t *segs, int n, nt_align_t align);
 
 // Text whose vertical middle sits at y (the prototype's textBaseline = 'middle').
 void nt_txt(ntg_t *g, const lv_font_t *font, const char *s, int x, int y, nt_align_t align, uint16_t color);
@@ -25,7 +35,7 @@ void nt_scores(ntg_t *g, const nt_t *m, const nt_fonts_t *f);
 void nt_chip(ntg_t *g, const nt_fonts_t *f, int p, const char *label);
 void nt_hint(ntg_t *g, const nt_fonts_t *f, const char *s);
 void nt_choices(ntg_t *g, const nt_fonts_t *f, int y, const char *a, const char *b, int cursor, uint16_t color);
-void nt_result_banner(ntg_t *g, const nt_t *m, const nt_fonts_t *f, const char *why);
+void nt_result_banner(ntg_t *g, const nt_t *m, const nt_fonts_t *f, const char *main, const char *why, uint16_t col);
 // "4 个 [die]" with a big number and a die of die_px, centred (align CENTER) or starting (LEFT)
 // at x, vertical middle at y. Sized to be read across the table. Returns the width used.
 int nt_bid_label(ntg_t *g, const nt_fonts_t *f, int x, int y, int q, int face, nt_align_t align, uint16_t color,

@@ -86,3 +86,6 @@ int host_draw(int check)
 void host_fb(uint16_t *out) { memcpy(out, inc->fb, sizeof(inc->fb)); }
 int host_ops(void) { return inc->g.n; }
 int host_glyphs(void) { return inc->g.glyphs.used; }
+int host_overflow(void) { return inc->g.overflow; }
+int host_dice(void) { return inc->g.dice_n; }
+int host_cards(void) { return inc->g.card_n; }

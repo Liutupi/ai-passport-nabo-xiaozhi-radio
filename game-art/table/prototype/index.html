@@ -15,6 +15,8 @@
   --brass: #c9a24a;
   --p1: #ff8a3d;
   --p2: #3db8ff;
+  --p3: #ff6fa8;
+  --p4: #8edb5a;
   --display: "Archivo Black", "Arial Black", sans-serif;
   --body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   --mono: "Space Mono", ui-monospace, Menlo, monospace;
@@ -72,7 +74,7 @@ button.text:hover { color: var(--fg); }
 #god { font-family: var(--mono); white-space: pre-wrap; }
 #log { margin: 0; padding-left: 1.4em; max-height: 220px; overflow-y: auto; font-size: 13px; color: var(--muted); }
 #log li:first-child { color: var(--fg); }
-.p1 { color: var(--p1); } .p2 { color: var(--p2); }
+.p1 { color: var(--p1); } .p2 { color: var(--p2); } .p3 { color: var(--p3); } .p4 { color: var(--p4); }
 @media (max-width: 560px) { :root { --cw: calc(100vw - 2 * max(16px, env(safe-area-inset-left, 0px)) - 82px); } }
 @media (prefers-reduced-motion: reduce) { .key { transition: none; } }
 </style>
@@ -106,6 +108,7 @@ button.text:hover { color: var(--fg); }
 
       <section>
         <h2>规则参数</h2>
+        <div class="slider"><label for="tPlayers">人数</label><input type="range" id="tPlayers" min="2" max="4" step="1"><output id="oPlayers"></output></div>
         <div class="slider"><label for="tTarget">抢几局</label><input type="range" id="tTarget" min="3" max="7" step="2"><output id="oTarget"></output></div>
         <div class="slider"><label for="tDice">每人骰子</label><input type="range" id="tDice" min="3" max="6" step="1"><output id="oDice"></output></div>
         <div class="slider"><label for="tOpen">起叫数量</label><input type="range" id="tOpen" min="1" max="4" step="1"><output id="oOpen"></output></div>
@@ -149,19 +152,22 @@ ctx.setTransform(2, 0, 0, 2, 0, 0);
 // 配色与 ART_BRIEF 第 8 节一致；vest/shirt/skin 只给占位 NABO 用
 const C = {
   felt: '#0E3B36', feltDark: '#082623', wall: '#0A1A17', rim: '#3A2418', brass: '#C9A24A',
-  p1: '#FF8A3D', p2: '#3DB8FF', card: '#F4F1E8', ink: '#14100E', red: '#D23A3A',
+  p1: '#FF8A3D', p2: '#3DB8FF', p3: '#FF6FA8', p4: '#8EDB5A', card: '#F4F1E8', ink: '#14100E', red: '#D23A3A',
   back: '#6E2638', muted: '#8FB3A8', vest: '#4B3560', shirt: '#EDE6D6', skin: '#F6E7CF',
 };
 const F_BODY = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
 const F_MONO = '"Space Mono",ui-monospace,Menlo,monospace';
 const F_DISP = '"Archivo Black","Arial Black",sans-serif';
-const PCOL = [C.p1, C.p2];
-const PNAME = ['玩家 1', '玩家 2'];
+const PCOL = [C.p1, C.p2, C.p3, C.p4];
+const PNAME = ['玩家 1', '玩家 2', '玩家 3', '玩家 4'];
+// 座位：两人左右对坐；三、四人 2 × 2（第三人单独一行居中）。单号在左、双号在右，NABO 朝右指 2、4 号
+const seatRight = p => p % 2 === 1;
+const popcount = v => { let n = 0; for (; v; v &= v - 1) n++; return n; };
 
 // ---------- 存储（只存本机偏好） ----------
 function load(k, d) { try { const v = localStorage.getItem(k); return v ? { ...d, ...JSON.parse(v) } : { ...d }; } catch { return { ...d }; } }
 function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* 无痕模式等 */ } }
-const SET_DEFAULT = { target: 3, dicePer: 5, minOpen: 2, wild: true, sound: true, god: false };
+const SET_DEFAULT = { players: 2, target: 3, dicePer: 5, minOpen: 2, wild: true, sound: true, god: false };
 const Cfg = load('table.settings', SET_DEFAULT);
 
 // ---------- 可复现随机数（mulberry32），固件移植时用同一算法对拍 ----------
@@ -397,10 +403,12 @@ function drawRim(rimY) {
   ctx.fillStyle = 'rgba(255,230,190,.18)'; ctx.fillRect(0, rimY - 4, W, 1);
   ctx.fillStyle = C.brass; ctx.fillRect(0, rimY + 5, W, 1);
 }
+// 顶部比分按座位排：左边一列的人在左上，右边一列的人在右上
+const SCORE_X = { 2: [10, W - 10], 3: [10, W - 10, 44], 4: [10, W - 10, 44, W - 44] };
 function drawScores() {
-  text(String(G.score[0]), 10, 16, { size: 18, font: F_DISP, color: C.p1 });
-  text(String(G.score[1]), W - 10, 16, { size: 18, font: F_DISP, color: C.p2, align: 'right' });
-  text(`抢 ${Cfg.target}`, W / 2, 10, { size: 9, color: C.muted, align: 'center' });
+  for (let p = 0; p < G.np; p++)
+    text(String(G.score[p]), SCORE_X[G.np][p], 16, { size: 18, font: F_DISP, color: PCOL[p], align: seatRight(p) ? 'right' : 'left' });
+  text(G.game === 'dice' ? `罚满 ${Cfg.target} 输` : `抢 ${Cfg.target}`, W / 2, 10, { size: 9, color: C.muted, align: 'center' });
 }
 function playerChip(p, label) {
   ctx.font = `700 11px ${F_BODY}`;
@@ -428,7 +436,7 @@ const PAUSE_TIP = '长按 OK 暂停';
 function hint(s) { text(s, W / 2, 310, { size: 10, color: C.muted, align: 'center' }); }
 
 // ---------- 游戏状态 ----------
-const G = { scene: 'menu', t: 0, menu: 0, game: null, score: [0, 0], round: 0, starter: 0, loser: 0, turn: 0, handoffTo: 0, pause: null, choice: 0, bj: null, dc: null, result: null };
+const G = { scene: 'menu', t: 0, menu: 0, game: null, np: 2, score: [0, 0], round: 0, starter: 0, loser: 0, turn: 0, handoffTo: 0, pause: null, choice: 0, bj: null, dc: null, result: null };
 let clock = 0;
 const logItems = [];
 function log(html) { logItems.unshift(html); if (logItems.length > 40) logItems.pop(); renderLog(); }
@@ -436,24 +444,25 @@ const pn = p => `<span class="p${p + 1}">${PNAME[p]}</span>`;
 function go(scene) { G.scene = scene; G.t = 0; G.sfxMark = 0; }
 
 function startMatch(game) {
-  G.game = game; G.score = [0, 0]; G.round = 0; G.loser = 0;
+  G.game = game; G.np = Cfg.players; G.score = Array(G.np).fill(0); G.round = 0; G.loser = 0;
   logItems.length = 0;
-  log(`开始 ${game === 'bj' ? '21 点' : '大话骰'}，抢 ${Cfg.target} 局`);
+  log(`开始 ${game === 'bj' ? '21 点' : '大话骰'}，${G.np} 人，${game === 'bj' ? `抢 ${Cfg.target} 局` : `罚满 ${Cfg.target} 输`}`);
   nextRound();
 }
 function nextRound() {
   G.round++; G.result = null;
   if (G.game === 'bj') {
-    G.starter = (G.round - 1) % 2;
+    G.starter = (G.round - 1) % G.np;
     const deck = [];
     for (let s = 0; s < 4; s++) for (let r = 1; r <= 13; r++) deck.push({ r, s });
-    G.bj = { deck: shuffle(deck), hands: [[], []], stood: [false, false], phase: 'choose', cursor: 0, dealt: 0 };
+    G.bj = { deck: shuffle(deck), hands: Array.from({ length: G.np }, () => []), stood: Array(G.np).fill(false), phase: 'choose', cursor: 0, dealt: 0 };
     go('bjDeal'); naboPlay('shuffle'); SFX.shuffle();
   } else {
     G.starter = G.round === 1 ? 0 : G.loser;
     const roll = () => Array.from({ length: Cfg.dicePer }, () => 1 + randInt(6));
     const yaws = () => Array.from({ length: Cfg.dicePer }, () => DICE3D.randomYaw(rand));
-    G.dc = { yaw: [yaws(), yaws()], dice: [roll(), roll()], per: Cfg.dicePer, minOpen: Cfg.minOpen, wild: Cfg.wild, bids: [], qList: [], qi: 0, fList: [], fi: 0, step: 'qty', caller: -1 };
+    const yaw = Array.from({ length: G.np }, yaws), dice = Array.from({ length: G.np }, roll);  // 先全部角度，再全部点数
+    G.dc = { yaw, dice, per: Cfg.dicePer, minOpen: Math.max(Cfg.minOpen, G.np), wild: Cfg.wild, bids: [], qList: [], qi: 0, fList: [], fi: 0, step: 'qty', caller: -1 };
     go('diceRoll'); naboPlay('shake'); SFX.rattle();
   }
   log(`第 ${G.round} 局，${pn(G.starter)} 先手`);
@@ -465,19 +474,31 @@ function beginTurn(p) {
   else { buildBidList(); go('diceTurn'); }
   naboPlay('idle');
 }
-function winRound(w, why) {
-  G.result = { winner: w, why }; G.choice = 0;
-  if (w === null) { naboPlay('shrug'); log(`平局：${why}`); return; }
-  G.score[w]++; G.loser = 1 - w;
-  naboPlay('point', { mirror: w === 1 });
-  SFX.win();
-  log(`${pn(w)} 赢下第 ${G.round} 局：${why}（${G.score[0]} : ${G.score[1]}）`);
+// winners：每人一位；21 点里赢家各加一局。loser ≥ 0 是大话骰：输的人罚一分、下局先叫
+function finishRound(winners, loser, main, why) {
+  G.result = { winners, loser, main, why }; G.choice = 0;
+  if (loser >= 0) {
+    G.score[loser]++; G.loser = loser;
+    naboPlay('point', { mirror: seatRight(loser) }); SFX.win();
+    log(`${pn(loser)} 罚一分：${why}（${G.score.join(' : ')}）`);
+    return;
+  }
+  if (!winners) { naboPlay('shrug'); log(`平局：${why}`); return; }
+  let first = -1;
+  for (let p = 0; p < G.np; p++) if (winners >> p & 1) { G.score[p]++; if (first < 0) first = p; }
+  naboPlay('point', { mirror: seatRight(first) }); SFX.win();
+  log(`${main}第 ${G.round} 局：${why}（${G.score.join(' : ')}）`);
 }
-function matchOver() { const w = G.result && G.result.winner; return w !== null && w !== undefined && G.score[w] >= Cfg.target; }
+const matchFocus = () => G.score.reduce((b, v, p) => (v > G.score[b] ? p : b), 0);
+// 21 点：有人单独到达目标才结束（并列领先就加赛）；大话骰：有人罚满就结束
+function matchOver() {
+  if (!G.result) return false;
+  const top = matchFocus(), shared = G.score.filter(v => v === G.score[top]).length;
+  return G.score[top] >= Cfg.target && (G.game === 'dice' || shared === 1);
+}
 function afterResult() {
-  const w = G.result.winner;
   if (G.choice === 1) { log('回到封面'); toMenu(); return; }
-  if (matchOver()) { G.choice = 0; go('end'); naboPlay('trophy'); log(`${pn(w)} 获胜 ${G.score[0]} : ${G.score[1]}`); }
+  if (matchOver()) { G.choice = 0; go('end'); naboPlay('trophy'); log(`整场结束 ${G.score.join(' : ')}`); }
   else nextRound();
 }
 
@@ -493,7 +514,29 @@ function bjSlot(p, i, n) {
   const dy = n > 1 ? Math.min(20, 88 / (n - 1)) : 0;
   return [BJ_COL_X[p] + 18 + (i % 2) * 6, BJ_TOP + 16 + i * dy];
 }
+// 三、四人的公开牌桌：2 × 2 格子，每格名字一行、牌横着排
+const cellX = p => (G.np === 3 && p === 2 ? 66 : seatRight(p) ? 124 : 8);
+const BJ_ROW = [104, 170], DC_ROW = [100, 152];
+function bjFan(p, i, n) {
+  const step = n > 1 ? Math.min(14, 40 / (n - 1)) : 0;
+  return [cellX(p) + 4 + i * step, BJ_ROW[p >> 1] + 14];
+}
+function drawBjGrid(faceT) {
+  for (let p = 0; p < G.np; p++) {
+    const hand = G.bj.hands[p], x = cellX(p), top = BJ_ROW[p >> 1];
+    text(PNAME[p], x + 4, top + 6, { size: 11, weight: 700, color: PCOL[p] });
+    text(G.bj.stood[p] ? '已停' : `${hand.length} 张`, x + 104, top + 6, { size: 10, color: C.muted, align: 'right' });
+    hand.forEach((c, i) => {
+      const [cx, cy] = bjFan(p, i, hand.length), age = clock - c.born;
+      if (age < 0) return;
+      if (age < 0.3) { const e = easeOut(age / 0.3); drawCard(lerp(111, cx, e), lerp(70, cy, e), 26, 36, null); return; }
+      if (faceT === null) drawCard(cx, cy, 26, 36, null);
+      else drawCardFlip(cx, cy, 26, 36, c, faceT(p, i));
+    });
+  }
+}
 function drawBjTable(faceT) {
+  if (G.np > 2) { drawBjGrid(faceT); return; }
   // 公开牌桌：两列，玩家 1 在左、玩家 2 在右；faceT 为 null 时全部盖着
   for (let p = 0; p < 2; p++) {
     const hand = G.bj.hands[p];
@@ -511,15 +554,15 @@ function drawBjTable(faceT) {
   }
 }
 function bjDealUpdate() {
-  const order = [G.starter, 1 - G.starter, G.starter, 1 - G.starter];
+  const total = 2 * G.np;   // 从先手开始轮流，每人两张
   const t0 = Math.max(0.8, animDur('shuffle'));   // 切牌做完再发牌
   const due = Math.floor((G.t - t0) / 0.35) + 1;
-  while (G.bj.dealt < Math.min(4, due)) {
-    const p = order[G.bj.dealt++];
+  while (G.bj.dealt < Math.min(total, due)) {
+    const p = (G.starter + G.bj.dealt++) % G.np;
     G.bj.hands[p].push({ ...G.bj.deck.pop(), born: clock });
     naboPlay('deal'); SFX.card();
   }
-  if (G.bj.dealt === 4 && G.t > t0 + 4 * 0.35 + 0.35) handoff(G.starter);
+  if (G.bj.dealt === total && G.t > t0 + total * 0.35 + 0.35) handoff(G.starter);
 }
 function bjHit() {
   const b = G.bj, p = G.turn;
@@ -528,23 +571,25 @@ function bjHit() {
   log(`${pn(p)} 要了一张牌（现在 ${b.hands[p].length} 张）`);
 }
 function bjEndTurn() {
-  const b = G.bj, p = G.turn, o = 1 - p;
-  if (b.stood[0] && b.stood[1]) { go('bjReveal'); naboPlay('open'); SFX.open(); return; }
-  if (!b.stood[o]) handoff(o);
-  else { b.phase = 'choose'; b.cursor = 0; }
+  const b = G.bj, p = G.turn;
+  for (let k = 1; k < G.np; k++) { const o = (p + k) % G.np; if (!b.stood[o]) { handoff(o); return; } }  // 交给下一个还在要牌的人
+  if (b.stood[p]) { go('bjReveal'); naboPlay('open'); SFX.open(); return; }
+  b.phase = 'choose'; b.cursor = 0;   // 其他人都停了：不用交接，接着要
 }
+const bjCanHit = p => G.bj.deck.length > 0 && G.bj.hands[p].length < 12 && !handTotal(G.bj.hands[p]).bust;
 function bjKey(k) {
-  const b = G.bj, p = G.turn, bust = handTotal(b.hands[p]).bust;
+  const b = G.bj, p = G.turn, canHit = bjCanHit(p);
   if (b.phase === 'hitShow') { if (k === 'ok') { SFX.ok(); bjEndTurn(); } return; }
-  if (k === 'up' || k === 'down') { if (!bust) { b.cursor = 1 - b.cursor; SFX.move(); } return; }
+  if (k === 'up' || k === 'down') { if (canHit) { b.cursor = 1 - b.cursor; SFX.move(); } return; }
   if (k !== 'ok') return;
   SFX.ok();
-  if (b.cursor === 0 && !bust) { bjHit(); return; }
+  if (b.cursor === 0 && canHit) { bjHit(); return; }
   b.stood[p] = true; log(`${pn(p)} 停牌`);
   bjEndTurn();
 }
 function drawBjTurn() {
-  const b = G.bj, p = G.turn, o = 1 - p, hand = b.hands[p], ht = handTotal(hand);
+  const b = G.bj, p = G.turn, hand = b.hands[p], ht = handTotal(hand), canHit = bjCanHit(p);
+  const others = [...Array(G.np).keys()].map(k => (p + 1 + k) % G.np).slice(0, G.np - 1);
   drawRoom(92); drawRim(92); drawNabo(W / 2, 92, 72); drawScores();
   playerChip(p, `${PNAME[p]} · 你的牌`);
   const n = hand.length, cw = 44, ch = 62;
@@ -558,18 +603,19 @@ function drawBjTurn() {
   const col = ht.bust ? C.red : C.card;
   const w = text(String(ht.total), 18, 196, { size: 34, font: F_DISP, color: col });
   text('点', 24 + w, 202, { size: 12, color: C.muted });
-  if (ht.bust) text('爆牌了，只能停牌', 52 + w, 200, { size: 12, weight: 700, color: C.red });
+  if (ht.bust || !canHit) text(ht.bust ? '爆牌了，只能停牌' : '牌发完了，只能停牌', 52 + w, 200, { size: 12, weight: 700, color: C.red });
   else if (ht.soft) text(`A 记 11（也可看作 ${ht.hard}）`, 52 + w, 200, { size: 11, color: C.muted });
-  text(`${PNAME[o]}：${b.hands[o].length} 张${b.stood[o] ? ' · 已停牌' : ''}`, 18, 228, { size: 11, color: PCOL[o] });
+  if (G.np === 2) { const o = others[0]; text(`${PNAME[o]}：${b.hands[o].length} 张${b.stood[o] ? ' · 已停牌' : ''}`, 18, 228, { size: 11, color: PCOL[o] }); }
+  else segLine(18, 228, others.map(o => [`${PNAME[o]} ${b.stood[o] ? '停' : b.hands[o].length + ' 张'}`, PCOL[o]]), 'left');
   if (b.phase === 'hitShow') {
-    const c = hand[n - 1];
+    const c = hand[n - 1], next = others.find(o => !b.stood[o]);
     text(`拿到 ${SUITS[c.s]}${RANKS[c.r]}`, W / 2, 256, { size: 14, weight: 700, color: C.card, align: 'center' });
-    hint((b.stood[o] ? 'OK 继续' : `OK 盖牌，交给${PNAME[o]}`) + ` · ${PAUSE_TIP}`);
+    hint((next === undefined ? 'OK 继续' : `OK 盖牌，交给${PNAME[next]}`) + ` · ${PAUSE_TIP}`);
     return;
   }
   const labels = ['要牌', '停牌'];
   for (let i = 0; i < 2; i++) {
-    const x = 18 + i * 108, sel = b.cursor === i, off = i === 0 && ht.bust;
+    const x = 18 + i * 108, sel = b.cursor === i, off = i === 0 && !canHit;
     rr(x, 244, 96, 36, 8);
     ctx.fillStyle = sel ? PCOL[p] : 'rgba(255,255,255,.05)'; ctx.fill();
     ctx.lineWidth = 1; ctx.strokeStyle = sel ? PCOL[p] : 'rgba(255,255,255,.18)'; ctx.stroke();
@@ -579,34 +625,46 @@ function drawBjTurn() {
 }
 const BJ_FLIP0 = 0.5, BJ_FLIP_STEP = 0.12;
 function bjFlipT(p, i) {
-  const idx = p === 0 ? i : G.bj.hands[0].length + i;
+  let idx = i;   // 按座位顺序一张张翻
+  for (let q = 0; q < p; q++) idx += G.bj.hands[q].length;
   return clamp01((G.t - BJ_FLIP0 - idx * BJ_FLIP_STEP) / 0.25);
 }
 function bjRevealUpdate() {
-  const n = G.bj.hands[0].length + G.bj.hands[1].length;
+  const n = G.bj.hands.reduce((a, h) => a + h.length, 0);
   const started = Math.min(n, Math.max(0, Math.floor((G.t - BJ_FLIP0) / BJ_FLIP_STEP) + 1));
   if (started > G.sfxMark) { G.sfxMark = started; SFX.flip(); }
   if (G.result || G.t < BJ_FLIP0 + n * BJ_FLIP_STEP + 0.4) return;
-  const [a, b] = G.bj.hands.map(handTotal);
-  const show = t => t.bust ? `${t.total} 爆` : String(t.total);
-  const why = `${show(a)} 对 ${show(b)}`;
-  if (a.bust && b.bust) winRound(null, `双方爆牌（${why}）`);
-  else if (a.bust) winRound(1, why);
-  else if (b.bust) winRound(0, why);
-  else if (a.total === b.total) winRound(null, `点数相同（${why}）`);
-  else winRound(a.total > b.total ? 0 : 1, why);
+  // 不爆的最大点数赢，并列的都得分；全爆、或所有人点数相同算平局
+  const t = G.bj.hands.map(handTotal);
+  const best = Math.max(-1, ...t.filter(x => !x.bust).map(x => x.total));
+  let winners = 0;
+  t.forEach((x, p) => { if (!x.bust && x.total === best) winners |= 1 << p; });
+  if (popcount(winners) === G.np) winners = 0;
+  const show = x => x.bust ? `${x.total} 爆` : String(x.total);
+  let main, why;
+  if (G.np === 2) {
+    const v = `${show(t[0])} 对 ${show(t[1])}`;
+    main = winners ? `${PNAME[winners === 1 ? 0 : 1]} 赢` : '平局';
+    why = winners ? v : best < 0 ? `双方爆牌（${v}）` : `点数相同（${v}）`;
+  } else {
+    const ids = [0, 1, 2, 3].filter(p => winners >> p & 1);
+    main = !winners ? '平局' : ids.length === 1 ? `${PNAME[ids[0]]} 赢` : `玩家 ${ids.map(p => p + 1).join('、')} 赢`;
+    why = best < 0 ? '全部爆牌' : !winners ? `点数都是 ${best}` : `${best} 点`;
+  }
+  finishRound(winners, -1, main, why);
 }
 function drawBjPublic() {
   drawRoom(92); drawRim(92); drawNabo(W / 2, 92, 72); drawScores();
   const reveal = G.scene === 'bjReveal';
   drawBjTable(reveal ? bjFlipT : null);
   if (reveal && G.result) {
-    for (let p = 0; p < 2; p++) {
+    for (let p = 0; p < G.np; p++) {
       const t = handTotal(G.bj.hands[p]);
-      text(t.bust ? '爆' : String(t.total), BJ_COL_X[p] + 104, 150, { size: 22, font: F_DISP, color: t.bust ? C.red : C.card, align: 'right' });
+      const [x, y] = G.np === 2 ? [BJ_COL_X[p] + 104, 150] : [cellX(p) + 104, BJ_ROW[p >> 1] + 32];
+      text(t.bust ? '爆' : String(t.total), x, y, { size: 22, font: F_DISP, color: t.bust ? C.red : C.card, align: 'right' });
     }
-    const w = G.result.winner;
-    resultBanner(w === null ? '平局' : `${PNAME[w]} 赢`, G.result.why, w === null ? C.brass : PCOL[w]);
+    const w = G.result.winners;
+    resultBanner(G.result.main, G.result.why, w ? PCOL[Math.log2(w & -w)] : C.brass);
   } else if (G.scene === 'bjDeal') hint('NABO 正在发牌');
 }
 
@@ -627,7 +685,7 @@ function legalFaces(q) {
 function buildBidList() {
   const d = G.dc, last = d.bids[d.bids.length - 1], qs = [];
   if (last) qs.push('open');
-  for (let q = d.minOpen; q <= d.per * 2; q++) if (legalFaces(q).length) qs.push(q);
+  for (let q = d.minOpen; q <= d.per * G.np; q++) if (legalFaces(q).length) qs.push(q);
   d.qList = qs; d.step = 'qty';
   d.qi = last && qs.length > 1 ? 1 : 0;  // 默认停在最小的合法数量，不默认停在「开」
 }
@@ -663,7 +721,21 @@ function diceKey(k) {
   const q = d.qList[d.qi];
   d.bids.push({ p, q, f }); SFX.ok();
   log(`${pn(p)} 叫 ${q} 个 ${f}${f === 1 && d.wild ? '（斋）' : ''}`);
-  handoff(1 - p);
+  handoff((p + 1) % G.np);
+}
+function diceRowGap(dice, cx, y, s, gap, o = {}) {
+  const x0 = cx - (dice.length * s + (dice.length - 1) * gap) / 2;
+  dice.forEach((v, i) => DICE3D.draw(ctx, x0 + i * (s + gap), y, s, v, o.yaw ? o.yaw[i] : 22, o.style ? o.style(v) : {}));
+}
+// 一行几段不同颜色的字，段间用「·」隔开
+function segLine(x, y, segs, align = 'center') {
+  ctx.font = `700 10px ${F_BODY}`;
+  const sep = '  ·  ', ws = segs.map(([t]) => ctx.measureText(t).width), sw = ctx.measureText(sep).width;
+  let cx = align === 'center' ? x - (ws.reduce((a, b) => a + b, 0) + sw * (segs.length - 1)) / 2 : x;
+  segs.forEach(([t, col], i) => {
+    if (i) { text(sep, cx, y, { size: 10, color: C.muted }); cx += sw; }
+    text(t, cx, y, { size: 10, weight: 700, color: col }); cx += ws[i];
+  });
 }
 function diceRow(dice, cx, y, s, o = {}) {
   const gap = 6, perRow = dice.length > 3 && o.cols ? Math.ceil(dice.length / 2) : dice.length;
@@ -730,51 +802,54 @@ function drawDicePublic() {
   const lift = reveal ? easeOut(clamp01((G.t - 0.45) / 0.35)) : 0;
   const hlOn = reveal && G.t > 0.9;
   const wildOn = d.wild && !isZhai() && last && last.f !== 1;
-  for (let p = 0; p < 2; p++) {
-    const cx = DC_COL_X[p];
-    text(PNAME[p], cx, 112, { size: 11, weight: 700, color: PCOL[p], align: 'center' });
+  const style = v => !hlOn ? {} : (v === last.f || (wildOn && v === 1)) ? { hl: C.brass } : { dim: true };
+  // 三、四人：2 × 2 格子，名字在左上，骰盅靠右，开盅后骰子排成一行
+  const sz = Math.min(20, Math.floor((104 - (d.per - 1) * 3) / d.per));
+  for (let p = 0; p < G.np; p++) {
+    const grid = G.np > 2, x = grid ? cellX(p) : 0, top = grid ? DC_ROW[p >> 1] : 0;
+    const cx = grid ? x + 80 : DC_COL_X[p], by = grid ? top + 48 : 190, rise = grid ? 40 : 70;
+    if (grid) text(PNAME[p], x + 4, top + 6, { size: 11, weight: 700, color: PCOL[p] });
+    else text(PNAME[p], cx, 112, { size: 11, weight: 700, color: PCOL[p], align: 'center' });
     if (G.scene === 'diceRoll') {
       const land = clamp01((G.t - 1.25) / 0.2);
-      if (land > 0) drawCup(cx, 190 - 8 * (1 - land), 1.3);
+      if (land > 0) drawCup(cx, by - 8 * (1 - land), 1.3);
       continue;
     }
-    if (reveal) diceRow(d.dice[p], cx, 138, 24, {
-      cols: true, yaw: d.yaw[p],
-      style: v => !hlOn ? {} : (v === last.f || (wildOn && v === 1)) ? { hl: C.brass } : { dim: true },
-    });
-    if (lift < 1) { ctx.save(); ctx.globalAlpha = 1 - lift; drawCup(cx, 190 - 70 * lift, 1.3); ctx.restore(); }
+    if (reveal && grid) diceRowGap(d.dice[p], x + 54, top + 16, sz, 3, { yaw: d.yaw[p], style });
+    else if (reveal) diceRow(d.dice[p], cx, 138, 24, { cols: true, yaw: d.yaw[p], style });
+    if (lift < 1) { ctx.save(); ctx.globalAlpha = 1 - lift; drawCup(cx, by - rise * lift, 1.3); ctx.restore(); }
   }
   if (last) {
     text(`${PNAME[last.p]} 叫`, W / 2, 210, { size: 10, color: PCOL[last.p], align: 'center' });
     bidLabel(W / 2, 229, last.q, last.f, { size: 16, align: 'center' });
   }
   if (reveal && hlOn && last) text(`实际 ${countFace(last.f)} 个${wildOn ? '（含万能 1）' : ''}`, W / 2, 251, { size: 12, weight: 700, color: C.brass, align: 'center' });
-  if (reveal && G.result) {
-    const w = G.result.winner;
-    resultBanner(`${PNAME[w]} 赢`, G.result.why, PCOL[w]);
-  } else if (G.scene === 'diceRoll') hint('NABO 正在摇盅');
+  if (reveal && G.result) resultBanner(G.result.main, G.result.why, PCOL[G.result.loser]);
+  else if (G.scene === 'diceRoll') hint('NABO 正在摇盅');
 }
 function diceRevealUpdate() {
   if (!G.sfxMark && G.t >= 0.4) { G.sfxMark = 1; SFX.lift(); }
   if (G.result || G.t < 1.3) return;
   const d = G.dc, last = d.bids[d.bids.length - 1], actual = countFace(last.f);
-  const ok = actual >= last.q;
-  winRound(ok ? last.p : d.caller, ok ? `叫中了：实际 ${actual} 个 ≥ ${last.q} 个` : `开中了：实际只有 ${actual} 个`);
+  const ok = actual >= last.q, loser = ok ? d.caller : last.p;   // 错的一方罚一分
+  finishRound(1 << (ok ? last.p : d.caller), loser, `${PNAME[loser]} 罚 1`,
+    ok ? `叫中了：实际 ${actual} 个 ≥ ${last.q} 个` : `开中了：实际只有 ${actual} 个`);
 }
 
 // ---------- 封面、交接、结束、暂停 ----------
 const MENU = [
   { id: 'bj', label: () => '21 点', anim: 'shuffle' },
   { id: 'dice', label: () => '大话骰', anim: 'shake' },
-  { id: 'target', label: () => `抢 ${Cfg.target} 局`, anim: 'idle' },
+  { id: 'players', label: () => `${Cfg.players} 人`, anim: 'idle' },
+  { id: 'target', label: () => `抢 ${Cfg.target} / 罚 ${Cfg.target}`, anim: 'idle' },
 ];
 function menuSelect(i) { G.menu = i; if (nabo.anim !== MENU[i].anim) naboPlay(MENU[i].anim); }
 function drawMenu() {
   drawRoom(168); drawRim(168); drawNabo(W / 2, 168, 150);
-  text('NABO', W / 2 - 34, 194, { size: 22, font: F_DISP, color: C.card, align: 'center' });
-  text('牌桌', W / 2 + 34, 195, { size: 20, weight: 700, color: C.brass, align: 'center' });
+  text('NABO', W / 2 - 34, 192, { size: 22, font: F_DISP, color: C.card, align: 'center' });
+  text('牌桌', W / 2 + 34, 193, { size: 20, weight: 700, color: C.brass, align: 'center' });
   MENU.forEach((m, i) => {
-    const y = 222 + i * 26, sel = G.menu === i;
+    const y = 218 + i * 22, sel = G.menu === i;
     if (sel) { rr(56, y - 10, W - 112, 22, 11); ctx.fillStyle = C.brass; ctx.fill(); }
     text(m.label(), W / 2, y + 1, { size: 14, weight: 700, color: sel ? C.ink : C.card, align: 'center' });
   });
@@ -786,12 +861,14 @@ function menuKey(k) {
   SFX.ok();
   const id = MENU[G.menu].id;
   if (id === 'target') { Cfg.target = Cfg.target >= 7 ? 3 : Cfg.target + 2; save('table.settings', Cfg); syncPanel(); return; }
+  if (id === 'players') { Cfg.players = Cfg.players >= 4 ? 2 : Cfg.players + 1; save('table.settings', Cfg); syncPanel(); return; }
   startMatch(id);
 }
 function publicInfo() {
   if (G.game === 'bj') {
     const b = G.bj;
-    return [0, 1].map(p => `${PNAME[p]} ${b.hands[p].length} 张${b.stood[p] ? ' 已停' : ''}`).join('  ·  ');
+    if (G.np === 2) return [0, 1].map(p => `${PNAME[p]} ${b.hands[p].length} 张${b.stood[p] ? ' 已停' : ''}`).join('  ·  ');
+    return 'seg';
   }
   return null;
 }
@@ -801,7 +878,12 @@ function drawHandoff() {
   text('请交给', W / 2, 196, { size: 12, color: C.muted, align: 'center' });
   text(PNAME[p], W / 2, 222, { size: 26, weight: 700, color: PCOL[p], align: 'center' });
   const info = publicInfo();
-  if (info) text(info, W / 2, 252, { size: 10, color: C.muted, align: 'center' });
+  if (info === 'seg') {
+    const segs = G.bj.hands.map((h, q) => [`${PNAME[q]} ${G.bj.stood[q] ? '停' : h.length + ' 张'}`, PCOL[q]]);
+    if (G.np === 3) segLine(W / 2, 252, segs);
+    else { segLine(W / 2, 245, segs.slice(0, 2)); segLine(W / 2, 260, segs.slice(2)); }  // 四人一行放不下，分两行
+  }
+  else if (info) text(info, W / 2, 252, { size: 10, color: C.muted, align: 'center' });
   else {
     const last = G.dc.bids[G.dc.bids.length - 1];
     if (last) { text(`${PNAME[last.p]} 叫`, W / 2 - 34, 256, { size: 11, color: PCOL[last.p], align: 'right' }); bidLabel(W / 2 - 26, 256, last.q, last.f, { size: 13 }); }
@@ -812,15 +894,23 @@ function drawHandoff() {
   text(PAUSE_TIP, W / 2, 312, { size: 9, color: C.muted, align: 'center' });
 }
 function drawEnd() {
-  const w = G.score[0] >= Cfg.target ? 0 : 1;
+  // 21 点：领先的人获胜；大话骰：两人时另一位获胜，三人以上宣布罚满的人
+  const f = matchFocus(), dice = G.game === 'dice';
+  const w = dice && G.np === 2 ? 1 - f : f, title = dice && G.np > 2 ? `${PNAME[f]} 输了` : `${PNAME[w]} 获胜`;
   drawRoom(186); drawRim(186); drawNabo(W / 2, 186, 150);
-  text(`${PNAME[w]} 获胜`, W / 2, 218, { size: 24, weight: 700, color: PCOL[w], align: 'center' });
-  text(`${G.score[0]}`, W / 2 - 22, 254, { size: 24, font: F_DISP, color: C.p1, align: 'right' });
-  text(':', W / 2, 252, { size: 20, font: F_DISP, color: C.muted, align: 'center' });
-  text(`${G.score[1]}`, W / 2 + 22, 254, { size: 24, font: F_DISP, color: C.p2 });
+  text(title, W / 2, 214, { size: 24, weight: 700, color: PCOL[w], align: 'center' });
+  if (dice && G.np > 2) text(`先罚满 ${Cfg.target} 次`, W / 2, 236, { size: 10, color: C.muted, align: 'center' });
+  if (G.np === 2) {
+    text(`${G.score[0]}`, W / 2 - 22, 254, { size: 24, font: F_DISP, color: C.p1, align: 'right' });
+    text(':', W / 2, 252, { size: 20, font: F_DISP, color: C.muted, align: 'center' });
+    text(`${G.score[1]}`, W / 2 + 22, 254, { size: 24, font: F_DISP, color: C.p2 });
+  } else {
+    const gap = 44, x0 = W / 2 - gap * (G.np - 1) / 2;
+    G.score.forEach((v, p) => text(String(v), x0 + p * gap, 258, { size: 22, font: F_DISP, color: PCOL[p], align: 'center' }));
+  }
   choices(290, ['再来一场', '回封面'], G.choice, PCOL[w]);
 }
-function toMenu() { G.game = null; go('menu'); menuSelect(G.menu === 2 ? 0 : G.menu); }
+function toMenu() { G.game = null; go('menu'); menuSelect(G.menu >= 2 ? 0 : G.menu); }
 const PAUSE_ITEMS = ['继续', '回到封面'];
 function drawPause() {
   ctx.fillStyle = C.wall; ctx.fillRect(0, 0, W, H);  // 不透明：暂停时不能露出私密画面
@@ -936,7 +1026,7 @@ function frame(now) {
 }
 
 // ---------- 面板 ----------
-const SLIDERS = [['tTarget', 'oTarget', 'target'], ['tDice', 'oDice', 'dicePer'], ['tOpen', 'oOpen', 'minOpen']];
+const SLIDERS = [['tPlayers', 'oPlayers', 'players'], ['tTarget', 'oTarget', 'target'], ['tDice', 'oDice', 'dicePer'], ['tOpen', 'oOpen', 'minOpen']];
 function syncPanel() {
   for (const [i, o, k] of SLIDERS) { $(i).value = Cfg[k]; $(o).textContent = Cfg[k]; }
   $('oWild').checked = Cfg.wild; $('oSound').checked = Cfg.sound; $('oGod').checked = Cfg.god;
@@ -955,7 +1045,7 @@ const SCENE_NAME = { menu: '封面', handoff: '交接屏', bjDeal: '21 点 · �
 let liveCache = '';
 function renderLive() {
   const rows = [['画面', SCENE_NAME[G.scene] + (G.pause ? '（暂停）' : '')], ['NABO 动作', nabo.anim + (nabo.mirror ? '（镜像）' : '')]];
-  if (G.game) rows.push(['比分', `${G.score[0]} : ${G.score[1]} · 第 ${G.round} 局`]);
+  if (G.game) rows.push([G.game === 'dice' ? '罚分' : '比分', `${G.score.join(' : ')} · 第 ${G.round} 局`]);
   if (G.game === 'bj' && G.bj) rows.push(['牌堆剩余', `${G.bj.deck.length} 张`]);
   if (G.game === 'dice' && G.dc) rows.push(['叫数次数', String(G.dc.bids.length)]);
   rows.push(['种子', String(seed)]);

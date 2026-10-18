@@ -34,8 +34,8 @@ b18f915d0295181609b225b475511e1e8a5e60d950b2390fc33191e7c0278d40
 | nabo_voice_commands.c | 有界无堆分配的明确语音命令解析；拒绝否定、询问、多程序歧义 |
 | nabo_jump_model.c / nabo_jump_rig.c | 游戏物理、平台和人体动作；保留落地/镜头期间的输入 |
 | nabo_jump_sound.c / jump_sounds.bin | PCM 音效、蓄力渐变与切换过渡 |
-| nabo_table.c | 牌桌任务（30 fps esp_timer 节拍）、原始按键沿（UP/DOWN 连发、OK 松开生效、长按 2 秒暂停）、NVS 抢局设置、`>table.*` 串口诊断 |
-| nabo_table_model.c / nabo_table_bid.c | 牌桌规则：封面、交接、暂停、21 点、大话骰；纯逻辑，与浏览器原型逐步对拍（test_table.py） |
+| nabo_table.c | 牌桌任务（30 fps esp_timer 节拍）、原始按键沿（UP/DOWN 连发、OK 松开生效、长按 2 秒暂停）、NVS 抢局与人数设置（`table_target` / `table_players`）、`>table.*` 串口诊断 |
+| nabo_table_model.c / nabo_table_bid.c | 牌桌规则（2–4 人）：封面、交接、暂停、21 点、大话骰（罚分制）；纯逻辑，与浏览器原型逐步对拍（test_table.py） |
 | nabo_table_gfx.c / shapes.c / scene*.c | 显示列表 + 脏矩形，8 行条带合成；绒布、牌、骰盅、文字、精灵；只用整数 |
 | nabo_table_sprites.c | 从资源分区原地读取 table_sprites.bin，大图逐行解码、小图关键帧+差分 |
 | nabo_table_sound.c | 现场合成：骰子共振器（复用 nabo_dice_render.c）、滤波噪声纸牌声、铃声 |
@@ -71,7 +71,9 @@ b18f915d0295181609b225b475511e1e8a5e60d950b2390fc33191e7c0278d40
 
 **按键：** 牌桌直接读三个键的按下/松开（板型里 UP 新增了 `OnPressDown/OnPressUp` → `nabo_apps_up_edge`）。对局中屏蔽双击上键（返回上一级）和长按上键（回小智），只有牌桌封面上才生效，避免按住上键翻叫数时被踢出去。中途退出走暂停菜单。
 
-**内存：** 打开时分配显示列表等约 12 KB、两条 3.8 KB 条带、5.3 KB 精灵缓冲、6 KB 任务栈。实测打开后空闲堆约 65 KB（配网模式下），最大连续块约 34 KB。大图帧直接从 Flash 解码，不占内存。
+**内存：** 打开时分配显示列表等约 18 KB（多人版把显示列表、骰子和扑克牌上限加大，原来约 12 KB）、两条 3.8 KB 条带、5.3 KB 精灵缓冲、6 KB 任务栈。实测打开后空闲堆约 65 KB（配网模式下），最大连续块约 34 KB。大图帧直接从 Flash 解码，不占内存。
+
+**多人：** 人数在开局时固定到 `nt_t.np`，所有按玩家循环的地方都只到 `np`。规则改动（并列都得分、罚分制、加赛）见 `game-art/table/DESIGN.md` 第 9 节。改规则时**先改浏览器原型**，再用 `tests/table_host/golden_server.py` + `record_golden.js` 重新录对拍轨迹（Playwright 打开原型页面后注入脚本，调用 `recordTrace`），C 模型必须逐步一致。渲染器每一帧超出显示列表、骰子、扑克牌或字形池上限时会置 `ntg_t.overflow`，新画面要用四人六骰的轨迹检查一遍。
 
 **开机即玩：** `application.cc`（NABO 板型分支）允许在 starting / wifi_configuring 状态 `BeginLocalApp()`，保持开机状态不变；期间的联网事件只记录下来，`EndLocalApp()` 时继续开机流程（若已联网就补发一次联网事件去激活）。已在没有可用 Wi-Fi 的工牌上验证；"游戏中途联网、退出后激活"尚未在真机验证。
 

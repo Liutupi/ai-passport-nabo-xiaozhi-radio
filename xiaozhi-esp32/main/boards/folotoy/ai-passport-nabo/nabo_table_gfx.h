@@ -15,9 +15,9 @@ extern "C" {
 
 #define NTG_W 240
 #define NTG_H 320
-#define NTG_MAX_OPS 64
-#define NTG_MAX_DICE 12
-#define NTG_MAX_CARDS 26
+#define NTG_MAX_OPS 80     // four seats of cards or dice, scores and the result banner
+#define NTG_MAX_DICE 26    // 4 players x 6 dice at the reveal, plus the die in the bid label
+#define NTG_MAX_CARDS 48
 #define NTG_MAX_RECTS 16
 #define NTG_STRIP 8
 
@@ -71,6 +71,7 @@ typedef struct {
     uint16_t *strip[2];
     int which;
     uint32_t bytes;           // pixel bytes sent by the last frame
+    bool overflow;            // a builder ran out of ops, dice, cards or glyphs this frame (host tests)
 } ntg_t;
 
 // strip buffers: two of NTG_W x NTG_STRIP pixels; sprite_buf: nts_buffer_need() bytes.

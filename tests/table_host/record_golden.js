@@ -4,10 +4,10 @@
 const SCENES = ['menu', 'handoff', 'bjDeal', 'bjTurn', 'bjReveal', 'diceRoll', 'diceTurn', 'diceReveal', 'end'];
 function snap() {
   const s = {
-    sc: SCENES.indexOf(G.scene), g: G.game === 'bj' ? 1 : G.game === 'dice' ? 2 : 0, score: [...G.score],
+    sc: SCENES.indexOf(G.scene), g: G.game === 'bj' ? 1 : G.game === 'dice' ? 2 : 0, np: G.np, score: [...G.score],
     round: G.round, starter: G.starter, turn: G.turn, ho: G.handoffTo, pause: G.pause ? G.pause.cursor : -1,
-    choice: G.choice, menu: G.menu, target: Cfg.target,
-    w: G.result ? (G.result.winner === null ? -1 : G.result.winner) : -2,
+    choice: G.choice, menu: G.menu, target: Cfg.target, players: Cfg.players,
+    w: G.result ? G.result.winners : -2, lo: G.result ? G.result.loser : -2,
   };
   if (G.game === 'bj' && G.bj) s.bj = {
     h: G.bj.hands.map(h => h.map(c => c.r * 10 + c.s)), st: G.bj.stood.map(Number),
@@ -23,7 +23,7 @@ function snap() {
 async function recordTrace(name, cfg, seed, nSteps) {
   Object.assign(Cfg, cfg);
   // Fresh state, as the firmware starts it: nothing carries over from the previous trace.
-  Object.assign(G, { score: [0, 0], round: 0, starter: 0, loser: 0, turn: 0, handoffTo: 0, result: null, bj: null, dc: null });
+  Object.assign(G, { np: Cfg.players, score: Array(Cfg.players).fill(0), round: 0, starter: 0, loser: 0, turn: 0, handoffTo: 0, result: null, bj: null, dc: null });
   rngState = seed >>> 0; G.pause = null; G.menu = 0; G.choice = 0; toMenu();
   let pol = (seed * 7919 + 13) >>> 0;   // the policy has its own generator, so replays are exact
   const r = () => ((pol = (pol * 1103515245 + 12345) >>> 0) >>> 8) / 16777216;

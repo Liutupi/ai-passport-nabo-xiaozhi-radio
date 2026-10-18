@@ -1,4 +1,4 @@
-// NABO TABLE rules: menu, hand-off, pause, match flow and 21 points. Liar's dice is in
+// NABO TABLE rules: menu, hand-off, pause, match flow and 21 points for 2..4 players. Liar's dice is in
 // nabo_table_bid.c. Times are doubles so a host replay matches the JavaScript prototype.
 #include "nabo_table_model.h"
 
@@ -9,7 +9,7 @@
 static const float ANIM_DEFAULT[NT_ANIM_COUNT] = {2, 0.9f, 0.33f, 0.5f, 0.25f, 0.25f, 1.4f, 0.45f, 0.35f, 0.4f, 1, 0.4f};
 static const bool ANIM_LOOP[NT_ANIM_COUNT] = {1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0};
 static const bool ANIM_HOLD[NT_ANIM_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1};
-static const nt_anim_t MENU_ANIM[NT_MENU_COUNT] = {NT_ANIM_SHUFFLE, NT_ANIM_SHAKE, NT_ANIM_IDLE};
+static const nt_anim_t MENU_ANIM[NT_MENU_COUNT] = {NT_ANIM_SHUFFLE, NT_ANIM_SHAKE, NT_ANIM_IDLE, NT_ANIM_IDLE};
 
 #define DEAL_GAP 0.35        // seconds between dealt cards
 #define BJ_FLIP0 0.5         // reveal: first card starts turning
@@ -68,7 +68,7 @@ static void to_menu(nt_t *g)
 {
     g->game = NT_GAME_NONE;
     nt_go(g, NT_MENU);
-    menu_select(g, g->menu == NT_MENU_TARGET ? 0 : g->menu);
+    menu_select(g, g->menu >= NT_MENU_PLAYERS ? 0 : g->menu);
 }
 
 void nt_handoff(nt_t *g, int p)
@@ -94,12 +94,21 @@ static void begin_turn(nt_t *g, int p)
 
 // ---------- match flow ----------
 
+int nt_popcount(unsigned v)
+{
+    int n = 0;
+    for (; v; v &= v - 1) n++;
+    return n;
+}
+
+int nt_next_player(const nt_t *g, int p) { return (p + 1) % g->np; }
+
 static void next_round(nt_t *g)
 {
     g->round++;
     memset(&g->result, 0, sizeof(g->result));
     if (g->game == NT_GAME_BJ) {
-        g->starter = (uint8_t)((g->round - 1) % 2);
+        g->starter = (uint8_t)((g->round - 1) % g->np);
         nt_bj_t *b = &g->bj;
         memset(b, 0, sizeof(*b));
         for (int s = 0, k = 0; s < 4; s++)
@@ -126,27 +135,53 @@ static void next_round(nt_t *g)
 static void start_match(nt_t *g, nt_game_t game)
 {
     g->game = game;
-    g->score[0] = g->score[1] = 0;
+    g->np = g->cfg.players;
+    memset(g->score, 0, sizeof(g->score));
     g->round = 0;
     g->loser = 0;
     next_round(g);
 }
 
-void nt_win_round(nt_t *g, int winner)
+void nt_finish_round(nt_t *g, unsigned winners, int loser)
 {
     g->result.has = true;
-    g->result.winner = (int8_t)winner;
+    g->result.winners = (uint8_t)winners;
+    g->result.loser = (int8_t)loser;
     g->choice = 0;
-    if (winner < 0) { nt_play(g, NT_ANIM_SHRUG, false); return; }
-    g->score[winner]++;
-    g->loser = (uint8_t)(1 - winner);
-    nt_play(g, NT_ANIM_POINT, winner == 1);
+    if (loser >= 0) {   // liar's dice: the loser drinks, calls first next round, and NABO points at them
+        g->score[loser]++;
+        g->loser = (uint8_t)loser;
+        nt_play(g, NT_ANIM_POINT, nt_seat_right(loser));
+        g->events |= NT_EV_WIN;
+        return;
+    }
+    if (!winners) { nt_play(g, NT_ANIM_SHRUG, false); return; }
+    int first = -1;
+    for (int p = 0; p < g->np; p++)
+        if (winners >> p & 1) {
+            g->score[p]++;
+            if (first < 0) first = p;
+        }
+    nt_play(g, NT_ANIM_POINT, nt_seat_right(first));
     g->events |= NT_EV_WIN;
 }
 
+int nt_match_focus(const nt_t *g)
+{
+    int best = 0;
+    for (int p = 1; p < g->np; p++)
+        if (g->score[p] > g->score[best]) best = p;
+    return best;
+}
+
+// 21 points ends when one player alone has reached the target (a shared lead plays on);
+// liar's dice ends when someone has collected the target in penalty points.
 bool nt_match_over(const nt_t *g)
 {
-    return g->result.has && g->result.winner >= 0 && g->score[g->result.winner] >= g->cfg.target;
+    if (!g->result.has) return false;
+    int top = nt_match_focus(g), shared = 0;
+    for (int p = 0; p < g->np; p++) shared += g->score[p] == g->score[top];
+    return g->score[top] >= g->cfg.target && (g->game == NT_GAME_DICE || shared == 1);
 }
 
 static void after_result(nt_t *g)
@@ -187,49 +222,55 @@ static void draw_card(nt_t *g, int p)
 static void bj_deal_update(nt_t *g)
 {
     nt_bj_t *b = &g->bj;
-    const int order[4] = {g->starter, 1 - g->starter, g->starter, 1 - g->starter};
+    int total = 2 * g->np;   // two cards each, going round from the starter
     double t0 = fmax(0.8, nt_anim_len(g, NT_ANIM_SHUFFLE));   // finish the cut, then deal
     int due = (int)floor((g->t - t0) / DEAL_GAP) + 1;
-    while (b->dealt < (due < 4 ? due : 4)) {
-        draw_card(g, order[b->dealt++]);
+    while (b->dealt < (due < total ? due : total)) {
+        draw_card(g, (g->starter + b->dealt++) % g->np);
         nt_play(g, NT_ANIM_DEAL, false);
         g->events |= NT_EV_CARD;
     }
-    if (b->dealt == 4 && g->t > t0 + 4 * DEAL_GAP + DEAL_GAP) nt_handoff(g, g->starter);
+    if (b->dealt == total && g->t > t0 + total * DEAL_GAP + DEAL_GAP) nt_handoff(g, g->starter);
 }
 
 static void bj_end_turn(nt_t *g)
 {
     nt_bj_t *b = &g->bj;
-    int o = 1 - g->turn;
-    if (b->stood[0] && b->stood[1]) {
+    for (int k = 1; k < g->np; k++) {   // pass the badge on to the next player still drawing
+        int o = (g->turn + k) % g->np;
+        if (!b->stood[o]) { nt_handoff(g, o); return; }
+    }
+    if (b->stood[g->turn]) {
         nt_go(g, NT_BJ_REVEAL);
         nt_play(g, NT_ANIM_OPEN, false);
         g->events |= NT_EV_OPEN;
-    } else if (!b->stood[o]) {
-        nt_handoff(g, o);
     } else {
-        b->phase = NT_BJ_CHOOSE;   // the other player has stood: keep going without a hand-off
+        b->phase = NT_BJ_CHOOSE;   // everyone else has stood: keep going without a hand-off
         b->cursor = 0;
     }
+}
+
+bool nt_bj_can_hit(const nt_t *g, int p)
+{
+    return g->bj.deck_n > 0 && g->bj.hand_n[p] < NT_MAX_HAND && !nt_hand_total(g->bj.hand[p], g->bj.hand_n[p]).bust;
 }
 
 static void bj_key(nt_t *g, nt_key_t k)
 {
     nt_bj_t *b = &g->bj;
     int p = g->turn;
-    bool bust = nt_hand_total(b->hand[p], b->hand_n[p]).bust;
+    bool can_hit = nt_bj_can_hit(g, p);
     if (b->phase == NT_BJ_HIT_SHOW) {
         if (k == NT_KEY_OK) { g->events |= NT_EV_OK; bj_end_turn(g); }
         return;
     }
     if (k == NT_KEY_UP || k == NT_KEY_DOWN) {
-        if (!bust) { b->cursor ^= 1; g->events |= NT_EV_MOVE; }
+        if (can_hit) { b->cursor ^= 1; g->events |= NT_EV_MOVE; }
         return;
     }
     if (k != NT_KEY_OK) return;
     g->events |= NT_EV_OK;
-    if (b->cursor == 0 && !bust) {
+    if (b->cursor == 0 && can_hit) {
         draw_card(g, p);
         b->phase = NT_BJ_HIT_SHOW;
         g->events |= NT_EV_HIT;
@@ -241,24 +282,34 @@ static void bj_key(nt_t *g, nt_key_t k)
 
 float nt_bj_flip(const nt_t *g, int p, int i)
 {
-    int idx = p == 0 ? i : g->bj.hand_n[0] + i;
+    int idx = i;   // cards turn over player by player, in seat order
+    for (int q = 0; q < p; q++) idx += g->bj.hand_n[q];
     double f = (g->t - BJ_FLIP0 - idx * BJ_FLIP_STEP) / 0.25;
     return (float)(f < 0 ? 0 : f > 1 ? 1 : f);
 }
 
 static void bj_reveal_update(nt_t *g)
 {
-    int n = g->bj.hand_n[0] + g->bj.hand_n[1];
+    int n = 0;
+    for (int p = 0; p < g->np; p++) n += g->bj.hand_n[p];
     int started = (int)floor((g->t - BJ_FLIP0) / BJ_FLIP_STEP) + 1;
     started = started < 0 ? 0 : started > n ? n : started;
     if (started > g->sfx_mark) { g->sfx_mark = (uint8_t)started; g->events |= NT_EV_FLIP; }
     if (g->result.has || g->t < BJ_FLIP0 + n * BJ_FLIP_STEP + 0.4) return;
-    nt_total_t a = nt_hand_total(g->bj.hand[0], g->bj.hand_n[0]);
-    nt_total_t b = nt_hand_total(g->bj.hand[1], g->bj.hand_n[1]);
-    int w = a.bust && b.bust ? -1 : a.bust ? 1 : b.bust ? 0 : a.total == b.total ? -1 : a.total > b.total ? 0 : 1;
-    nt_win_round(g, w);
-    g->result.bj[0] = a;
-    g->result.bj[1] = b;
+    // Highest total without busting wins; everyone tied for it scores. All bust, or everyone
+    // on the same total, is a tie and nobody scores.
+    nt_total_t t[NT_MAX_PLAYERS];
+    int best = -1;
+    unsigned winners = 0;
+    for (int p = 0; p < g->np; p++) {
+        t[p] = nt_hand_total(g->bj.hand[p], g->bj.hand_n[p]);
+        if (!t[p].bust && t[p].total > best) best = t[p].total;
+    }
+    for (int p = 0; p < g->np; p++)
+        if (!t[p].bust && t[p].total == best) winners |= 1u << p;
+    if (nt_popcount(winners) == g->np) winners = 0;
+    nt_finish_round(g, winners, -1);
+    memcpy(g->result.bj, t, sizeof(t[0]) * g->np);
 }
 
 // ---------- menu, pause, keys ----------
@@ -274,6 +325,11 @@ static void menu_key(nt_t *g, nt_key_t k)
     g->events |= NT_EV_OK;
     if (g->menu == NT_MENU_TARGET) {
         g->cfg.target = g->cfg.target >= 7 ? 3 : g->cfg.target + 2;
+        g->events |= NT_EV_SETTINGS;
+        return;
+    }
+    if (g->menu == NT_MENU_PLAYERS) {
+        g->cfg.players = g->cfg.players >= NT_MAX_PLAYERS ? NT_MIN_PLAYERS : g->cfg.players + 1;
         g->events |= NT_EV_SETTINGS;
         return;
     }
@@ -355,6 +411,8 @@ void nt_init(nt_t *g, const nt_config_t *cfg, uint32_t seed)
 {
     memset(g, 0, sizeof(*g));
     g->cfg = *cfg;
+    if (g->cfg.players < NT_MIN_PLAYERS || g->cfg.players > NT_MAX_PLAYERS) g->cfg.players = NT_MIN_PLAYERS;
+    g->np = g->cfg.players;
     g->rng = seed;
     g->anim = NT_ANIM_IDLE;
     menu_select(g, 0);

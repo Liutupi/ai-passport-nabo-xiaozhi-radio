@@ -32,7 +32,7 @@ FONTS = {
     'nabo_table_font_12': ('sans', 12, 4),
     'nabo_table_font_24': ('sans', 24, 4),
 }
-TABLE_24 = '玩家 12获胜暂停开！'
+TABLE_24 = '玩家 1234获胜输了暂停开！'
 
 
 def existing_menu_glyphs():

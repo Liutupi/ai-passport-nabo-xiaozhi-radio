@@ -85,35 +85,40 @@ int nabo_table_status(char *out, size_t cap)
     table_state_t *st = s_st;
     if (!atomic_load(&s_running) || !st) return snprintf(out, cap, "{\"running\":0}");
     const nt_t *m = &st->model;
-    return snprintf(out, cap, "{\"running\":1,\"scene\":%d,\"game\":%d,\"score\":[%d,%d],\"round\":%d,\"turn\":%d,"
-                              "\"paused\":%d,\"heap\":%u}",
-                    m->scene, m->game, m->score[0], m->score[1], m->round, m->turn, m->paused,
-                    (unsigned)esp_get_free_heap_size());
+    return snprintf(out, cap, "{\"running\":1,\"scene\":%d,\"game\":%d,\"players\":%d,\"score\":[%d,%d,%d,%d],"
+                              "\"round\":%d,\"turn\":%d,\"paused\":%d,\"heap\":%u}",
+                    m->scene, m->game, m->np, m->score[0], m->score[1], m->score[2], m->score[3], m->round, m->turn,
+                    m->paused, (unsigned)esp_get_free_heap_size());
 }
 
 /* ---------- settings ---------- */
 
-static uint8_t load_target(void)
+// Target and player count live next to the other UI settings; older firmware never wrote
+// table_players, so a missing key means the two-player table.
+static void load_settings(nt_config_t *cfg)
 {
     nvs_handle_t h;
-    uint8_t v = 3;
+    uint8_t target = 3, players = 2;
     if (nvs_open("nabo_ui", NVS_READONLY, &h) == ESP_OK) {
-        nvs_get_u8(h, "table_target", &v);
+        nvs_get_u8(h, "table_target", &target);
+        nvs_get_u8(h, "table_players", &players);
         nvs_close(h);
     }
-    return v == 3 || v == 5 || v == 7 ? v : 3;
+    cfg->target = target == 3 || target == 5 || target == 7 ? target : 3;
+    cfg->players = players >= NT_MIN_PLAYERS && players <= NT_MAX_PLAYERS ? players : 2;
 }
 
-static void save_target(uint8_t v)
+static void save_settings(const nt_config_t *cfg)
 {
     nvs_handle_t h;
     esp_err_t err = nvs_open("nabo_ui", NVS_READWRITE, &h);
     if (err == ESP_OK) {
-        err = nvs_set_u8(h, "table_target", v);
+        err = nvs_set_u8(h, "table_target", cfg->target);
+        if (err == ESP_OK) err = nvs_set_u8(h, "table_players", cfg->players);
         if (err == ESP_OK) err = nvs_commit(h);
         nvs_close(h);
     }
-    if (err != ESP_OK) ESP_LOGE(TAG, "target save failed: %d", err);
+    if (err != ESP_OK) ESP_LOGE(TAG, "settings save failed: %d", err);
 }
 
 /* ---------- game task ---------- */
@@ -195,7 +200,8 @@ static void game_task(void *arg)
     }
     nt_fonts_t fonts = {&nabo_table_font_12, &nabo_menu_font_16, &nabo_ui_font_18,
                         &nabo_table_font_24, &nabo_mono_font_12, &nabo_poster_font_28};
-    nt_config_t cfg = {.target = load_target(), .dice_per = 5, .min_open = 2, .wild = true};
+    nt_config_t cfg = {.dice_per = 5, .min_open = 2, .wild = true};
+    load_settings(&cfg);
     // One-shot lengths come from the sprites, so scene timing matches what NABO is doing.
     static const struct { nt_anim_t anim; int sprite; } LEN[] = {
         {NT_ANIM_SHUFFLE, NTS_SMALL_CUT}, {NT_ANIM_DEAL, NTS_SMALL_DEAL}, {NT_ANIM_SLAM, NTS_SMALL_SLAM},
@@ -219,7 +225,7 @@ static void game_task(void *arg)
         handle_input(m, keys, (uint32_t)(now / 1000));
         nt_update(m, dt);
         uint32_t ev = nt_take_events(m);
-        if (ev & NT_EV_SETTINGS) save_target(m->cfg.target);
+        if (ev & NT_EV_SETTINGS) save_settings(&m->cfg);
         if (ev) atomic_fetch_or(&s_events, ev);
         bool capture = atomic_exchange(&s_capture, false);
         if (capture) {

@@ -1,5 +1,5 @@
 #pragma once
-// NABO TABLE: two-player 21 points and liar's dice with NABO as the dealer. Like DIVE, it owns
+// NABO TABLE: 21 points and liar's dice for 2..4 players with NABO as the dealer. Like DIVE, it owns
 // the panel while open (LVGL refresh paused) and runs its own game task.
 #include <stdbool.h>
 #include <stddef.h>

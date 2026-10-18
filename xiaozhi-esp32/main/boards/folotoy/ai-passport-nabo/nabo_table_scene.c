@@ -4,8 +4,32 @@
 
 #include <stdio.h>
 
-const char *const NT_PNAME[2] = {"玩家 1", "玩家 2"};
-uint16_t nt_pcol(int p) { return p ? NT_COL_P2 : NT_COL_P1; }
+const char *const NT_PNAME[NT_MAX_PLAYERS] = {"玩家 1", "玩家 2", "玩家 3", "玩家 4"};
+
+uint16_t nt_pcol(int p)
+{
+    switch (p) {
+    case 1: return NT_COL_P2;
+    case 2: return NT_COL_P3;
+    case 3: return NT_COL_P4;
+    default: return NT_COL_P1;
+    }
+}
+
+int nt_cell_x(const nt_t *m, int p) { return m->np == 3 && p == 2 ? 66 : nt_seat_right(p) ? 124 : 8; }
+
+void nt_seg_line(ntg_t *g, const nt_fonts_t *f, int x, int y, const nt_seg_t *segs, int n, nt_align_t align)
+{
+    static const char SEP[] = " · ";
+    int sw = ntg_text_width(f->f12, SEP), total = sw * (n - 1);
+    for (int i = 0; i < n; i++) total += ntg_text_width(f->f12, segs[i].text);
+    int cx = align == NT_ALIGN_CENTER ? x - total / 2 : x;
+    for (int i = 0; i < n; i++) {
+        if (i) { nt_txt(g, f->f12, SEP, cx, y, NT_ALIGN_LEFT, NT_COL_MUTED); cx += sw; }
+        nt_txt(g, f->f12, segs[i].text, cx, y, NT_ALIGN_LEFT, segs[i].color);
+        cx += ntg_text_width(f->f12, segs[i].text);
+    }
+}
 
 void nt_txt(ntg_t *g, const lv_font_t *font, const char *s, int x, int y, nt_align_t align, uint16_t color)
 {
@@ -30,7 +54,8 @@ static int sprite_for(const nt_t *m, bool large)
         case NT_ANIM_SHAKE: return NTS_LARGE_SHAKE;
         case NT_ANIM_COVER_IN: return NTS_LARGE_COVER_IN;
         case NT_ANIM_COVER: return NTS_LARGE_COVER;
-        case NT_ANIM_TROPHY: return NTS_LARGE_TROPHY;
+        // No trophy when the end screen names the player who lost liar's dice (3 or 4 players).
+        case NT_ANIM_TROPHY: return m->game == NT_GAME_DICE && m->np > 2 ? NTS_LARGE_IDLE_EMPTY : NTS_LARGE_TROPHY;
         default: return NTS_LARGE_IDLE_EMPTY;
         }
     }
@@ -58,15 +83,18 @@ void nt_dealer(ntg_t *g, const nt_t *m, int rim, bool large)
 
 // ---------- common pieces ----------
 
+// Scores sit on the same side as the seats: left-column players top left, right-column top right.
 void nt_scores(ntg_t *g, const nt_t *m, const nt_fonts_t *f)
 {
+    static const int16_t X[NT_MAX_PLAYERS] = {8, NTG_W - 8, 42, NTG_W - 42};
     char s[8];
-    snprintf(s, sizeof(s), "%d", m->score[0]);
-    nt_txt(g, f->poster, s, 8, 18, NT_ALIGN_LEFT, NT_COL_P1);
-    snprintf(s, sizeof(s), "%d", m->score[1]);
-    nt_txt(g, f->poster, s, NTG_W - 8, 18, NT_ALIGN_RIGHT, NT_COL_P2);
-    char t[16];
-    snprintf(t, sizeof(t), "抢 %d", m->cfg.target);
+    for (int p = 0; p < m->np; p++) {
+        snprintf(s, sizeof(s), "%d", m->score[p]);
+        nt_txt(g, f->poster, s, X[p], 18, nt_seat_right(p) ? NT_ALIGN_RIGHT : NT_ALIGN_LEFT, nt_pcol(p));
+    }
+    char t[24];
+    if (m->game == NT_GAME_DICE) snprintf(t, sizeof(t), "罚满 %d 输", m->cfg.target);
+    else snprintf(t, sizeof(t), "抢 %d", m->cfg.target);
     nt_txt(g, f->f12, t, NTG_W / 2, 9, NT_ALIGN_CENTER, NT_COL_MUTED);
 }
 
@@ -90,12 +118,10 @@ void nt_choices(ntg_t *g, const nt_fonts_t *f, int y, const char *a, const char 
     }
 }
 
-void nt_result_banner(ntg_t *g, const nt_t *m, const nt_fonts_t *f, const char *why)
+void nt_result_banner(ntg_t *g, const nt_t *m, const nt_fonts_t *f, const char *main, const char *why, uint16_t col)
 {
-    int w = m->result.winner;
-    uint16_t col = w < 0 ? NT_COL_BRASS : nt_pcol(w);
     char line[96];
-    snprintf(line, sizeof(line), "%s · %s", w < 0 ? "平局" : w ? "玩家 2 赢" : "玩家 1 赢", why);
+    snprintf(line, sizeof(line), "%s · %s", main, why);
     ntg_rect(g, 0, 266, NTG_W, 54, 0, ntg_rgb(4, 12, 10), 235, 0, 0);
     ntg_rect(g, 0, 266, NTG_W, 2, 0, col, 255, 0, 0);
     nt_txt(g, f->f12, line, NTG_W / 2, 282, NT_ALIGN_CENTER, col);
@@ -121,18 +147,18 @@ int nt_bid_label(ntg_t *g, const nt_fonts_t *f, int x, int y, int q, int face, n
 
 static void scene_menu(ntg_t *g, const nt_t *m, const nt_fonts_t *f)
 {
-    static const char *const ITEMS[2] = {"21 点", "大话骰"};
+    char label[NT_MENU_COUNT][24] = {"21 点", "大话骰"};
+    snprintf(label[NT_MENU_PLAYERS], sizeof(label[0]), "%d 人", m->cfg.players);
+    snprintf(label[NT_MENU_TARGET], sizeof(label[0]), "抢 %d / 罚 %d", m->cfg.target, m->cfg.target);
     ntg_bg(g, 168);
     nt_dealer(g, m, 168, true);
-    nt_txt(g, f->poster, "NABO", 86, 194, NT_ALIGN_CENTER, NT_COL_FELT_TEXT);
-    nt_txt(g, f->f18, "牌桌", 154, 195, NT_ALIGN_CENTER, NT_COL_BRASS);
+    nt_txt(g, f->poster, "NABO", 86, 192, NT_ALIGN_CENTER, NT_COL_FELT_TEXT);
+    nt_txt(g, f->f18, "牌桌", 154, 193, NT_ALIGN_CENTER, NT_COL_BRASS);
     for (int i = 0; i < NT_MENU_COUNT; i++) {
-        int y = 224 + i * 26;
+        int y = 218 + i * 22;
         bool sel = m->menu == i;
-        char target[16];
-        snprintf(target, sizeof(target), "抢 %d 局", m->cfg.target);
         if (sel) ntg_rect(g, 56, y - 11, 128, 22, 11, NT_COL_BRASS, 255, 0, 0);
-        nt_txt(g, f->f16, i < 2 ? ITEMS[i] : target, NTG_W / 2, y, NT_ALIGN_CENTER, sel ? NT_COL_INK : NT_COL_FELT_TEXT);
+        nt_txt(g, f->f16, label[i], NTG_W / 2, y, NT_ALIGN_CENTER, sel ? NT_COL_INK : NT_COL_FELT_TEXT);
     }
     nt_hint(g, f, "↑↓ 选择 · OK 进入 · 双击上 退出");
 }
@@ -146,10 +172,24 @@ static void scene_handoff(ntg_t *g, const nt_t *m, const nt_fonts_t *f)
     nt_scores(g, m, f);
     nt_txt(g, f->f12, "请交给", NTG_W / 2, 194, NT_ALIGN_CENTER, NT_COL_MUTED);
     nt_txt(g, f->f24, NT_PNAME[p], NTG_W / 2, 220, NT_ALIGN_CENTER, nt_pcol(p));
-    if (m->game == NT_GAME_BJ) {
+    if (m->game == NT_GAME_BJ && m->np == 2) {
         snprintf(s, sizeof(s), "玩家 1 %d 张%s · 玩家 2 %d 张%s", m->bj.hand_n[0], m->bj.stood[0] ? " 已停" : "",
                  m->bj.hand_n[1], m->bj.stood[1] ? " 已停" : "");
         nt_txt(g, f->f12, s, NTG_W / 2, 250, NT_ALIGN_CENTER, NT_COL_MUTED);
+    } else if (m->game == NT_GAME_BJ) {
+        char t[NT_MAX_PLAYERS][24];
+        nt_seg_t segs[NT_MAX_PLAYERS];
+        for (int q = 0; q < m->np; q++) {
+            if (m->bj.stood[q]) snprintf(t[q], sizeof(t[q]), "%s 停", NT_PNAME[q]);
+            else snprintf(t[q], sizeof(t[q]), "%s %d 张", NT_PNAME[q], m->bj.hand_n[q]);
+            segs[q] = (nt_seg_t){t[q], nt_pcol(q)};
+        }
+        if (m->np == 3) {
+            nt_seg_line(g, f, NTG_W / 2, 250, segs, 3, NT_ALIGN_CENTER);
+        } else {   // four do not fit on one line: two rows of two
+            nt_seg_line(g, f, NTG_W / 2, 243, segs, 2, NT_ALIGN_CENTER);
+            nt_seg_line(g, f, NTG_W / 2, 259, segs + 2, 2, NT_ALIGN_CENTER);
+        }
     } else {
         const nt_bid_t *last = nt_last_bid(m);
         if (last) {
@@ -165,19 +205,35 @@ static void scene_handoff(ntg_t *g, const nt_t *m, const nt_fonts_t *f)
     nt_txt(g, f->f12, "长按 OK 暂停", NTG_W / 2, 311, NT_ALIGN_CENTER, NT_COL_MUTED);
 }
 
+// 21 points: the leader wins. Liar's dice: with two players the other one wins; with more,
+// the player who collected the penalties is announced.
 static void scene_end(ntg_t *g, const nt_t *m, const nt_fonts_t *f)
 {
-    int w = m->score[0] >= m->cfg.target ? 0 : 1;
-    char s[16];
+    int focus = nt_match_focus(m);
+    bool dice = m->game == NT_GAME_DICE, loser_title = dice && m->np > 2;
+    int w = dice && m->np == 2 ? 1 - focus : focus;
+    char s[32];
     ntg_bg(g, 186);
     nt_dealer(g, m, 186, true);
-    snprintf(s, sizeof(s), "%s 获胜", NT_PNAME[w]);
-    nt_txt(g, f->f24, s, NTG_W / 2, 216, NT_ALIGN_CENTER, nt_pcol(w));
-    snprintf(s, sizeof(s), "%d", m->score[0]);
-    nt_txt(g, f->poster, s, NTG_W / 2 - 18, 252, NT_ALIGN_RIGHT, NT_COL_P1);
-    nt_txt(g, f->poster, ":", NTG_W / 2, 250, NT_ALIGN_CENTER, NT_COL_MUTED);
-    snprintf(s, sizeof(s), "%d", m->score[1]);
-    nt_txt(g, f->poster, s, NTG_W / 2 + 18, 252, NT_ALIGN_LEFT, NT_COL_P2);
+    snprintf(s, sizeof(s), loser_title ? "%s 输了" : "%s 获胜", NT_PNAME[w]);
+    nt_txt(g, f->f24, s, NTG_W / 2, loser_title ? 212 : 216, NT_ALIGN_CENTER, nt_pcol(w));
+    if (m->np == 2) {
+        snprintf(s, sizeof(s), "%d", m->score[0]);
+        nt_txt(g, f->poster, s, NTG_W / 2 - 18, 252, NT_ALIGN_RIGHT, NT_COL_P1);
+        nt_txt(g, f->poster, ":", NTG_W / 2, 250, NT_ALIGN_CENTER, NT_COL_MUTED);
+        snprintf(s, sizeof(s), "%d", m->score[1]);
+        nt_txt(g, f->poster, s, NTG_W / 2 + 18, 252, NT_ALIGN_LEFT, NT_COL_P2);
+    } else {
+        if (loser_title) {
+            snprintf(s, sizeof(s), "先罚满 %d 次", m->cfg.target);
+            nt_txt(g, f->f12, s, NTG_W / 2, 234, NT_ALIGN_CENTER, NT_COL_MUTED);
+        }
+        const int gap = 44, x0 = NTG_W / 2 - gap * (m->np - 1) / 2;
+        for (int p = 0; p < m->np; p++) {
+            snprintf(s, sizeof(s), "%d", m->score[p]);
+            nt_txt(g, f->poster, s, x0 + p * gap, 256, NT_ALIGN_CENTER, nt_pcol(p));
+        }
+    }
     nt_choices(g, f, 292, "再来一场", "回封面", m->choice, nt_pcol(w));
 }
 

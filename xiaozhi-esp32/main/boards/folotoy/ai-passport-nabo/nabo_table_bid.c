@@ -1,4 +1,4 @@
-// Liar's dice for two: rolling, the two-step bid picker (quantity, then face), legality,
+// Liar's dice for 2..4 players: rolling, the two-step bid picker (quantity, then face), legality,
 // "open" and the reveal count with wild ones and zhai. Same rules as the prototype.
 #include "nabo_table_model.h"
 
@@ -28,7 +28,7 @@ int nt_count_face(const nt_t *g, int face)
 {
     bool wild = nt_wild_counts(g, face);
     int n = 0;
-    for (int p = 0; p < 2; p++)
+    for (int p = 0; p < g->np; p++)
         for (int i = 0; i < g->dc.per; i++) {
             int v = g->dc.dice[p][i];
             if (v == face || (wild && v == 1)) n++;
@@ -41,17 +41,17 @@ void nt_dice_new_round(nt_t *g)
     nt_dice_t *d = &g->dc;
     memset(d, 0, sizeof(*d));
     d->per = g->cfg.dice_per;
-    d->min_open = g->cfg.min_open;
+    d->min_open = g->cfg.min_open > g->np ? g->cfg.min_open : g->np;   // at least one die per player
     d->wild = g->cfg.wild;
     d->caller = -1;
-    // Draw order matters for replay: both players' angles first, then both players' dice.
-    for (int p = 0; p < 2; p++)
+    // Draw order matters for replay: every player's angles first, then every player's dice.
+    for (int p = 0; p < g->np; p++)
         for (int i = 0; i < d->per; i++) {
             double quarter = floor(nt_rand(g) * 4) * 90;
             double sign = nt_rand(g) < 0.5 ? -1 : 1;
             d->yaw[p][i] = (float)(quarter + sign * (15 + nt_rand(g) * 16));
         }
-    for (int p = 0; p < 2; p++)
+    for (int p = 0; p < g->np; p++)
         for (int i = 0; i < d->per; i++) d->dice[p][i] = (uint8_t)(1 + (int)floor(nt_rand(g) * 6));
 }
 
@@ -77,7 +77,7 @@ void nt_dice_build_bids(nt_t *g)
     uint8_t faces[6];
     d->qn = 0;
     if (last) d->qlist[d->qn++] = 0;   // "open"
-    for (int q = d->min_open; q <= d->per * 2 && d->qn < NT_MAX_QTY; q++)
+    for (int q = d->min_open; q <= d->per * g->np && d->qn < NT_MAX_QTY; q++)
         if (legal_faces(g, q, faces)) d->qlist[d->qn++] = (uint8_t)q;
     d->step = NT_STEP_QTY;
     d->qi = last && d->qn > 1 ? 1 : 0;   // start on the smallest raise, never on "open"
@@ -126,7 +126,7 @@ void nt_dice_key(nt_t *g, nt_key_t k)
         d->bids[d->bid_n++] = b;
     }
     g->events |= NT_EV_OK;
-    nt_handoff(g, 1 - g->turn);
+    nt_handoff(g, nt_next_player(g, g->turn));
 }
 
 void nt_dice_reveal_update(nt_t *g)
@@ -136,7 +136,8 @@ void nt_dice_reveal_update(nt_t *g)
     const nt_bid_t *last = nt_last_bid(g);
     int actual = nt_count_face(g, last->f);
     bool held = actual >= last->q;
-    nt_win_round(g, held ? last->p : g->dc.caller);
+    int bidder = last->p, caller = g->dc.caller;   // whoever was wrong takes the penalty
+    nt_finish_round(g, 1u << (held ? bidder : caller), held ? caller : bidder);
     g->result.actual = (uint8_t)actual;
     g->result.bid_q = last->q;
     g->result.bid_f = last->f;
