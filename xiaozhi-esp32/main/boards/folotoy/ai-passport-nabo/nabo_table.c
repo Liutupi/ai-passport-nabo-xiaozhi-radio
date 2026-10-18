@@ -44,6 +44,7 @@ static SemaphoreHandle_t s_done;
 static esp_timer_handle_t s_timer;
 static atomic_bool s_stop, s_running, s_capture, s_capturing;
 static uint32_t s_seed;
+static atomic_int s_start_on;
 
 // Input: button edges and injected keys, from other tasks.
 #define EDGE_RING 32
@@ -85,10 +86,20 @@ int nabo_table_status(char *out, size_t cap)
     table_state_t *st = s_st;
     if (!atomic_load(&s_running) || !st) return snprintf(out, cap, "{\"running\":0}");
     const nt_t *m = &st->model;
-    return snprintf(out, cap, "{\"running\":1,\"scene\":%d,\"game\":%d,\"players\":%d,\"cfg_players\":%d,\"score\":[%d,%d,%d,%d],"
-                              "\"round\":%d,\"turn\":%d,\"paused\":%d,\"heap\":%u}",
-                    m->scene, m->game, m->np, m->cfg.players, m->score[0], m->score[1], m->score[2], m->score[3], m->round, m->turn,
-                    m->paused, (unsigned)esp_get_free_heap_size());
+    int len = snprintf(out, cap, "{\"running\":1,\"scene\":%d,\"game\":%d,\"players\":%d,\"cfg_players\":%d,"
+                                 "\"score\":[%d,%d,%d,%d],\"round\":%d,\"turn\":%d,\"paused\":%d,\"heap\":%u",
+                       m->scene, m->game, m->np, m->cfg.players, m->score[0], m->score[1], m->score[2], m->score[3],
+                       m->round, m->turn, m->paused, (unsigned)esp_get_free_heap_size());
+    if (m->game == NT_GAME_UC && len > 0 && (size_t)len < cap) {   // masks: bit per player
+        unsigned uc = 0, alive = 0;
+        for (int p = 0; p < m->uc.n; p++) uc |= (unsigned)m->uc.uc[p] << p, alive |= (unsigned)m->uc.alive[p] << p;
+        len += snprintf(out + len, cap - len, ",\"uc\":{\"n\":%d,\"pair\":%d,\"uc\":%u,\"alive\":%u,\"round\":%d,"
+                        "\"speaker\":%d,\"cursor\":%d,\"confirm\":%d,\"over\":%d,\"uc_won\":%d}",
+                        m->uc.n, m->uc.pair, uc, alive, m->uc.round, m->uc.speaker, m->uc.cursor, m->uc.confirm,
+                        m->result.has, m->uc.uc_won);
+    }
+    if (len > 0 && (size_t)len + 1 < cap) out[len++] = '}', out[len] = 0;
+    return len;
 }
 
 /* ---------- settings ---------- */
@@ -98,14 +109,16 @@ int nabo_table_status(char *out, size_t cap)
 static void load_settings(nt_config_t *cfg)
 {
     nvs_handle_t h;
-    uint8_t target = 3, players = 2;
+    uint8_t target = 3, players = 2, uc_players = 5;
     if (nvs_open("nabo_ui", NVS_READONLY, &h) == ESP_OK) {
         nvs_get_u8(h, "table_target", &target);
         nvs_get_u8(h, "table_players", &players);
+        nvs_get_u8(h, "uc_players", &uc_players);
         nvs_close(h);
     }
     cfg->target = target == 3 || target == 5 || target == 7 ? target : 3;
     cfg->players = players >= NT_MIN_PLAYERS && players <= NT_MAX_PLAYERS ? players : 2;
+    cfg->uc_players = uc_players >= NT_UC_MIN && uc_players <= NT_UC_MAX ? uc_players : 5;
 }
 
 static void save_settings(const nt_config_t *cfg)
@@ -115,6 +128,7 @@ static void save_settings(const nt_config_t *cfg)
     if (err == ESP_OK) {
         err = nvs_set_u8(h, "table_target", cfg->target);
         if (err == ESP_OK) err = nvs_set_u8(h, "table_players", cfg->players);
+        if (err == ESP_OK) err = nvs_set_u8(h, "uc_players", cfg->uc_players);
         if (err == ESP_OK) err = nvs_commit(h);
         nvs_close(h);
     }
@@ -140,6 +154,8 @@ static void send(void *ctx, int x, int y, int w, int h, uint16_t *px)
 }
 
 void nabo_table_capture(void) { atomic_store(&s_capture, true); }
+
+void nabo_table_start_on(int where) { atomic_store(&s_start_on, where); }
 
 static void tick(void *arg)
 {
@@ -212,6 +228,7 @@ static void game_task(void *arg)
     }
     nt_t *m = &s_st->model;
     nt_init(m, &cfg, s_seed);
+    if (atomic_exchange(&s_start_on, NABO_TABLE_START_COVER) == NABO_TABLE_START_UNDERCOVER) nt_uc_setup(m);
     nt_sound_reset(&s_st->sound);
     key_state_t keys[3] = {0};
     int64_t last = esp_timer_get_time(), stats_at = last;

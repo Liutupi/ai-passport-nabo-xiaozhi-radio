@@ -12,8 +12,9 @@ public:
     void SetEmotion(const char* emotion) override;
     void SetTheme(Theme* theme) override;
     void CaptureLCD();
-    // DIVE owns the panel between these calls (LVGL task, display locked): LVGL refresh is
-    // paused and its last flush has finished, so only the game talks to the panel.
+    // A local program owns the panel between these calls (LVGL task, display locked): LVGL's
+    // last flush has finished, refresh is paused, and any refresh LVGL still runs (it resumes
+    // the timer on invalidation) completes without sending to the panel.
     void BeginDirectDraw(esp_lcd_panel_io_handle_t* io, esp_lcd_panel_handle_t* panel);
     void EndDirectDraw();
     void ReleaseGameDrawBuffer();

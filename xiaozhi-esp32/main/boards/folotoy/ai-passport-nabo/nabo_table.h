@@ -1,5 +1,6 @@
 #pragma once
-// NABO TABLE: 21 points and liar's dice for 2..4 players with NABO as the dealer. Like DIVE, it owns
+// NABO TABLE: 21 points and liar's dice for 2..4 players and who is the undercover for 3..8,
+// with NABO as the dealer. Like DIVE, it owns
 // the panel while open (LVGL refresh paused) and runs its own game task.
 #include <stdbool.h>
 #include <stddef.h>
@@ -13,6 +14,10 @@ extern "C" {
 #endif
 
 enum { NABO_TABLE_UP = 0, NABO_TABLE_DOWN = 1, NABO_TABLE_OK = 2 };
+enum { NABO_TABLE_START_COVER = 0, NABO_TABLE_START_UNDERCOVER = 1 };
+
+// Where the next nabo_table_open() starts (voice "打开谁是卧底" goes straight to its setup).
+void nabo_table_start_on(int where);
 
 // pack: table_sprites.bin as mapped from the assets partition.
 bool nabo_table_open(esp_lcd_panel_io_handle_t io, esp_lcd_panel_handle_t panel, uint32_t seed, const void *pack,

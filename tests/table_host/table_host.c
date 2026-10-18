@@ -9,10 +9,11 @@ static nt_t g;
 
 nt_t *host_model(void) { return &g; }
 
-void host_init(unsigned seed, int players, int target, int per, int min_open, int wild, float cut_s, float slam_s)
+void host_init(unsigned seed, int players, int uc_players, int target, int per, int min_open, int wild, float cut_s, float slam_s)
 {
     nt_config_t cfg = {0};
     cfg.players = (uint8_t)players;
+    cfg.uc_players = (uint8_t)uc_players;
     cfg.target = (uint8_t)target;
     cfg.dice_per = (uint8_t)per;
     cfg.min_open = (uint8_t)min_open;
@@ -44,13 +45,28 @@ static int ints(char *out, int len, int cap, const uint8_t *v, int n)
 int host_snap(char *out, int cap)
 {
     int len = 0;
-    int w = !g.result.has ? -2 : g.result.winners, lo = !g.result.has ? -2 : g.result.loser;
+    bool uc = g.game == NT_GAME_UC;
+    int w = uc || !g.result.has ? -2 : g.result.winners, lo = uc || !g.result.has ? -2 : g.result.loser;
     PUT("{\"sc\":%d,\"g\":%d,\"np\":%d,\"score\":", g.scene, g.game, g.np);
     len = ints(out, len, cap, g.score, g.np);
     PUT(",\"round\":%d,\"starter\":%d,\"turn\":%d,\"ho\":%d,\"pause\":%d,"
-        "\"choice\":%d,\"menu\":%d,\"target\":%d,\"players\":%d,\"w\":%d,\"lo\":%d",
+        "\"choice\":%d,\"menu\":%d,\"target\":%d,\"players\":%d,\"w\":%d,\"lo\":%d,\"ucp\":%d",
         g.round, g.starter, g.turn, g.handoff_to, g.paused ? g.pause_cursor : -1, g.choice, g.menu, g.cfg.target,
-        g.cfg.players, w, lo);
+        g.cfg.players, w, lo, g.cfg.uc_players);
+    if (uc && g.uc.n == 0) {   // setup before the first deal
+        PUT(",\"uc\":{\"cu\":%d}", g.uc.cursor);
+    } else if (uc) {
+        const nt_uc_t *u = &g.uc;
+        PUT(",\"uc\":{\"cu\":%d,\"n\":%d,\"pair\":%d,\"sw\":%d,\"uc\":[", u->cursor, u->n, u->pair, u->swap);
+        for (int p = 0; p < u->n; p++) PUT("%s%d", p ? "," : "", u->uc[p]);
+        PUT("],\"al\":[");
+        for (int p = 0; p < u->n; p++) PUT("%s%d", p ? "," : "", u->alive[p]);
+        PUT("],\"rd\":%d,\"sp\":%d,\"out\":%d,\"li\":%d,\"cf\":%d,\"cc\":%d,\"rc\":%d,\"won\":%d,\"over\":%d,\"rec\":[",
+            u->round, (int8_t)u->speaker, (int8_t)u->out, u->list, u->confirm, u->confirm_cursor, u->recheck, u->uc_won,
+            g.result.has);
+        for (int i = 0; i < u->recent_n; i++) PUT("%s%d", i ? "," : "", u->recent[i]);
+        PUT("]}");
+    }
     if (g.game == NT_GAME_BJ) {
         PUT(",\"bj\":{\"h\":[");
         for (int p = 0; p < g.np; p++) {
@@ -115,3 +131,8 @@ void host_bj_reveal(void)
 
 void host_set_score(int p, int v) { g.score[p] = (uint8_t)v; }
 int host_match_over(void) { return nt_match_over(&g); }
+
+const char *host_uc_word(int p) { return nt_uc_word(&g, p); }
+
+// Who is the undercover opened straight from voice (nabo_table_start_on), not from the cover.
+void host_uc_direct(void) { nt_uc_setup(&g); }

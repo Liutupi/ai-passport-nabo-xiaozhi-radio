@@ -2,7 +2,11 @@
 
 ## 当前交接状态
 
-最新 Release 为 **v1.5.0 牌桌多人版**（本仓库），应用 SHA256 `849a1ce6468c9f927ba94e951f74c5dbf1a9c1ec0da06bbdc8d63187e1f43e05`：牌桌支持 2–4 人（21 点并列最高都得分，大话骰改为罚分制），应用分区剩约 337 KB，bootloader、分区表沿用 v1.4.0。上一版 **v1.4.0 牌桌版**，应用 SHA256 `b9502231ad4d8b2056e91c567858826fbc91c30fa25dcdb60024c08892e97f4b`：新增 NABO 牌桌（21 点、大话骰），移除深潜、摇骰子、功德木鱼和蓝牙电脑快捷键（含 `nabo_pc.c`）；小智没联网时也能打开本地程序。应用分区剩约 340 KB。**资源分区随之改变**（多了 1.18 MB 的 `table_sprites.bin`，共 2.54 MB），所以发行包不再复用 v1.0.0 的资源镜像，upgrade 模式写应用和资源。牌桌的结构与注意事项见下文“NABO 牌桌”一节。
+当前版本为 **v1.6.0 谁是卧底版**：复用现成实机验证应用，3,975,984 字节，SHA256 `de9ff6def9c9e49464d77607aca6a53d4e162f8da387dc2e0f379106101d7327`。资源 SHA256 `b7230904f977912bdb4b31b21bb47ad105c7e49e4a2f7a162664ba8c43107785`，bootloader、分区表和资源与 v1.5.0 相同。新增 `nabo_table_uc.c`（3–8 人规则）、`nabo_table_scene_uc.c`（画面）和 `nabo_uc_words.c/.h`（264 组词库），原型同步至 `game-art/table/prototype/undercover.js`；词库来源为 `game-art/table/undercover/words.txt`，生成器 `tools/generate_uc_words.py`。本版删除节奏回声固件与相关测试，勿将历史文档中的节奏入口当作本版功能。
+
+**屏幕争用修复：** `NaboDisplay::BeginDirectDraw()` 设置 `panel_borrowed`；LVGL flush 在牌桌持有面板期间只回报完成。仅暂停 LVGL 刷新定时器不够，因为配网状态变更会重新唤醒刷新。不要移除此保护。实机 5/8 人完整流程及 10 轮牌桌进出压力测试已通过，验证范围见 `docs/VALIDATION.md` 和 `validation/v1.6.0.json`；现成镜像与日后干净构建必须分别记录，不能静默替换。
+
+上一版 Release 为 **v1.5.0 牌桌多人版**（本仓库），应用 SHA256 `849a1ce6468c9f927ba94e951f74c5dbf1a9c1ec0da06bbdc8d63187e1f43e05`：牌桌支持 2–4 人（21 点并列最高都得分，大话骰改为罚分制），应用分区剩约 337 KB，bootloader、分区表沿用 v1.4.0。上一版 **v1.4.0 牌桌版**，应用 SHA256 `b9502231ad4d8b2056e91c567858826fbc91c30fa25dcdb60024c08892e97f4b`：新增 NABO 牌桌（21 点、大话骰），移除深潜、摇骰子、功德木鱼和蓝牙电脑快捷键（含 `nabo_pc.c`）；小智没联网时也能打开本地程序。应用分区剩约 340 KB。**资源分区随之改变**（多了 1.18 MB 的 `table_sprites.bin`，共 2.54 MB），所以发行包不再复用 v1.0.0 的资源镜像，upgrade 模式写应用和资源。牌桌的结构与注意事项见下文“NABO 牌桌”一节。
 
 v1.3.x 深潜版：应用 4,107,808 字节，SHA256 `7cd8589aff5aa7eacf66bdff93a9cd5accc19613aa9add2ce80504507ac0a45a`（v1.3.0）；新增深潜，移除网络电台，在 [ai-passport-nabo-xiaozhi-dive](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-dive) 维护。
 

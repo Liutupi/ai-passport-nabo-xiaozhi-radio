@@ -152,7 +152,7 @@ private:
         });
 
         auto down = adc_button_[kAdcButtonDown];
-        // Rhythm scores DOWN on press-down and DIVE dashes while it is held;
+        // The table reads DOWN press-down and release edges;
         // menus keep using its click.
         down->OnPressDown([this]() {
             uint32_t event_ms = esp_timer_get_time() / 1000;

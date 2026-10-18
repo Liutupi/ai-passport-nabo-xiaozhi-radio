@@ -1,6 +1,6 @@
 #pragma once
 // NABO TABLE rules: cover menu, hand-off screens, 21 points and liar's dice for two to four
-// players passing one badge around. Pure logic, a port of nabo-table/prototype/index.html: the same seed and
+// players and "who is the undercover" for three to eight, all passing one badge around. Pure logic, a port of nabo-table/prototype/index.html: the same seed and
 // the same key presses give the same deals, rolls and results. No display, audio or RTOS here.
 #include <stdbool.h>
 #include <stdint.h>
@@ -15,15 +15,19 @@ extern "C" {
 #define NT_MAX_DICE 6
 #define NT_MAX_BIDS 160  // bids strictly increase over 24 quantities x 6 faces
 #define NT_MAX_QTY 25    // "open" + quantities up to 4 x 6 dice
+#define NT_UC_MIN 3      // who is the undercover: players
+#define NT_UC_MAX 8
+#define NT_UC_RECENT 24  // pairs not dealt again until this many others have been
 
 typedef enum { NT_KEY_UP, NT_KEY_DOWN, NT_KEY_OK, NT_KEY_OK_LONG } nt_key_t;
 
 typedef enum {
-    NT_MENU, NT_HANDOFF, NT_BJ_DEAL, NT_BJ_TURN, NT_BJ_REVEAL, NT_DICE_ROLL, NT_DICE_TURN, NT_DICE_REVEAL, NT_END
+    NT_MENU, NT_HANDOFF, NT_BJ_DEAL, NT_BJ_TURN, NT_BJ_REVEAL, NT_DICE_ROLL, NT_DICE_TURN, NT_DICE_REVEAL, NT_END,
+    NT_UC_SETUP, NT_UC_WORD, NT_UC_TALK, NT_UC_VOTE, NT_UC_OUT, NT_UC_END
 } nt_scene_t;
 
-typedef enum { NT_GAME_NONE, NT_GAME_BJ, NT_GAME_DICE } nt_game_t;
-typedef enum { NT_MENU_BJ, NT_MENU_DICE, NT_MENU_PLAYERS, NT_MENU_TARGET, NT_MENU_COUNT } nt_menu_item_t;
+typedef enum { NT_GAME_NONE, NT_GAME_BJ, NT_GAME_DICE, NT_GAME_UC } nt_game_t;
+typedef enum { NT_MENU_BJ, NT_MENU_DICE, NT_MENU_UC, NT_MENU_PLAYERS, NT_MENU_TARGET, NT_MENU_COUNT } nt_menu_item_t;
 
 // NABO's dealer animations. The renderer picks the sprite (e.g. SHUFFLE is the card spread on
 // the cover and the cut at the start of a round; POINT with mirror set means point right).
@@ -51,6 +55,7 @@ enum {
 typedef struct {
     uint8_t target;     // 21 points: rounds needed to win; liar's dice: penalties that lose. 3, 5 or 7
     uint8_t players;    // 2..4, chosen on the cover
+    uint8_t uc_players; // who is the undercover: 3..8, chosen on its setup screen
     uint8_t dice_per;   // dice per player, 3..6
     uint8_t min_open;   // smallest quantity a bid may use (raised to the player count)
     bool wild;          // ones count as any face until someone bids ones ("zhai")
@@ -90,6 +95,28 @@ typedef struct {
     int8_t caller;
 } nt_dice_t;
 
+// Who is the undercover. Everyone gets a word; the undercovers (1, or 2 from seven players)
+// get the other word of the pair. Players describe their word out loud, then vote someone out
+// on the badge. Civilians win when every undercover is out; undercovers win once they are at
+// least as many as the civilians left.
+typedef enum { NT_UC_LIST_VOTE, NT_UC_LIST_FORGOT } nt_uc_list_t;
+
+typedef struct {
+    uint8_t n, n_uc;
+    uint16_t pair;
+    bool swap;                    // the undercovers get word 0 of the pair, civilians word 1
+    bool uc[NT_UC_MAX], alive[NT_UC_MAX];
+    uint8_t round, speaker, out;  // first to describe this round; the player just voted out
+    uint8_t cursor;               // setup: player count; talk: 0 vote, 1 someone forgot; lists: row
+    nt_uc_list_t list;
+    bool confirm;                 // vote: "vote out player N?" step
+    uint8_t confirm_cursor;       // 0 = yes, 1 = cancel
+    bool recheck;                 // the word screen was opened from "someone forgot"
+    bool uc_won;                  // valid once the game is over
+    uint16_t recent[NT_UC_RECENT];
+    uint8_t recent_n;
+} nt_uc_t;
+
 typedef struct {
     bool has;
     uint8_t winners;             // bit per player; 0 = tie, nobody scores
@@ -116,6 +143,7 @@ typedef struct {
     uint8_t sfx_mark;
     nt_bj_t bj;
     nt_dice_t dc;
+    nt_uc_t uc;
     nt_result_t result;
     nt_anim_t anim, anim_next;
     bool mirror, has_next;
@@ -147,6 +175,15 @@ bool nt_wild_counts(const nt_t *g, int face);
 float nt_bj_flip(const nt_t *g, int p, int i);
 float nt_anim_len(const nt_t *g, nt_anim_t a);
 
+// Who is the undercover (nabo_table_uc.c).
+void nt_uc_setup(nt_t *g);              // cover -> setup screen
+void nt_uc_key(nt_t *g, nt_key_t key);  // keys in the undercover scenes
+void nt_uc_begin_turn(nt_t *g, int p);  // after a hand-off: show player p their word
+const char *nt_uc_word(const nt_t *g, int p);
+int nt_uc_alive(const nt_t *g, bool undercover);   // players still in, of one side
+int nt_uc_list_len(const nt_t *g);      // rows in the vote / forgot list (alive players + one)
+int nt_uc_list_player(const nt_t *g, int row);     // player on a list row, -1 for the last row
+
 // Liar's dice internals (nabo_table_bid.c), used by the model.
 void nt_dice_new_round(nt_t *g);
 void nt_dice_build_bids(nt_t *g);
@@ -161,6 +198,8 @@ void nt_handoff(nt_t *g, int p);
 // Scores the round: winners (bit per player) gain a round in 21 points; in liar's dice the
 // loser gains a penalty point. winners == 0 and loser < 0 is a tie.
 void nt_finish_round(nt_t *g, unsigned winners, int loser);
+void nt_to_menu(nt_t *g);
+int nt_rand_int(nt_t *g, int n);
 
 #ifdef __cplusplus
 }

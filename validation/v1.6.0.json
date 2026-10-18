@@ -1,0 +1,116 @@
+{
+  "version": "1.6.0",
+  "date": "2026-10-18",
+  "board": "ai-passport-nabo",
+  "chip": "esp32c3",
+  "flash_bytes": 8388608,
+  "accepted_app": {
+    "bytes": 3975984,
+    "sha256": "de9ff6def9c9e49464d77607aca6a53d4e162f8da387dc2e0f379106101d7327",
+    "origin": "existing Windows ESP-IDF 6.0.2 build, flashed and verified before publication",
+    "rebuilt_for_publication": false
+  },
+  "assets_sha256": "b7230904f977912bdb4b31b21bb47ad105c7e49e4a2f7a162664ba8c43107785",
+  "guarded_upgrade": {
+    "image_write_verification": true,
+    "unchanged_region_verification": true
+  },
+  "device_serial_scenarios": {
+    "undercover": [
+      {
+        "players": 5,
+        "final_scene": 14,
+        "winner": "civilians"
+      },
+      {
+        "players": 8,
+        "final_scene": 14,
+        "winner": "civilians"
+      }
+    ],
+    "blackjack": {
+      "players": 2,
+      "final_scene": 4
+    },
+    "liars_dice": {
+      "players": 2,
+      "final_scene": 7
+    },
+    "problem_lines": 0
+  },
+  "screen_handover_stress": {
+    "cycles": 10,
+    "problem_count": 0,
+    "home_heap_min": 70580,
+    "home_heap_max": 71484,
+    "wifi_connected": false
+  },
+  "not_revalidated": [
+    "manual physical button and sound evaluation",
+    "online voice conversation",
+    "fresh full-image installation on a blank device",
+    "complete 3/4/6/7-player device games"
+  ],
+  "source_hash_normalization": "UTF-8 file bytes with CRLF normalized to LF, matching Git attributes",
+  "accepted_source_sha256": {
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/ai_passport_board.cc": "1901da0ce96a7a5a770626fca57fb1622b685f29c54ce66e6e1ab3c802a1ce26",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/config.h": "8e69ea404cb9a7db0254a748f106c90d0c354f49f4290ba65c3011d6c9fdd288",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/cw2017_battery_monitor.cc": "e95275299251dde79e80a143d6ff28ea4e773a7429b0448449a6277b769efbae",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/cw2017_battery_monitor.h": "e10fb996b6774078e4d91d059d502636a4719afc30f382f79cd24a378d2b5eb5",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/muse_menu.h": "c3a4f66a4c2351a6c881cef6d3fc2422896c4bc5da3894c35efffa4af20ce784",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/muse_nabo.h": "2eadb828a3dbb40ce7e36f3a9a09c4c88d5b7d0cf410e83a69c946777c27b7f3",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/muse_pixel.c": "c7e33070d1bdd27395084e3741dee14b5e85aca8f8ecbaa80933c1d40185ffb7",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/muse_pixel.h": "c5a90bc7f3f673c6d3da706900a81e579c21cde1450e338564e35db50e59be61",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/muse_settings.h": "22823246fdf688784a6f8d13dba6ab990c781a3d4150cdb84b51607b6336091a",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/muse_wifi.h": "4d9aa9d7a80e22e8fb928b254fea1ef02c143811d9c1d22dc09dbff52cf2053e",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_apps.cc": "201fcd41e611027551120d3a62d5ac60004604fa5a99c80de146ffdf2db83f62",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_apps.h": "46fe0aea30dcc0949492ce7df039c007e7058f60662b9367be2b9915daa56a76",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_assets.h": "ab037554f956efa7db9a66e1329bdcc3ce2b43066cc39d9501603a8423348766",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_dice_render.c": "018b971da15a7fb0496440b75818179f3ac3734274d1ebed1fd6a37cad5e5061",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_dice_render.h": "6eb4a3710efbb3731e54538ba10ee4b8e709ba46a4153dc7eeb3477187311223",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_dirty.h": "216c0883fe0146f0eb9b0c04fe7a1f009a4ad7bf01e6eaf392ad469c0b008f7c",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_display.cc": "ba4b0bd7a57964b334aa18fa64577aca8758a33a876ef5467ef98d49f79d6410",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_display.h": "8cb1d872fc4176dae8284a3f33709f2327307b4469287a8948eb466c2a915e8a",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_jump_assets.h": "bdaca21e737a3cab50f70aa69cbc9e3e567443ba216a770931e4c6534bfcceb9",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_jump_model.c": "a179a0640fd019934761bad6e7cba2bd57b98929e9be60b72cc27d053988040e",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_jump_model.h": "7c2b7ac675eda07edea169905f10e16b4136ed5bd940ca1b44a477c262b6f9ee",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_jump_rig.c": "4b65edb1e4d155b2b96d565fc85930dda12a01d12c14dedce59f400881ad683b",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_jump_rig.h": "8229df60293b8e8783defe5b2f57056fce41e1e4dd8142795358d9426af74538",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_jump_sound.c": "4e1d22e04432be876e5b337bcbfa998e9408ce8ef4eb6b1af24b0d5527000bef",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_jump_sound.h": "3aebee0cfde698c5463f587fccdb116b1855327750e0e1f99b51f728ae7ffcbd",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_menu_font_16.c": "40c431af41b1b0a6f838195cc9cccf99f78abf4ddbac476ff0126ab75dad511f",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_menu_view.cc": "3b0d3efb181b8ae560e0a366cb5f33a4a857f01ec05d4f8b44d8edecf7400191",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_menu_view.h": "294f2adaa57ef0ddd45074d9ecaf238d7e649a38a4ce1e46a4bff33e89b0c5e2",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_mono_font_12.c": "264281c5b9969c87547e30136fdc071fb3a897a58d40d7ed8173712c307d01bf",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_poster_font_28.c": "ce7ed1ecd5eedeb1df4b673470a65ed9816e5ac3bdff3d849d55e58dd897d12d",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_poster_font_48.c": "ecc849f6cbfbc520cca83bff864577d6d3788ecc74f513ae60ae5a7371d0fbf5",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table.c": "ee2e98a48c9ab942d5cc4e178c26b2c1dc71e141c0a83e9f86db3774c1b69d98",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table.h": "ba2734af90473a4b397667d65c4990766173c0c94036065028ef5c685374b111",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_bid.c": "c8130d11dfea8abf75ae1fadbd12d2a49a6d18b6b090d68c42dde248dfc34938",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_font_12.c": "7c1631cae757096a331d0dfed043329c456edd990eda5a5311ec21bc71643bb6",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_font_24.c": "42cba4d3905a2d056c2f7ec806ce8fdfa51645c23e29eb2020391940488557e3",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_gfx.c": "33476060d5fb69d4c91d36de149db3c6af9305a1631c76610c0456f92137ad3d",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_gfx.h": "9b3ed1a8f1fbbc98bd8c52eedeaa2d3664493ca8f8500d7428361b5b67339c93",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_model.c": "552ee443f2a50d0382409e50fe32e20c22a3b145cb4bd8992c17e531210b60a1",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_model.h": "76d4f993187ff830a57060eb06596e9f8024cfab39355b940f75e9f1b9f9460b",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_scene.c": "d05866af452b167e6dc2147c8aba7322dcec25cb09bff5be8761760a372ec9ec",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_scene.h": "7fbf5c5aba9c95cb047f162634cbd8456ed4ce55226ed3247250e77e68cd38f7",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_scene_play.c": "4a0c7b61b4b7ddd07b8b3823c4ad4d15ac5968ac8f1b4c86b1ccf40d163af505",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_scene_uc.c": "52187014cd026e83abf821773d480c83dc6b9290cb4dd1f09a4c98e10e054989",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_scene_ui.h": "caee97515ac186d5410c4a2fcbfd6a3b3e52b1ba3b2288256148183de3946a02",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_shapes.c": "ea56c43829931d8c42c3bf5af40778eaaca3c9c9b75e8358027f3b2e731bdede",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_sound.c": "1e3a275fd199ffe48c0e765d9b4f60fa4d717f90521fb11234b81a5b11e333e1",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_sound.h": "daec4d6b59f2b49008084babe614683be37f058715cfb53983ffe9bb6fcd190f",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_sprite_ids.h": "f632abbf4ecd989cb8e0e79ff1eca6a7fd58ab1cc974870098b065a1c5c61a9b",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_sprites.c": "933423c2964147beec5d9951b550b03be7591209bc305a5498c3d21c5fdb065e",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_sprites.h": "c7ea7c003271893edd1decd2deb87cc38058e849d0fcf70e3b63ae6dc85c86a6",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_text.c": "6c7f9411a3d39db149c8a437ef22d26a258c6afa936429d13b7b48a02fc76d2c",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_text.h": "6a50e7a0786a5189dab4cbc2df49efbda27eb80737184836a2fd5173a8a0cfca",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_table_uc.c": "796eef2c702e054f618287cc6e822136a0af4f1d939f931231a93a76a98389c7",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_uc_words.c": "5b51ef67fbb5303892416020b2897a41c04f6c8712e5ace3ee4b804f9afe13d2",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_uc_words.h": "a55fa1492e121b88cc0694ac17fb7fd0db1a59792038437f724226bcea3e97a1",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_ui_font_18.c": "dded3e9e6428a174d9db32c4c0c16b17e3fbd577adb0afdd0e02793e30ec8d51",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_voice_commands.c": "e88f6006141cd018baabd8f3e5a0b8ed65c7531e67d4a55645c4dbbe15f21e1b",
+    "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_voice_commands.h": "2a2fab0332edec8a953cabf591c332c9ab2faf9ec78d8528174f784d021d9a10"
+  }
+}

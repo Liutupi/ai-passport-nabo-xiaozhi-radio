@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-const char *const NT_PNAME[NT_MAX_PLAYERS] = {"玩家 1", "玩家 2", "玩家 3", "玩家 4"};
+const char *const NT_PNAME[NT_UC_MAX] = {"玩家 1", "玩家 2", "玩家 3", "玩家 4", "玩家 5", "玩家 6", "玩家 7", "玩家 8"};
 
 uint16_t nt_pcol(int p)
 {
@@ -12,11 +12,26 @@ uint16_t nt_pcol(int p)
     case 1: return NT_COL_P2;
     case 2: return NT_COL_P3;
     case 3: return NT_COL_P4;
+    case 4: return NT_COL_P5;
+    case 5: return NT_COL_P6;
+    case 6: return NT_COL_P7;
+    case 7: return NT_COL_P8;
     default: return NT_COL_P1;
     }
 }
 
 int nt_cell_x(const nt_t *m, int p) { return m->np == 3 && p == 2 ? 66 : nt_seat_right(p) ? 124 : 8; }
+
+void nt_runs(ntg_t *g, const lv_font_t *font, int x, int y, const nt_seg_t *segs, int n, nt_align_t align)
+{
+    int total = 0;
+    for (int i = 0; i < n; i++) total += ntg_text_width(font, segs[i].text);
+    int cx = align == NT_ALIGN_CENTER ? x - total / 2 : align == NT_ALIGN_RIGHT ? x - total : x;
+    for (int i = 0; i < n; i++) {
+        nt_txt(g, font, segs[i].text, cx, y, NT_ALIGN_LEFT, segs[i].color);
+        cx += ntg_text_width(font, segs[i].text);
+    }
+}
 
 void nt_seg_line(ntg_t *g, const nt_fonts_t *f, int x, int y, const nt_seg_t *segs, int n, nt_align_t align)
 {
@@ -147,17 +162,17 @@ int nt_bid_label(ntg_t *g, const nt_fonts_t *f, int x, int y, int q, int face, n
 
 static void scene_menu(ntg_t *g, const nt_t *m, const nt_fonts_t *f)
 {
-    char label[NT_MENU_COUNT][24] = {"21 点", "大话骰"};
+    char label[NT_MENU_COUNT][24] = {"21 点", "大话骰", "谁是卧底"};
     snprintf(label[NT_MENU_PLAYERS], sizeof(label[0]), "%d 人", m->cfg.players);
     snprintf(label[NT_MENU_TARGET], sizeof(label[0]), "抢 %d / 罚 %d", m->cfg.target, m->cfg.target);
     ntg_bg(g, 168);
     nt_dealer(g, m, 168, true);
-    nt_txt(g, f->poster, "NABO", 86, 192, NT_ALIGN_CENTER, NT_COL_FELT_TEXT);
-    nt_txt(g, f->f18, "牌桌", 154, 193, NT_ALIGN_CENTER, NT_COL_BRASS);
+    nt_txt(g, f->poster, "NABO", 86, 189, NT_ALIGN_CENTER, NT_COL_FELT_TEXT);
+    nt_txt(g, f->f18, "牌桌", 154, 190, NT_ALIGN_CENTER, NT_COL_BRASS);
     for (int i = 0; i < NT_MENU_COUNT; i++) {
-        int y = 218 + i * 22;
+        int y = 211 + i * 20;
         bool sel = m->menu == i;
-        if (sel) ntg_rect(g, 56, y - 11, 128, 22, 11, NT_COL_BRASS, 255, 0, 0);
+        if (sel) ntg_rect(g, 56, y - 10, 128, 20, 10, NT_COL_BRASS, 255, 0, 0);
         nt_txt(g, f->f16, label[i], NTG_W / 2, y, NT_ALIGN_CENTER, sel ? NT_COL_INK : NT_COL_FELT_TEXT);
     }
     nt_hint(g, f, "↑↓ 选择 · OK 进入 · 双击上 退出");
@@ -165,6 +180,7 @@ static void scene_menu(ntg_t *g, const nt_t *m, const nt_fonts_t *f)
 
 static void scene_handoff(ntg_t *g, const nt_t *m, const nt_fonts_t *f)
 {
+    if (m->game == NT_GAME_UC) { nt_scene_uc_handoff(g, m, f); return; }
     int p = m->handoff_to;
     char s[64];
     ntg_bg(g, 170);
@@ -269,5 +285,6 @@ void nt_scene_build(ntg_t *g, const nt_t *m, const nt_fonts_t *f)
     case NT_DICE_REVEAL: nt_scene_dice(g, m, f); break;
     case NT_DICE_TURN: nt_scene_dice_turn(g, m, f); break;
     case NT_END: scene_end(g, m, f); break;
+    default: nt_scene_uc(g, m, f); break;
     }
 }

@@ -9,7 +9,7 @@
 static const float ANIM_DEFAULT[NT_ANIM_COUNT] = {2, 0.9f, 0.33f, 0.5f, 0.25f, 0.25f, 1.4f, 0.45f, 0.35f, 0.4f, 1, 0.4f};
 static const bool ANIM_LOOP[NT_ANIM_COUNT] = {1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0};
 static const bool ANIM_HOLD[NT_ANIM_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1};
-static const nt_anim_t MENU_ANIM[NT_MENU_COUNT] = {NT_ANIM_SHUFFLE, NT_ANIM_SHAKE, NT_ANIM_IDLE, NT_ANIM_IDLE};
+static const nt_anim_t MENU_ANIM[NT_MENU_COUNT] = {NT_ANIM_SHUFFLE, NT_ANIM_SHAKE, NT_ANIM_COVER, NT_ANIM_IDLE, NT_ANIM_IDLE};
 
 #define DEAL_GAP 0.35        // seconds between dealt cards
 #define BJ_FLIP0 0.5         // reveal: first card starts turning
@@ -26,7 +26,8 @@ double nt_rand(nt_t *g)
     return (double)(t ^ (t >> 14)) / 4294967296.0;
 }
 
-static int rand_int(nt_t *g, int n) { return (int)floor(nt_rand(g) * n); }
+int nt_rand_int(nt_t *g, int n) { return (int)floor(nt_rand(g) * n); }
+#define rand_int nt_rand_int
 
 // ---------- animation and scene plumbing ----------
 
@@ -64,12 +65,13 @@ static void menu_select(nt_t *g, int i)
     if (g->anim != MENU_ANIM[i]) nt_play(g, MENU_ANIM[i], false);
 }
 
-static void to_menu(nt_t *g)
+void nt_to_menu(nt_t *g)
 {
     g->game = NT_GAME_NONE;
     nt_go(g, NT_MENU);
     menu_select(g, g->menu >= NT_MENU_PLAYERS ? 0 : g->menu);
 }
+#define to_menu nt_to_menu
 
 void nt_handoff(nt_t *g, int p)
 {
@@ -80,6 +82,7 @@ void nt_handoff(nt_t *g, int p)
 
 static void begin_turn(nt_t *g, int p)
 {
+    if (g->game == NT_GAME_UC) { nt_uc_begin_turn(g, p); return; }
     g->turn = (uint8_t)p;
     if (g->game == NT_GAME_BJ) {
         g->bj.phase = NT_BJ_CHOOSE;
@@ -333,10 +336,14 @@ static void menu_key(nt_t *g, nt_key_t k)
         g->events |= NT_EV_SETTINGS;
         return;
     }
+    if (g->menu == NT_MENU_UC) { nt_uc_setup(g); return; }
     start_match(g, g->menu == NT_MENU_BJ ? NT_GAME_BJ : NT_GAME_DICE);
 }
 
-bool nt_can_pause(const nt_t *g) { return !g->paused && g->scene != NT_MENU && g->scene != NT_END; }
+bool nt_can_pause(const nt_t *g)
+{
+    return !g->paused && g->scene != NT_MENU && g->scene != NT_END && g->scene != NT_UC_END;
+}
 
 void nt_key(nt_t *g, nt_key_t k)
 {
@@ -364,6 +371,12 @@ void nt_key(nt_t *g, nt_key_t k)
         if (k == NT_KEY_OK) { g->events |= NT_EV_OK; after_result(g); }
         else { g->choice ^= 1; g->events |= NT_EV_MOVE; }
         break;
+    case NT_UC_SETUP:
+    case NT_UC_WORD:
+    case NT_UC_TALK:
+    case NT_UC_VOTE:
+    case NT_UC_OUT:
+    case NT_UC_END: nt_uc_key(g, k); break;
     case NT_END:
         if (k != NT_KEY_OK) { g->choice ^= 1; g->events |= NT_EV_MOVE; break; }
         g->events |= NT_EV_OK;
@@ -412,6 +425,7 @@ void nt_init(nt_t *g, const nt_config_t *cfg, uint32_t seed)
     memset(g, 0, sizeof(*g));
     g->cfg = *cfg;
     if (g->cfg.players < NT_MIN_PLAYERS || g->cfg.players > NT_MAX_PLAYERS) g->cfg.players = NT_MIN_PLAYERS;
+    if (g->cfg.uc_players < NT_UC_MIN || g->cfg.uc_players > NT_UC_MAX) g->cfg.uc_players = 5;
     g->np = g->cfg.players;
     g->rng = seed;
     g->anim = NT_ANIM_IDLE;

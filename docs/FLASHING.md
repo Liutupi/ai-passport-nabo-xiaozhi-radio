@@ -18,7 +18,7 @@ Release ZIP 是独立镜像集合，不是可直接写到 `0x0` 的单个文件�
 
 ## 准备
 
-下载并解压 `ai-passport-nabo-xiaozhi-table-v1.5.0.zip`。在解压目录执行：
+下载并解压 `ai-passport-nabo-xiaozhi-table-v1.6.0.zip`。在解压目录执行：
 
 ```powershell
 python -m pip install -r requirements-flash.txt

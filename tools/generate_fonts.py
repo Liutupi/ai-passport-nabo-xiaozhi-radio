@@ -32,7 +32,7 @@ FONTS = {
     'nabo_table_font_12': ('sans', 12, 4),
     'nabo_table_font_24': ('sans', 24, 4),
 }
-TABLE_24 = '玩家 1234获胜输了暂停开！'
+TABLE_24 = '玩家 12345678获胜输了暂停开！谁是卧底出局平民胜利'
 
 
 def existing_menu_glyphs():
@@ -59,13 +59,20 @@ def table_glyphs():
 def source_glyphs():
     chars = set()
     for path in sorted(BOARD.glob('*.[ch]')) + sorted(BOARD.glob('*.cc')):
-        if path.name.startswith('._') or path.name in ('nabo_menu_font_16.c', 'nabo_ui_font_18.c'):
+        # The undercover word list is drawn only with the 24 px table font (see table_24_symbols).
+        if path.name.startswith('._') or path.name in ('nabo_menu_font_16.c', 'nabo_ui_font_18.c', 'nabo_uc_words.c'):
             continue
         if re.match(r'nabo_(poster|mono)_font_\d+\.c$', path.name):
             continue
         chars.update(ord(c) for c in path.read_text('utf-8') if ord(c) > 0x7e)
     # Box drawing / emoji never belong in the menu font.
     return {c for c in chars if c < 0x2500 or 0x3000 <= c <= 0x9fff or 0xff00 <= c <= 0xffef}
+
+
+def table_24_symbols():
+    """Big table words plus every character of the who-is-the-undercover word list."""
+    from generate_uc_words import word_chars
+    return ''.join(sorted(set(TABLE_24) | set(word_chars())))
 
 
 LINE_HEIGHT = {'nabo_menu_font_16': (19, 4), 'nabo_ui_font_18': (22, 5)}
@@ -113,7 +120,7 @@ def main():
             symbols = ''.join(chr(c) for c in sorted(table_glyphs()))
             digest = convert(args.converter, font, name, size, bpp, '0x20-0x7E', symbols)
         elif name == 'nabo_table_font_24':
-            symbols = TABLE_24
+            symbols = table_24_symbols()
             digest = convert(args.converter, font, name, size, bpp, None, symbols)
         elif name == 'nabo_mono_font_12':
             digest = convert(args.converter, font, name, size, bpp, '0x20-0x7E')

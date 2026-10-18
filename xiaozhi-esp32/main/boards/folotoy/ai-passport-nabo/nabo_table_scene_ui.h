@@ -12,10 +12,14 @@
 #define NT_COL_P2 ntg_rgb(61, 184, 255)
 #define NT_COL_P3 ntg_rgb(255, 111, 168)
 #define NT_COL_P4 ntg_rgb(142, 219, 90)
+#define NT_COL_P5 ntg_rgb(255, 214, 92)
+#define NT_COL_P6 ntg_rgb(178, 140, 255)
+#define NT_COL_P7 ntg_rgb(72, 220, 200)
+#define NT_COL_P8 ntg_rgb(255, 128, 128)
 #define NT_COL_WALL ntg_rgb(10, 26, 23)
 #define NT_PLAY_RIM 92
 
-extern const char *const NT_PNAME[NT_MAX_PLAYERS];
+extern const char *const NT_PNAME[NT_UC_MAX];
 uint16_t nt_pcol(int p);
 // Three or four players sit in a 2 x 2 grid of cells NT_CELL_W wide: left column x 8, right
 // column x 124, the third of three alone in the middle of the second row.
@@ -25,6 +29,8 @@ int nt_cell_x(const nt_t *m, int p);
 typedef struct { const char *text; uint16_t color; } nt_seg_t;
 // One line of differently coloured pieces joined by " · ", vertical middle at y.
 void nt_seg_line(ntg_t *g, const nt_fonts_t *f, int x, int y, const nt_seg_t *segs, int n, nt_align_t align);
+// The same pieces run together without separators (a sentence with a coloured name in it).
+void nt_runs(ntg_t *g, const lv_font_t *font, int x, int y, const nt_seg_t *segs, int n, nt_align_t align);
 
 // Text whose vertical middle sits at y (the prototype's textBaseline = 'middle').
 void nt_txt(ntg_t *g, const lv_font_t *font, const char *s, int x, int y, nt_align_t align, uint16_t color);
@@ -45,3 +51,5 @@ void nt_scene_bj(ntg_t *g, const nt_t *m, const nt_fonts_t *f);
 void nt_scene_bj_turn(ntg_t *g, const nt_t *m, const nt_fonts_t *f);
 void nt_scene_dice(ntg_t *g, const nt_t *m, const nt_fonts_t *f);
 void nt_scene_dice_turn(ntg_t *g, const nt_t *m, const nt_fonts_t *f);
+void nt_scene_uc(ntg_t *g, const nt_t *m, const nt_fonts_t *f);          // setup, word, talk, vote, out, end
+void nt_scene_uc_handoff(ntg_t *g, const nt_t *m, const nt_fonts_t *f);

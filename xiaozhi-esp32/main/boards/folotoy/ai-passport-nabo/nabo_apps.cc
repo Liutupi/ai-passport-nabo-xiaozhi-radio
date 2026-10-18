@@ -28,14 +28,12 @@
 extern "C" {
 #include "nabo_jump_model.h"
 #include "nabo_jump_sound.h"
-#include "nabo_rhythm_play.h"
 #include "nabo_table.h"
 #include "nabo_voice_commands.h"
 LV_FONT_DECLARE(nabo_menu_font_16);
 LV_FONT_DECLARE(nabo_mono_font_12);
 }
 #include "nabo_menu_view.h"
-#include "nabo_rhythm_ui.h"
 
 static std::atomic<int> wanted{NABO_HOME}, request_revision{0}, setting_command{-1};
 static std::atomic<int> detail_parent{NABO_SETTINGS};
@@ -99,9 +97,9 @@ static lv_image_dsc_t jump_source = {};
 static lv_draw_buf_t* jump_strip;
 static int64_t jump_last_frame;
 
-static const char* tools[] = {"返回 NABO", "跳一跳", "节奏回声", "NABO 牌桌", "更多设置"};
+static const char* tools[] = {"返回 NABO", "跳一跳", "NABO 牌桌", "更多设置"};
 static constexpr int kToolCount = sizeof(tools) / sizeof(*tools);
-static const NaboApp tool_apps[] = {NABO_HOME, NABO_JUMP, NABO_RHYTHM, NABO_TABLE, NABO_SETTINGS};
+static const NaboApp tool_apps[] = {NABO_HOME, NABO_JUMP, NABO_TABLE, NABO_SETTINGS};
 enum Setting {
     ST_BACK,
     ST_VOLUME,
@@ -126,7 +124,7 @@ extern "C" bool muse_wifi_connected(void) {
 }
 
 void nabo_apps_open(NaboApp app, int delay_ms) {
-    if (app < NABO_HOME || app > NABO_RHYTHM)
+    if (app < NABO_HOME || app > NABO_WIFI)
         return;
     int origin = wanted.load();
     if ((app == NABO_STATUS || app == NABO_BATTERY || app == NABO_WIFI) && origin != app)
@@ -141,7 +139,7 @@ void nabo_apps_open(NaboApp app, int delay_ms) {
 bool nabo_apps_active() { return wanted.load() != NABO_HOME || ready.load(); }
 bool nabo_apps_is_jump() { return wanted.load() == NABO_JUMP && ready.load(); }
 bool nabo_apps_is_fast() {
-    return (wanted.load() == NABO_JUMP || wanted.load() == NABO_RHYTHM) && ready.load();
+    return wanted.load() == NABO_JUMP && ready.load();
 }
 
 static void save_settings() {
@@ -307,10 +305,12 @@ static void diagnostic(const char* line) {
             NaboApp app;
         } aliases[] = {{"home", NABO_HOME},     {"tools", NABO_TOOLS}, {"settings", NABO_SETTINGS},
                        {"table", NABO_TABLE},   {"jump", NABO_JUMP},   {"status", NABO_STATUS},
-                       {"rhythm", NABO_RHYTHM}};
+                       {"undercover", NABO_TABLE}};
         bool found = false;
         for (const auto& item : aliases)
             if (!strcmp(name, item.name)) {
+                if (!strcmp(name, "undercover"))
+                    nabo_table_start_on(NABO_TABLE_START_UNDERCOVER);
                 nabo_apps_open(item.app);
                 found = true;
                 break;
@@ -361,13 +361,6 @@ static void diagnostic(const char* line) {
                 jump_sound = 1;
             }
         });
-    } else if (!strcmp(line, ">rhythm.best.reset")) {
-        DisplayLockGuard lock(Board::GetInstance().GetDisplay());
-        nabo_rhythm_ui_reset_best();
-        printf("\n@rhythm best cleared\n");
-    } else if (!strncmp(line, ">rhythm.latency=", 16)) {
-        nabo_rhythm_play_set_latency_ms(atoi(line + 16));
-        printf("\n@rhythm latency_ms=%d\n", nabo_rhythm_play_latency_ms());
     } else if (!strncmp(line, ">table.press=", 13)) {
         static const char* names[] = {"up", "down", "ok", "long"};
         for (int k = 0; k < 4; ++k)
@@ -376,7 +369,7 @@ static void diagnostic(const char* line) {
     } else if (!strcmp(line, ">table.capture")) {
         nabo_table_capture();
     } else if (!strcmp(line, ">table.status")) {
-        char text[192];
+        char text[384];
         nabo_table_status(text, sizeof(text));
         printf("\n@table %s\n", text);
     } else if (!strcmp(line, ">apps.capture")) {
@@ -463,8 +456,6 @@ static void worker(void*) {
                 nabo_jump_sound_fill(&jump_audio, samples, 320);
             else
                 nabo_jump_sound_start(&jump_audio, 0, 0);
-            if (desired == NABO_RHYTHM)
-                nabo_rhythm_audio_fill(samples, 320);
             if (desired == NABO_TABLE)
                 nabo_table_audio_fill(samples, 320);
             // A continuous 20 ms clock prevents underruns and clears each effect's
@@ -637,15 +628,13 @@ void nabo_apps_build(lv_obj_t* screen) {
     lv_obj_set_style_text_font(jump_score, &lv_font_montserrat_28, 0);
     nabo_apps_initialize();
     nabo_apps_register_tools();
-    ESP_LOGI("NABO-Apps", "menus, table, rhythm and jump ready");
+    ESP_LOGI("NABO-Apps", "menus, table and jump ready");
 }
 static void change_page(NaboApp next) {
     if (page == NABO_TABLE) {
         nabo_table_close();
         static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())->EndDirectDraw();
     }
-    if (page == NABO_RHYTHM)
-        nabo_rhythm_ui_close();
     if (page == NABO_JUMP) {
         lv_obj_add_flag(jump_panel, LV_OBJ_FLAG_HIDDEN);
         if (jump_strip) {
@@ -656,7 +645,7 @@ static void change_page(NaboApp next) {
     page = next;
     edit = -1;
     selected = next == NABO_TOOLS ? 1 : 0;
-    bool menu = !(next == NABO_HOME || next == NABO_JUMP || next == NABO_RHYTHM || next == NABO_TABLE);
+    bool menu = !(next == NABO_HOME || next == NABO_JUMP || next == NABO_TABLE);
     // The menu panel exists only while a menu page is shown: LVGL allocates
     // from the C3's system heap, which XiaoZhi's TLS and Opus need at home.
     if (menu) {
@@ -678,11 +667,6 @@ static void change_page(NaboApp next) {
             snprintf(notice, sizeof(notice), have_pack ? "内存不足，请退出重试" : "缺少牌桌素材，请更新资源分区");
             nabo_apps_open(NABO_TOOLS);
         }
-    }
-    if (next == NABO_RHYTHM &&
-        !nabo_rhythm_ui_open(app_screen, &nabo_menu_font_16)) {
-        snprintf(notice, sizeof(notice), "内存不足，请退出重试");
-        nabo_apps_open(NABO_TOOLS);
     }
     if (next == NABO_JUMP) {
         jump_strip = lv_draw_buf_create(240, 20, LV_COLOR_FORMAT_RGB565, LV_STRIDE_AUTO);
@@ -713,10 +697,6 @@ void nabo_apps_tick() {
         return;
     if (page == NABO_TABLE)
         return;   // the table runs on its own task
-    if (page == NABO_RHYTHM) {
-        nabo_rhythm_ui_tick();
-        return;
-    }
     if (page == NABO_JUMP) {
         uint32_t now = esp_timer_get_time() / 1000;
         auto previous = jump_game.phase;
@@ -879,8 +859,6 @@ static void return_one_level() {
     if (current == NABO_HOME)
         return;
     bool settled = ready.load() && current == page;
-    if (settled && current == NABO_RHYTHM && nabo_rhythm_ui_key(MUSE_MENU_LEFT))
-        return;
     if (settled && current == NABO_SETTINGS && edit >= 0) {
         edit = -1;
         return;
@@ -927,11 +905,6 @@ bool nabo_apps_key(muse_menu_key_t key) {
         return true;
     if (page == NABO_TABLE)
         return true;   // the table reads raw button edges (repeat, long OK) itself
-    if (page == NABO_RHYTHM) {
-        if (!nabo_rhythm_ui_key(key))
-            nabo_apps_open(NABO_TOOLS);
-        return true;
-    }
     if (page == NABO_JUMP) {
         if (key == MUSE_MENU_UP)
             nabo_apps_open(NABO_TOOLS);
@@ -990,8 +963,6 @@ bool nabo_apps_key(muse_menu_key_t key) {
     return true;
 }
 void nabo_apps_down_pressed(uint32_t event_ms) {
-    if (page == NABO_RHYTHM && ready.load() && wanted.load() == NABO_RHYTHM)
-        nabo_rhythm_ui_press(1, event_ms);
     if (page == NABO_TABLE && ready.load() && wanted.load() == NABO_TABLE)
         nabo_table_button(NABO_TABLE_DOWN, true, event_ms);
 }
@@ -1008,10 +979,6 @@ void nabo_apps_charge(bool pressed, uint32_t event_ms) {
     last_input = esp_timer_get_time();
     if (!event_ms)
         event_ms = esp_timer_get_time() / 1000;
-    if (pressed && page == NABO_RHYTHM && ready.load() && wanted.load() == NABO_RHYTHM) {
-        nabo_rhythm_ui_press(0, event_ms);
-        return;
-    }
     if (page == NABO_TABLE && (!pressed || (ready.load() && wanted.load() == NABO_TABLE))) {
         nabo_table_button(NABO_TABLE_OK, pressed, event_ms);
         return;
@@ -1038,7 +1005,7 @@ void nabo_apps_register_tools() {
     server.AddTool(
         "self.apps.open",
         "打开工牌内置程序。app "
-        "可用：跳一跳(jump)、节奏回声(rhythm)、NABO 牌桌(table，21 点和大话骰)"
+        "可用：跳一跳(jump)、NABO 牌桌(table，21 点、大话骰)、谁是卧底(undercover，在牌桌里)"
         "、设置(settings)、工具(tools)。进入程序会暂停语音对话；双击上键返回上一级，长按上键回到 "
         "NABO "
         "恢复小智。",
@@ -1051,15 +1018,17 @@ void nabo_apps_register_tools() {
             else if (name == "table" || name == "牌桌" || name == "NABO 牌桌" || name == "21点" ||
                      name == "21 点" || name == "大话骰")
                 app = NABO_TABLE;
-            else if (name == "rhythm" || name == "节奏回声" || name == "节奏游戏")
-                app = NABO_RHYTHM;
+            else if (name == "undercover" || name == "谁是卧底" || name == "卧底") {
+                app = NABO_TABLE;
+                nabo_table_start_on(NABO_TABLE_START_UNDERCOVER);
+            }
             else if (name == "settings" || name == "设置")
                 app = NABO_SETTINGS;
             else if (name == "tools" || name == "工具")
                 app = NABO_TOOLS;
             else
                 return std::unexpected(
-                    "Unknown app. Use jump, rhythm, table, settings or tools.");
+                    "Unknown app. Use jump, table, undercover, settings or tools.");
             nabo_apps_open(app, 900);
             return std::string("已安排打开 ") + name + "。程序中使用实体按键；长按上键返回小智。";
         });
@@ -1070,9 +1039,10 @@ bool nabo_apps_voice_command(const char* transcript) {
     const char* name = nabo_voice_launch_app(transcript);
     if (!name)
         return false;
-    NaboApp target = !strcmp(name, "table")      ? NABO_TABLE
+    if (!strcmp(name, "undercover"))
+        nabo_table_start_on(NABO_TABLE_START_UNDERCOVER);
+    NaboApp target = !strcmp(name, "table") || !strcmp(name, "undercover") ? NABO_TABLE
                      : !strcmp(name, "jump")     ? NABO_JUMP
-                     : !strcmp(name, "rhythm")   ? NABO_RHYTHM
                      : !strcmp(name, "settings") ? NABO_SETTINGS
                                                  : NABO_TOOLS;
     nabo_apps_open(target);

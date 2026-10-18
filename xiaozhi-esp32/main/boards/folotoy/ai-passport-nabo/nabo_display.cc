@@ -32,7 +32,16 @@ NaboDisplay::~NaboDisplay() {
 }
 static lv_display_flush_cb_t original_flush;
 static std::atomic<bool> capture_lcd{false};
+// Set while a local program (NABO TABLE) draws straight to the panel. Pausing LVGL's refresh
+// timer is not enough: LVGL 9 resumes it on any invalidation (LV_EVENT_REFR_REQUEST), e.g. the
+// boot or Wi-Fi setup status text, and a flush would then share the panel's SPI device with the
+// game task (assert in spi_device_release_bus). While set, flushes complete without touching SPI.
+static std::atomic<bool> panel_borrowed{false};
 static void capture_flush(lv_display_t* display, const lv_area_t* area, uint8_t* pixels) {
+    if (panel_borrowed.load()) {
+        lv_display_flush_ready(display);
+        return;
+    }
     if (capture_lcd.load()) {
         int bytes = (area->x2 - area->x1 + 1) * (area->y2 - area->y1 + 1) * 2;
         flockfile(stdout);
@@ -66,6 +75,7 @@ void NaboDisplay::CaptureLCD() {
 
 void NaboDisplay::BeginDirectDraw(esp_lcd_panel_io_handle_t* io, esp_lcd_panel_handle_t* panel) {
     if (display_ && !direct_draw_) {
+        panel_borrowed = true;   // later flushes skip the panel, whatever resumes the timer
         lv_timer_pause(lv_display_get_refr_timer(display_));
         while (display_->flushing)
             vTaskDelay(1);
@@ -79,6 +89,7 @@ void NaboDisplay::EndDirectDraw() {
     if (!direct_draw_)
         return;
     direct_draw_ = false;
+    panel_borrowed = false;
     if (display_) {
         lv_timer_resume(lv_display_get_refr_timer(display_));
         lv_obj_invalidate(lv_screen_active());
@@ -276,7 +287,7 @@ void NaboDisplay::Tick() {
     nabo_apps_tick();
     if (nabo_apps_is_jump())
         SetGameDrawBuffer(true);
-    // Jump keeps its measured 16 ms cadence; the rhythm playhead needs 50 Hz.
+    // Jump keeps its measured 16 ms cadence.
     int period = nabo_apps_is_jump() ? 16 : nabo_apps_is_fast() ? 20 : 0;
     if (animation_)
         lv_timer_set_period(animation_, period ? period : 40);

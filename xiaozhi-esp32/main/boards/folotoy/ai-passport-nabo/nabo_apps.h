@@ -9,8 +9,7 @@ enum NaboApp {
     NABO_JUMP,
     NABO_STATUS,
     NABO_BATTERY,
-    NABO_WIFI,
-    NABO_RHYTHM
+    NABO_WIFI
 };
 void nabo_apps_build(lv_obj_t* screen);
 void nabo_apps_tick();
@@ -19,9 +18,9 @@ void nabo_apps_charge(bool pressed, uint32_t event_ms = 0);
 void nabo_apps_open(NaboApp app, int delay_ms = 0);
 bool nabo_apps_active();
 bool nabo_apps_is_jump();
-/* Local game that needs a fast display refresh (jump or rhythm). */
+/* Local game that needs a fast display refresh (jump). */
 bool nabo_apps_is_fast();
-/* Press-down of the DOWN key; only the rhythm game scores it. */
+/* Press-down of the DOWN key; the table reads raw DOWN edges. */
 void nabo_apps_down_pressed(uint32_t event_ms);
 /* Release of the DOWN key; DIVE dashes while it is held. */
 void nabo_apps_down_released(uint32_t event_ms);
