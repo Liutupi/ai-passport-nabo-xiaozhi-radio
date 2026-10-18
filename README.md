@@ -1,14 +1,16 @@
-# AI Passport · NABO × 小智 · 深潜版
+# AI Passport · NABO × 小智 · 牌桌版
 
-为 **FoloToy AI Passport（ESP32-C3 / 8 MB）**制作的小智定制固件，带原创单键下潜游戏**「深潜 DIVE」**：NABO 待机与对话动画、深潜、跳一跳、节奏回声、摇骰子、功德木鱼、蓝牙电脑快捷键，以及完整的设备设置。
+为 **FoloToy AI Passport（ESP32-C3 / 8 MB）**制作的小智定制固件，带两人同机的「**NABO 牌桌**」：21 点和大话骰，NABO 当荷官。另有 NABO 待机与对话动画、跳一跳、节奏回声，以及完整的设备设置。
 
-本仓库从 [ai-passport-nabo-xiaozhi](https://github.com/Liutupi/ai-passport-nabo-xiaozhi)（v1.2.0，带网络电台）分出，保留其完整历史；为给深潜腾出应用分区，**移除了网络电台**。两个版本分区、NVS 完全兼容，只写应用分区即可来回切换，配网、激活和成绩都保留。深潜的美术素材、Codex 流程和网页原型在独立仓库 [nabo-dive](https://github.com/Liutupi/nabo-dive)。
+本仓库从 [ai-passport-nabo-xiaozhi-dive](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-dive)（v1.3.1 深潜版）分出，保留完整历史。为给牌桌腾出空间，**移除了深潜、摇骰子、功德木鱼和蓝牙电脑快捷键**。分区表和 NVS 与此前各版兼容，配网、激活和成绩都保留；牌桌的 NABO 动画放在资源分区里，所以从其他版本切换过来时，**应用和资源两个镜像都要写**（刷写工具的 upgrade 模式会自动处理）。
 
-**当前版本：v1.3.1，2026-10-17。** 修复清空 NVS 后首次激活时的重启；应用 SHA256 `22fb387f12e39247514ca60a0d85e1071b1cc7e4652b8df54c1afda1d657919a`，已在工牌实机验证。已装电台版 v1.0.0–v1.2.0 的工牌可直接用升级模式切换过来（只写应用），想回到电台版用原仓库 v1.2.0 包同样升级即可。
+**当前版本：v1.4.0，2026-10-18。** 应用 SHA256 `b9502231ad4d8b2056e91c567858826fbc91c30fa25dcdb60024c08892e97f4b`。
 
-[下载固件](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-dive/releases/latest) · [使用指南](docs/USER_GUIDE.md) · [刷写说明](docs/FLASHING.md) · [编译说明](docs/BUILD.md) · [维护交接](docs/HANDOFF.md) · [验证记录](docs/VALIDATION.md) · [更新记录](CHANGELOG.md)
+[下载固件](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-table/releases/latest) · [使用指南](docs/USER_GUIDE.md) · [刷写说明](docs/FLASHING.md) · [编译说明](docs/BUILD.md) · [维护交接](docs/HANDOFF.md) · [验证记录](docs/VALIDATION.md) · [更新记录](CHANGELOG.md)
 
-![深潜：标题、阳光层、俯冲破纪录、结束页（面板实际像素）](docs/images/lcd-dive.png)
+![NABO 牌桌：封面、21 点轮到自己、21 点开牌、大话骰叫数、大话骰开盅](docs/images/lcd-table.png)
+
+*上图由固件的同一套渲染代码在电脑上按一局录好的对局生成（`test_table.py` 的宿主渲染），真机串口截屏与之一致。*
 
 ![NABO 跳一跳实机画面](docs/images/lcd-jump-current.png)
 
@@ -17,22 +19,22 @@
 | 功能 | 行为 |
 |---|---|
 | 小智 + NABO | 224×224 半身原图，待机眨眼，聆听、思考、说话切换动画 |
-| 语音打开 | 对话中说“打开深潜／摇骰子／木鱼／跳一跳／节奏回声／电脑快捷键／设置” |
+| 语音打开 | 对话中说“打开牌桌／大话骰／二十一点／跳一跳／节奏回声／设置” |
+| NABO 牌桌 | 两人传着一台工牌玩：21 点（无明牌，轮流要牌/停牌，一起开牌）和大话骰（两步叫数，1 点万能、叫 1 即斋）；换人时出现交接屏，NABO 捂眼不看；先赢满 3 / 5 / 7 局获胜 |
 | 跳一跳 | 按住 OK 蓄力、松开起跳；NABO 屈膝摆臂、落地站稳、平台旁跌坐结束；支持连续蓄力 |
 | 节奏回声 | 先听一小节示范再拍回去；回声 / 对唱 / 混合 × 4 关，88–120 BPM，PERFECT 判定与最好成绩 |
-| 个性平台 | 医院、书房、播客、木鱼、值班咖啡、靶心 |
-| 骰子 / 木鱼 | 延续此前 NABO 工牌的声音和操作方式，保存累计功德 |
-| 深潜 DIVE | OK 换方向、按住下键俯冲；氧气随深度消耗、气泡补给、擦边奖励；五层海域，硬件垂直滚动直绘屏幕 |
-| 电脑控制 | BLE 键盘与媒体按键，34 个操作、6 个分组，Windows / Mac 映射 |
+| 开机即玩 | 小智还没联网（找不到 Wi-Fi、等待配网）时也能打开本地程序，退出后小智接着启动 |
 | 导航 / 设置 | 双击右侧上键返回上一级；长按上键回小智；音量、亮度、休眠、网络等 |
 
-明确的打开命令在语音识别结果到达后由设备直接处理；复杂表达仍可通过 `self.apps.open` MCP 工具执行。进入本地程序会暂停小智，长按右侧上键恢复小智。C3 版通过 OK 开始对话，未启用本地唤醒词。
+明确的打开命令在语音识别结果到达后由设备直接处理；复杂表达仍可通过 `self.apps.open` MCP 工具执行（`table`）。进入本地程序会暂停小智，长按右侧上键恢复小智。C3 版通过 OK 开始对话，未启用本地唤醒词。
+
+牌桌的 NABO 荷官动画由项目拥有者用 Codex 出图、Grok 图生视频制作，处理成 16 个动作 215 帧，打包为 1.18 MB 的 `table_sprites.bin` 放在资源分区；扑克牌、骰子（沿用摇骰子的立体渲染）、绒布和音效都由程序实时生成。美术流程、镜头清单和网页原型在单独的 `nabo-table` 项目里。
 
 ## 下载与安装
 
-Release 提供独立应用 `xiaozhi.bin`、包含四个分区镜像的安装 ZIP、`manifest.json` 和 `SHA256SUMS.txt`。ZIP 内附使用文档及带设备身份检查、备份和写后校验的刷写工具。
+Release 提供应用 `xiaozhi.bin`、资源 `assets.bin`、包含四个分区镜像的安装 ZIP、从 `0x0` 刷写的完整固件 `…-full.bin`、`manifest.json` 和 `SHA256SUMS.txt`。ZIP 内附使用文档及带设备身份检查、备份和写后校验的刷写工具。
 
-- **本定制版已安装：** 使用应用升级，仅写 `0x10000`，保留配网、激活、资源及用户数据。
+- **本定制版（任一版本）已安装：** 使用 upgrade 模式，写应用 `0x10000` 和资源 `0x400000`，保留配网、激活及用户数据。
 - **首次安装：** 使用安装包中的四个独立镜像；先核对芯片、Flash、分区和备份。不会执行整片擦除。
 
 此固件只适配上述工牌，采用单应用自定义分区。官方标准 OTA 镜像与这个布局不兼容。请按[刷写说明](docs/FLASHING.md)操作，不要把 ZIP 当成整片 Flash 备份写入。

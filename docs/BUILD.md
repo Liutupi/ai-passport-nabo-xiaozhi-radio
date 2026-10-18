@@ -31,9 +31,9 @@ python scripts/build.py folotoy/ai-passport-nabo --name ai-passport-nabo --langu
 
 ## 已包含的资源
 
-NABO RLE、木鱼 RLE、平台/角色精灵、跳跃 PCM、深潜 NABO 帧表、中文菜单字体均在板型目录，干净检出即可构建，不需要作者的旧 Muse 项目、私有素材路径或移植脚本。
+NABO RLE、平台/角色精灵、跳跃 PCM、牌桌精灵包 `table_assets/table_sprites.bin`、中文字体均在板型目录，干净检出即可构建，不需要作者的旧 Muse 项目、私有素材路径或移植脚本。
 
-**深潜素材：** `nabo_dive_sprites.c/.h` 由 `python3 tools/generate_dive_sprites.py --skin a` 从美术仓库 [nabo-dive](https://github.com/Liutupi/nabo-dive) 的 `manifest.json` 生成（需要 Pillow、NumPy、SciPy；默认读取与本仓库同级的 `../nabo-dive`，可用 `--source` 指定）。
+**牌桌素材：** `table_assets/table_sprites.bin` 和 `nabo_table_sprite_ids.h` 由 `python3 tools/generate_table_sprites.py` 生成，输入是与本仓库同级的 `../nabo-table/sprites/`（由 nabo-table 项目的 `tools/clip_to_sprites.py` 从图生视频抽帧得到）。每个动作一套 64 色调色板；大图每帧都是关键帧，直接从 Flash 解码；小图第 0 帧是关键帧，之后是差分帧。脚本会逐帧解码回来比对像素和颜色误差。构建时 CMake 通过 `DEFAULT_ASSETS_EXTRA_FILES` 把 `table_assets/` 打进 `generated_assets.bin`，运行时用 `Assets::GetAssetData("table_sprites.bin")` 原地读取。需要 Pillow、NumPy。
 
 **字体：** 新增界面中文后重新生成。源字体不入库，SHA256 记录在 `game-art/fonts.json`：
 
@@ -53,7 +53,7 @@ python -m pip install -r requirements-dev.txt
 python tools/run_tests.py
 ```
 
-GCC/G++ 必须在 PATH 中，或设置 `CC`、`CXX`。Windows 可用 MinGW/w64devkit；Linux 使用系统 GCC。测试直接编译生产 C/C++：语音指令案例、PCM 分块极值/尾块、跳一跳与节奏回声回归、深潜规则/素材/字形/声音与增量画面逐像素比对、骰子/木鱼/快捷键回归，另有上游宿主测试。深潜测试需要系统 zlib。
+GCC/G++ 必须在 PATH 中，或设置 `CC`、`CXX`。Windows 可用 MinGW/w64devkit；Linux 使用系统 GCC。测试直接编译生产 C/C++：语音指令案例、PCM 分块极值/尾块、跳一跳与节奏回声回归、牌桌（按浏览器原型录下的 6 条对局逐步对拍、规则用例、增量画面与整屏重绘逐像素比对）、立体骰子渲染，另有上游宿主测试。
 
 宿主测试不刷工牌。通过后仍须在真实硬件验证对话、音频、按键和程序切换。CI 不替代这一步。
 

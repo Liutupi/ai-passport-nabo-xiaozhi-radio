@@ -18,7 +18,7 @@ Release ZIP 是独立镜像集合，不是可直接写到 `0x0` 的单个文件�
 
 ## 准备
 
-下载并解压 `ai-passport-nabo-xiaozhi-dive-v1.3.1.zip`。在解压目录执行：
+下载并解压 `ai-passport-nabo-xiaozhi-table-v1.4.0.zip`。在解压目录执行：
 
 ```powershell
 python -m pip install -r requirements-flash.txt
@@ -28,19 +28,24 @@ python tools/flash_release.py --package . --mode inspect
 
 第一条 esptool 命令用于读取设备 MAC；将后续命令中的 `YOUR_DEVICE_MAC` 替换为它。关闭串口监视器再刷写。工具默认只检查包，只有明确指定 upgrade/install 和设备身份才会写入。
 
-## 已安装本定制版：应用升级
+## 已安装本定制版（任一版本）：升级
 
 ```powershell
 python tools/flash_release.py --package . --mode upgrade --port COM8 --expected-mac YOUR_DEVICE_MAC
 ```
 
-工具核对包内 SHA256、ESP32-C3、8 MB、未启用安全启动/Flash 加密，备份并校验整片 Flash，再比对当前 bootloader、分区表和资源。匹配时只写 `xiaozhi.bin`，写后校验应用和全部未修改区域，再重启。配网、激活、最高分等 NVS 数据保留。
+工具核对包内 SHA256、ESP32-C3、8 MB、未启用安全启动/Flash 加密，备份并校验整片 Flash，再比对当前 bootloader 和分区表。匹配时写入 `xiaozhi.bin` 和 `assets.bin`（牌桌的 NABO 动画在资源分区里），写后校验这两个镜像和全部未修改区域，再重启。配网、激活、最高分等 NVS 数据和末尾 files 区保留。
 
-若分区/资源不同，工具会在写入前停止。先阅读失败原因，不要绕过检查继续用裸 esptool 写入。
+若 bootloader 或分区表不同，工具会在写入前停止。先阅读失败原因，不要绕过检查继续用裸 esptool 写入。
 
-### 在电台版与深潜版之间切换
+### 在各版本之间切换
 
-深潜版 v1.3.0 与电台版 v1.0.0–v1.2.0 的 bootloader、分区表、资源完全相同，互相切换都用上面的 upgrade 模式，只写应用。想回到网络电台，下载 [ai-passport-nabo-xiaozhi v1.2.0](https://github.com/Liutupi/ai-passport-nabo-xiaozhi/releases/tag/v1.2.0) 的包同样执行 upgrade。两版各自的数据（深潜最深纪录、跳一跳最高分、功德等）都留在 NVS，切回来仍在。
+牌桌版 v1.4.0 与电台版 v1.0.0–v1.2.0、深潜版 v1.3.0–v1.3.1 的 bootloader 和分区表相同，NVS 互相兼容。
+
+- **切到牌桌版**：用本包的 upgrade 模式（写应用和资源）。
+- **从牌桌版切回其他版本**：旧版本的 upgrade 模式要求资源与它的包完全一致，会拒绝写入；请用对应版本包的 install 模式（写四个镜像，仍保留 NVS 和 files 区）。电台版见 [ai-passport-nabo-xiaozhi](https://github.com/Liutupi/ai-passport-nabo-xiaozhi/releases)，深潜版见 [ai-passport-nabo-xiaozhi-dive](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-dive/releases)。
+
+各版本的数据（跳一跳最高分、节奏回声成绩、牌桌的抢局设置等）都留在 NVS，切回来仍在。
 
 ## 原始工牌或首次安装
 

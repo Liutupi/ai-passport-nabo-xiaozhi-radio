@@ -106,12 +106,14 @@ def main():
     receipt_path = private / (stamp+'-receipt.json')
     receipt_path.write_text(json.dumps(receipt, indent=2)+'\n', 'utf-8')
     if args.mode == 'upgrade':
-        for name in ['bootloader.bin', 'partition-table.bin', 'assets.bin']:
+        # NABO TABLE reads its sprite pack from the assets partition, so an upgrade writes the
+        # application and the assets image; bootloader and partition table must already match.
+        for name in ['bootloader.bin', 'partition-table.bin']:
             offset, _, data = images[name]
             if backup[offset:offset+len(data)] != data:
-                raise RuntimeError(name+' differs; application-only upgrade refused before writing')
-        selected = ['xiaozhi.bin']
-        protected = [(0, 0x10000), (0x400000, 0x400000)]
+                raise RuntimeError(name+' differs; upgrade refused before writing (use install)')
+        selected = ['xiaozhi.bin', 'assets.bin']
+        protected = [(0, 0x10000), (0x700000, 0x100000)]
     else:
         selected = list(IMAGES)
         protected = [(0x9000, 0x7000), (0x700000, 0x100000)]

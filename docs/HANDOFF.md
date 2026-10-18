@@ -2,7 +2,9 @@
 
 ## 当前交接状态
 
-最新 Release 为 **v1.3.0 深潜版**（本仓库），应用 4,107,808 字节，SHA256 `7cd8589aff5aa7eacf66bdff93a9cd5accc19613aa9add2ce80504507ac0a45a`：新增深潜，移除网络电台。应用分区剩约 20 KB；深潜运行时空闲堆约 32 KB，主页约 32 KB。发行包仍复用 v1.0.0 的 bootloader、分区表和资源；带电台的 v1.2.0 继续在 [ai-passport-nabo-xiaozhi](https://github.com/Liutupi/ai-passport-nabo-xiaozhi) 维护，两版用 upgrade 模式互相切换。深潜的结构与注意事项见下文“深潜”一节。
+最新 Release 为 **v1.4.0 牌桌版**（本仓库），应用 SHA256 `b9502231ad4d8b2056e91c567858826fbc91c30fa25dcdb60024c08892e97f4b`：新增 NABO 牌桌（21 点、大话骰），移除深潜、摇骰子、功德木鱼和蓝牙电脑快捷键（含 `nabo_pc.c`）；小智没联网时也能打开本地程序。应用分区剩约 340 KB。**资源分区随之改变**（多了 1.18 MB 的 `table_sprites.bin`，共 2.54 MB），所以发行包不再复用 v1.0.0 的资源镜像，upgrade 模式写应用和资源。牌桌的结构与注意事项见下文“NABO 牌桌”一节。
+
+v1.3.x 深潜版：应用 4,107,808 字节，SHA256 `7cd8589aff5aa7eacf66bdff93a9cd5accc19613aa9add2ce80504507ac0a45a`（v1.3.0）；新增深潜，移除网络电台，在 [ai-passport-nabo-xiaozhi-dive](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-dive) 维护。
 
 以下为 v1.2.0 及更早的交接状态。
 
@@ -32,14 +34,12 @@ b18f915d0295181609b225b475511e1e8a5e60d950b2390fc33191e7c0278d40
 | nabo_voice_commands.c | 有界无堆分配的明确语音命令解析；拒绝否定、询问、多程序歧义 |
 | nabo_jump_model.c / nabo_jump_rig.c | 游戏物理、平台和人体动作；保留落地/镜头期间的输入 |
 | nabo_jump_sound.c / jump_sounds.bin | PCM 音效、蓄力渐变与切换过渡 |
-| nabo_dive.c | 深潜任务、60 Hz esp_timer 节拍、输入、画面切换、NVS 最深纪录、ROM tinfl 解帧、音效事件队列 |
-| nabo_dive_model.c | 深潜规则：地形噪声、氧气、气泡、生物、碰撞（胸口+头两圆）；纯逻辑，宿主测试 test_dive.py |
-| nabo_dive_anim.c | NABO 动作状态机（划水/缺氧/俯冲进出、撞到/吃气泡/结束插播、镜像转身）与仿射矩阵 |
-| nabo_dive_render.c / nabo_dive_draw.c / nabo_dive_text.c | 直绘 GRAM：硬件滚动 + 脏矩形合并、按行世界背景、整数图元、直接读 lv_font_conv 字形 |
-| nabo_dive_sound.c | 16 kHz 合成：分层配乐与事件音效，整数逐样本 |
-| nabo_dive_sprites.c/.h | 由 tools/generate_dive_sprites.py 从 nabo-dive 仓库的 manifest.json 生成（64 色、每帧 raw deflate），不要手改 |
-| nabo_keys*.c / nabo_pc.c | BLE HID、分组映射与退出回收 |
-| nabo_dice*.c / nabo_muyu*.c | 骰子/木鱼模型、画面、声音与持久化 |
+| nabo_table.c | 牌桌任务（30 fps esp_timer 节拍）、原始按键沿（UP/DOWN 连发、OK 松开生效、长按 2 秒暂停）、NVS 抢局设置、`>table.*` 串口诊断 |
+| nabo_table_model.c / nabo_table_bid.c | 牌桌规则：封面、交接、暂停、21 点、大话骰；纯逻辑，与浏览器原型逐步对拍（test_table.py） |
+| nabo_table_gfx.c / shapes.c / scene*.c | 显示列表 + 脏矩形，8 行条带合成；绒布、牌、骰盅、文字、精灵；只用整数 |
+| nabo_table_sprites.c | 从资源分区原地读取 table_sprites.bin，大图逐行解码、小图关键帧+差分 |
+| nabo_table_sound.c | 现场合成：骰子共振器（复用 nabo_dice_render.c）、滤波噪声纸牌声、铃声 |
+| nabo_dice_render.c | 立体骰子渲染与敲击声；摇骰子程序已删，牌桌用 nabo_dice_pose / nabo_dice_die_row |
 | nabo_rhythm_model.c / nabo_rhythm_sound.c | 节奏回声关卡、判定（16 kHz 采样时钟）、合成音色；宿主测试 test_rhythm.py |
 | nabo_rhythm_play.c | 音频 worker 与 LVGL 之间的歌曲时钟锚点、音效队列、延迟补偿 |
 | nabo_rhythm_ui.c / nabo_rhythm_stage.c | 选关/结算与演奏画面；对象只在程序打开时存在 |
@@ -53,11 +53,11 @@ b18f915d0295181609b225b475511e1e8a5e60d950b2390fc33191e7c0278d40
 
 **程序切换：** 本地程序持有音频时停止小智，返回前完成本地音频退出；主任务回收已完成的协议初始化任务后再恢复 AudioService，不能叠加约 8 KiB 的已完成任务栈。避免在 LVGL 显示锁内阻塞等待音频任务。
 
-**BLE 退出：** 先断开、停止 host、清空 GATT 属性，再 NimBLE deinit/释放内存。漏掉 GATT 清理会导致 ATT 运行时内存池断言。需使用真实已配对电脑验证退出，空连接测试不足。
+**BLE：** 电脑快捷键与 `nabo_pc.c` 已在 v1.4.0 删除，固件不再启动蓝牙。若将来恢复：先断开、停止 host、清空 GATT 属性，再 NimBLE deinit/释放内存，并用真实已配对电脑验证退出。
 
 **游戏输入与画面：** 落地、镜头移动甚至飞行末段可缓冲下一次蓄力；保留第一次按下时间和提前松开的时长。不能等画面停止才接受按键。失败动作在平台旁结束，不让 NABO 整体飞出屏幕。已把绘制范围缩到有效扫描行和角色/阴影局部区域；避免恢复逐像素全场景检查。
 
-**声音：** 骰子/木鱼继续 16 kHz 双声道 I2S、4×160 帧 DMA。小智 24 kHz 与本地音效的所有权和采样率不同，要先完成退出再切换。蓄力 gain 0.65、15 ms 淡入淡出、约 8 ms 声音切换过渡已被接受。界面 100% 需保留扬声器余量，不能直接恢复满幅。
+**声音：** 本地程序（牌桌、跳一跳、节奏回声）用 16 kHz 双声道 I2S、4×160 帧 DMA。小智 24 kHz 与本地音效的所有权和采样率不同，要先完成退出再切换。蓄力 gain 0.65、15 ms 淡入淡出、约 8 ms 声音切换过渡已被接受。界面 100% 需保留扬声器余量，不能直接恢复满幅。
 
 **按键：** 右侧上键双击回上一级，单击原功能、长按直接回小智。页面父级要保留，特别是设置编辑、状态页、电脑分组。左侧电源键不是可读取的 MCU 按键。
 
@@ -65,19 +65,19 @@ b18f915d0295181609b225b475511e1e8a5e60d950b2390fc33191e7c0278d40
 
 **节奏判定：** 判定以 OK/下键的 press-down 时间戳为准（下键按下由板型 `OnPressDown` 转发），通过 worker 写 I2S 前记录的锚点换算到歌曲采样位置。默认补偿 42 ms，可用 `>rhythm.latency=` 调整；`>rhythm.best.reset` 清除成绩，脚本测试后应执行，避免留下假成绩。
 
-## 深潜
+## NABO 牌桌
 
-**屏幕所有权：** 深潜不经过 LVGL。`change_page` 在 LVGL 任务里调用 `NaboDisplay::BeginDirectDraw()`（暂停刷新定时器、等最后一次 flush 结束）后启动游戏任务；离开时 `nabo_dive_close()` 先让任务复位硬件滚动（VSCSAD=0）并退出，再 `EndDirectDraw()` 恢复刷新、整屏重绘。游戏任务不拿显示锁，避免和 LVGL 任务互等。
+**屏幕所有权：** 与此前的深潜相同，不经过 LVGL。`change_page` 在 LVGL 任务里 `BeginDirectDraw()` 后调用 `nabo_table_open()`；离开时 `nabo_table_close()` 等最后一个条带发完再 `EndDirectDraw()`。
 
-**画面：** 世界行写入 GRAM 第 `世界行 mod 320` 行，VSCSAD 跟随镜头；新露出的行只画一次，移动物体和屏幕固定的 HUD 走脏矩形（上一帧位置按滚动行数平移后与本帧合并）。按 4 行一组缓存背景颜色，组颜色固定取首行，否则增量画面与整屏重绘不一致；`test_dive.py` 逐像素比对两者。氧气条是不透明凹槽，下面不再画背景。
+**按键：** 牌桌直接读三个键的按下/松开（板型里 UP 新增了 `OnPressDown/OnPressUp` → `nabo_apps_up_edge`）。对局中屏蔽双击上键（返回上一级）和长按上键（回小智），只有牌桌封面上才生效，避免按住上键翻叫数时被踢出去。中途退出走暂停菜单。
 
-**内存：** 打开时约占 45 KB（tinfl 状态 11 KB、任务栈 6 KB、游戏状态、行缓存、条带缓冲等），先分配大块。运行中剩约 30 KB。小智的协议恢复必须等 `nabo_dive_running()` 为假，否则恢复时分配失败。应用分区剩约 18 KB。**不要把渲染代码放进 IRAM：** 试过一次，开机即 abort 循环。
+**内存：** 打开时分配显示列表等约 12 KB、两条 3.8 KB 条带、5.3 KB 精灵缓冲、6 KB 任务栈。实测打开后空闲堆约 65 KB（配网模式下），最大连续块约 34 KB。大图帧直接从 Flash 解码，不占内存。
 
-**性能：** 实测正常游玩约 27–31 fps，标题/结束页 59 fps。瓶颈是 Flash 指令缓存与每行固定开销，不是 SPI。
+**开机即玩：** `application.cc`（NABO 板型分支）允许在 starting / wifi_configuring 状态 `BeginLocalApp()`，保持开机状态不变；期间的联网事件只记录下来，`EndLocalApp()` 时继续开机流程（若已联网就补发一次联网事件去激活）。已在没有可用 Wi-Fi 的工牌上验证；"游戏中途联网、退出后激活"尚未在真机验证。
 
-**素材流程：** Codex 交付到 [nabo-dive](https://github.com/Liutupi/nabo-dive) 仓库 → `manifest.json` → `python3 tools/generate_dive_sprites.py --skin a` → 重新编译。新增界面中文后按 BUILD.md 重新生成字体。
+**素材流程：** nabo-table 项目：起始图 → 图生视频 → `tools/clip_to_sprites.py` 抽帧抠图 → 本仓库 `tools/generate_table_sprites.py` 打包。改了素材要重新构建资源镜像，并用 upgrade（写应用+资源）刷写。
 
-**串口诊断：** `>apps.open=dive`；`>jump.press` / `>jump.release` 模拟 OK；`>dive.auto=1` 自动驾驶（测帧率、演示）；`>dive.prof=1` 在 5 秒日志里加分项计时（本身约耗 1 ms/帧）。
+**画面速度：** 平时每帧 1.5–6.5 ms，28–30 fps；换画面时整屏重画 55–180 ms，会有一下停顿，后续可优化。不要把渲染代码放进 IRAM（深潜试过，开机即 abort 循环）。
 
 ## 诊断与回归
 
@@ -85,14 +85,14 @@ b18f915d0295181609b225b475511e1e8a5e60d950b2390fc33191e7c0278d40
 
 主页 `VoiceMemory` 每约 5 秒打印 heap、largest、Opus 栈余量和音频计数，只在主页工作，不干扰游戏绘制。记录长回答、打断、返回主页后再对话，检查 abort/assert、栈和最大连续内存块。日志可能包含 ASR/TTS、网络信息，只保存到被 Git 忽略的 `private/`，公开问题仅用脱敏堆栈和统计。
 
-按影响运行测试：语音解析/PCM/游戏（跳一跳、节奏回声、深潜）生产 C 测试，以及上游宿主测试。修改音频/生命周期必须加真实连续对话与程序来回切换；修改 BLE 需已配对退出；修改导航需验证所有父页面。不要反复运行不相关测试替代硬件验证。
+按影响运行测试：语音解析/PCM/游戏（跳一跳、节奏回声、牌桌）生产 C 测试，以及上游宿主测试。修改音频/生命周期必须加真实连续对话与程序来回切换；修改导航需验证所有父页面。不要反复运行不相关测试替代硬件验证。
 
 ## 下一版发布流程
 
 1. 从本仓库的 `v1.0.0` 标签开始，保持板型身份 `ai-passport-nabo` 和分区接口。
 2. 读取源码中的 AGENTS.md，修改最窄职责层，保留第三方许可。改动编译配置时更新锁定/配置并记录理由。
 3. 宿主测试、目标构建、相应实机回归；给每份设备验证摘要记录具体应用 SHA256。
-4. 打包四个**构建输出镜像**，从不打包已配网设备的整片 Flash、NVS 或 private。应用升级仍只写应用分区。
+4. 打包四个**构建输出镜像**，从不打包已配网设备的整片 Flash、NVS 或 private。upgrade 模式写应用和资源（牌桌素材在资源分区）。
 5. 更新 CHANGELOG、交接、验证边界、manifest 和 SHA256SUMS；标签与源码提交绑定。
 6. 创建 Release 后下载公开资产重新核对 SHA256 和 ZIP 成员，确认文档/许可证随包。
 
