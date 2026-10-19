@@ -90,7 +90,7 @@ def main():
     font(a.sans, 12, chars, dest/'radio_ui.bin')
     font(a.wenkai, 14, set('NABO FM'), dest/'radio_logo.bin')
     font(a.sans, 8, set('ON AIR'), dest/'radio_led.bin')
-    font(a.wenkai, 60, set('0123456789:'), dest/'radio_clock.bin')
+    font(a.wenkai, 60, set('0123456789:-'), dest/'radio_clock.bin')
     for name, size in [('mic',(26,36)), ('nabo_head_24',(24,24))]:
         im = Image.open(a.design/f'art/props/{name}.png').convert('RGBA').resize(size, Image.Resampling.LANCZOS)
         blob = bytearray(struct.pack('<4sHH', b'NFP1', *size))

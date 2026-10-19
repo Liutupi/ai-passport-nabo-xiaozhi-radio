@@ -4,8 +4,8 @@
     "sha256": "6e725ce46cf4f248984c6f40e991afbced24ca52dc5b37b7932eb83e62cc2677"
   },
   "radio_clock.bin": {
-    "bytes": 8348,
-    "sha256": "69581e53393db064254a5666d945836757a751f755bbd2d30a8f9e5509766314"
+    "bytes": 8534,
+    "sha256": "4d2eb90861efbb432c631624025e77a8cf4f3fa520664798f569b86d70c8da91"
   },
   "radio_led.bin": {
     "bytes": 176,
@@ -35,7 +35,7 @@
     "bytes": 67673,
     "sha256": "7833387413fa9bc350e9082f1ac0f436e9d2f43ca32d314978c961a18df16968"
   },
-  "total_bytes": 1693682,
+  "total_bytes": 1693868,
   "font_sources": {
     "wenkai": {
       "file": "LXGWWenKai-Regular.ttf",
