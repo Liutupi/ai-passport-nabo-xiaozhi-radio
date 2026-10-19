@@ -16,7 +16,7 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
     lib.nabo_radio_dsp_silent.restype = ctypes.c_bool
     lib.nabo_radio_dsp_meter.restype = ctypes.c_int
 
-    def make(rate=24000, loud=False, fade_in=True):
+    def make(rate=48000, loud=False, fade_in=True):
         d = ctypes.create_string_buffer(512)
         lib.nabo_radio_dsp_init(d, rate)
         lib.nabo_radio_dsp_set_loudness(d, loud)
@@ -34,8 +34,8 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
             if n <= 0:
                 break
             src = (I16 * (n * channels))(*samples[at * channels:(at + n) * channels])
-            dst = (I16 * (n // 2 + 2))()
-            got = lib.nabo_radio_dsp_feed(d, src, n, channels, dst, n // 2 + 2)
+            dst = (I16 * (n + 2))()
+            got = lib.nabo_radio_dsp_feed(d, src, n, channels, dst, n + 2)
             out += dst[:got]
             at += n
         return out
@@ -108,10 +108,16 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
     checks += 1
     # 9. 44.1 kHz and 32 kHz streams decimate the same way (output 22.05 k / 16 k)
     for rate in (44100, 32000):
-        out = run(make(rate // 2), sine(1000, rate, 0.5, 8000))[2000:]
+        out = run(make(rate), sine(1000, rate, 0.5, 8000))[2000:]
         assert 0.9 < rms(out) / (8000 / math.sqrt(2) * 0.794) < 1.06
         checks += 1
-    # 10. meter follows the output and decays
+    # 10. 22.05 kHz streams pass through at their own rate
+    out = run(make(22050), sine(1000, 22050, 0.5, 8000))
+    assert len(out) == 11025 and 0.9 < rms(out[2000:]) / (8000 / math.sqrt(2) * 0.794) < 1.06
+    lib.nabo_radio_dsp_out_rate_for.restype = ctypes.c_uint
+    assert [lib.nabo_radio_dsp_out_rate_for(r) for r in (48000, 44100, 32000, 24000, 22050, 16000)] == [24000, 22050, 16000, 24000, 22050, 16000]
+    checks += 2
+    # 11. meter follows the output and decays
     d = make()
     run(d, sine(1000, 48000, 0.1, 20000))
     m1 = lib.nabo_radio_dsp_meter(d)

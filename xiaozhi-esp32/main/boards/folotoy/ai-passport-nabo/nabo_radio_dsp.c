@@ -16,21 +16,29 @@ static const int16_t kSide[8] = {-69, 152, -309, 564, -976, 1688, -3225, 10344};
 
 static int32_t clamp32(int32_t v, int32_t lo, int32_t hi) { return v < lo ? lo : v > hi ? hi : v; }
 
-void nabo_radio_dsp_init(nabo_radio_dsp_t* d, unsigned out_rate) {
+unsigned nabo_radio_dsp_out_rate_for(unsigned stream_rate) {
+    return stream_rate > 24000 ? stream_rate / 2 : stream_rate;
+}
+
+void nabo_radio_dsp_init(nabo_radio_dsp_t* d, unsigned stream_rate) {
     memset(d, 0, sizeof(*d));
     d->agc = 4096 << 8;
     d->env = LOUD_FLOOR;
     d->loudness = true;
-    d->out_rate = out_rate ? out_rate : 24000;
+    stream_rate = stream_rate ? stream_rate : 48000;
+    d->out_rate = nabo_radio_dsp_out_rate_for(stream_rate);
+    d->decimate = stream_rate > 24000;
 }
 
-void nabo_radio_dsp_reset(nabo_radio_dsp_t* d, unsigned out_rate) {
+void nabo_radio_dsp_reset(nabo_radio_dsp_t* d, unsigned stream_rate) {
     memset(d->hist, 0, sizeof(d->hist));
     d->pos = d->odd = 0;
     d->hp_lp = 0;
     d->peak = 0;
-    if (out_rate)
-        d->out_rate = out_rate;
+    if (stream_rate) {
+        d->out_rate = nabo_radio_dsp_out_rate_for(stream_rate);
+        d->decimate = stream_rate > 24000;
+    }
 }
 
 void nabo_radio_dsp_set_loudness(nabo_radio_dsp_t* d, bool on) {
@@ -105,6 +113,12 @@ size_t nabo_radio_dsp_feed(nabo_radio_dsp_t* d, const int16_t* pcm, size_t frame
         return 0;
     for (size_t i = 0; i < frames; ++i) {
         int32_t x = channels == 2 ? ((int32_t)pcm[2 * i] + pcm[2 * i + 1]) >> 1 : pcm[i];
+        if (!d->decimate) {
+            if (written >= cap)
+                break;
+            out[written++] = finish(d, x);
+            continue;
+        }
         d->hist[d->pos] = d->hist[d->pos + NABO_RADIO_DSP_TAPS] = (int16_t)x;
         d->pos = (uint8_t)(d->pos + 1 == NABO_RADIO_DSP_TAPS ? 0 : d->pos + 1);
         d->odd ^= 1;
