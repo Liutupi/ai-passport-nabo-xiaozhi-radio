@@ -41,6 +41,27 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
         return audio
     expected=session(320)
     for n in [1,97,441,480]:assert session(n)==expected,n
+    # Fragmented heaps can reject a 32 KiB allocation. Both smaller rings must
+    # prefill and stream the same samples without waiting for an impossible size.
+    for capacity in [16384,8192]:
+        lib.host_limit_ring(capacity)
+        lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin()
+        assert lib.host_ring_capacity()==capacity
+        offset=0;audio=[];eof=False
+        for _ in range(100000):
+            if offset<len(payload):
+                block=C.create_string_buffer(payload[offset:offset+2048])
+                offset+=lib.host_feed(block,min(2048,len(payload)-offset))
+            elif not eof:
+                lib.host_eof();eof=True
+            if lib.nabo_radio_finished():break
+            dst=(C.c_int16*320)();n=lib.nabo_radio_read(dst,320,0);audio.extend(dst[:n])
+        else:raise AssertionError('small ring stalled')
+        assert audio==expected,capacity
+        lib.nabo_radio_stop();lib.nabo_radio_finish();assert lib.host_clean()
+    lib.host_limit_ring(0)
+    lib.nabo_radio_select_station(0);assert not lib.nabo_radio_begin();assert lib.host_clean()
+    lib.host_limit_ring(32768)
     # Pausing fades the tail to zero and frees every pipeline allocation.
     lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin()
     src=C.create_string_buffer(payload);lib.host_feed(src,len(payload));dst=(C.c_int16*480)()
@@ -58,4 +79,4 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
     for _ in range(50):
         lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin();lib.nabo_radio_stop();lib.host_eof();lib.nabo_radio_finish();assert lib.host_clean()
     unload_library(lib._handle)
-    print(f'PASS: production compressed ring -> Helix -> half-band DSP; {len(expected)} exact samples at 5 read sizes; EOF drain, pause tail, 50 clean cycles, 1105-station favorites and sleep expiry')
+    print(f'PASS: production compressed ring -> Helix -> half-band DSP; {len(expected)} exact samples at 5 read sizes and 8/16/32 KiB rings; allocation-failure cleanup, EOF drain, pause tail, 50 clean cycles, 1105-station favorites and sleep expiry')

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 extern int64_t host_engine_us;
+extern size_t host_ring_limit;
 static inline int64_t esp_timer_get_time(void) { return host_engine_us; }
 #define ESP_LOGI(tag, ...) ((void)(tag))
 #define ESP_OK 0
@@ -34,6 +35,8 @@ typedef struct {
 static inline StreamBufferHandle_t xStreamBufferCreate(size_t n,
                                                        size_t trigger) {
   (void)trigger;
+  if (n > host_ring_limit)
+    return NULL;
   StreamBufferHandle_t s = calloc(1, sizeof(*s) + n);
   if (s)
     s->size = n;

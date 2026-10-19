@@ -1,4 +1,4 @@
-/* NABO FM: network producer -> 32 KiB compressed ring -> speaker-owner decoder.
+/* NABO FM: network producer -> bounded compressed ring -> speaker-owner decoder.
  * No network read runs on the I2S owner. No decoded PCM queue or Flash spooling.
  */
 #include "nabo_radio.h"
@@ -30,6 +30,7 @@
 
 #define COMPRESSED_BYTES (32 * 1024)
 #define PREFILL_BYTES (12 * 1024) /* 1.5 seconds at the catalog's common 64 kbit/s. */
+#define MIN_COMPRESSED_BYTES (8 * 1024)
 #define INPUT_BYTES 4096
 #define MAX_FAVORITES 128
 enum { STOPPED, CONNECTING, BUFFERING, PLAYING, WAIT_WIFI, RETRYING, FAILED, PAUSED };
@@ -45,6 +46,7 @@ static bool s_has_legacy_station;
 static uint64_t s_legacy_favorites;
 static bool s_inited;
 static StreamBufferHandle_t s_ring;
+static size_t s_ring_bytes;
 static TaskHandle_t s_network;
 static atomic_uint s_retry_at;
 static int64_t s_sleep_end;
@@ -417,9 +419,13 @@ static void network_worker(void* arg) {
         }
         esp_http_client_set_header(http, "Icy-MetaData", "0");
         esp_http_client_set_header(http, "User-Agent", "NABO-FM/0.2");
-        bool opened = esp_http_client_open(http, 0) == ESP_OK &&
-                      esp_http_client_fetch_headers(http) >= 0 &&
-                      esp_http_client_get_status_code(http) == 200 && !headers.invalid;
+        esp_err_t open_error = esp_http_client_open(http, 0);
+        int64_t length = open_error == ESP_OK ? esp_http_client_fetch_headers(http) : -1;
+        int status = esp_http_client_get_status_code(http);
+        bool opened = open_error == ESP_OK && length >= 0 && status == 200 && !headers.invalid;
+        if (!opened)
+            ESP_LOGW(TAG, "stream open failed: err=%d status=%d header=%d invalid=%d",
+                     (int)open_error, status, length >= 0, headers.invalid);
         if (opened) {
             esp_http_client_set_timeout_ms(http, 800);
             int64_t last = esp_timer_get_time();
@@ -474,33 +480,65 @@ bool nabo_radio_begin(void) {
     s_audio_generation = atomic_load(&s_generation);
     save_settings();
     atomic_store(&s_state, CONNECTING);
+    const char* stage = "decode workspace";
     s_decode = calloc(1, sizeof(*s_decode));
-    s_ring = xStreamBufferCreate(COMPRESSED_BYTES, 1);
-    if (!s_decode || !s_ring)
+    if (!s_decode)
         goto failed;
     nrf_station_t station;
+    stage = "station format";
     if (!nabo_radio_station_info(nabo_radio_current_station(), &station) || station.codec > 1)
         goto failed;
     s_decode->codec = station.codec;
     s_decode->leading = true;
+    stage = "codec workspace";
     if (station.codec == 1) {
         esp_aac_dec_cfg_t cfg = ESP_AAC_DEC_CONFIG_DEFAULT();
         if (esp_aac_dec_open(&cfg, sizeof(cfg), &s_decode->aac) != ESP_AUDIO_ERR_OK)
             goto failed;
     } else if (!nabo_radio_decoder_init(&s_decode->mp3))
         goto failed;
+    // Voice task teardown and the animated view leave fragmented C3 SRAM.
+    // Allocate codec workspaces first; reserve room for the network task and
+    // HTTP/I2S allocations instead of consuming every remaining byte in a ring.
+    stage = "compressed buffer";
+    for (size_t bytes = COMPRESSED_BYTES; bytes >= MIN_COMPRESSED_BYTES; bytes /= 2) {
+#ifndef NRF_ENGINE_HOST
+        if (esp_get_free_heap_size() < bytes + 16 * 1024)
+            continue;
+#endif
+        s_ring = xStreamBufferCreate(bytes, 1);
+        if (s_ring) {
+            s_ring_bytes = bytes;
+            break;
+        }
+    }
+    if (!s_ring)
+        goto failed;
     atomic_store(&s_done, false);
     atomic_store(&s_active, true);
     s_tail = 0;
     s_last = 0;
+    stage = "network task";
     if (xTaskCreate(network_worker, "fm_network", 8192, (void*)(uintptr_t)s_audio_generation, 4,
                     &s_network) != pdPASS) {
         atomic_store(&s_done, true);
         atomic_store(&s_active, false);
         goto failed;
     }
+#ifndef NRF_ENGINE_HOST
+    ESP_LOGI(TAG, "pipeline ready: ring=%u heap=%u largest=%u", (unsigned)s_ring_bytes,
+             (unsigned)esp_get_free_heap_size(),
+             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
+#endif
     return true;
 failed:
+#ifndef NRF_ENGINE_HOST
+    ESP_LOGW(TAG, "pipeline allocation failed at %s: heap=%u largest=%u", stage,
+             (unsigned)esp_get_free_heap_size(),
+             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
+#else
+    (void)stage;
+#endif
     if (s_decode) {
         nabo_radio_decoder_free(&s_decode->mp3);
         if (s_decode->aac)
@@ -512,6 +550,7 @@ failed:
         vStreamBufferDelete(s_ring);
         s_ring = NULL;
     }
+    s_ring_bytes = 0;
     atomic_store(&s_state, FAILED);
     s_retry_at = (uint32_t)(esp_timer_get_time() / 1000) + 3000;
     app_nabo_radio_network_end();
@@ -566,7 +605,10 @@ size_t nabo_radio_read(int16_t* out, size_t frames, int wait_ms) {
         return n;
     }
     if (!d->prefilled) {
-        if (xStreamBufferBytesAvailable(s_ring) < PREFILL_BYTES && !atomic_load(&s_done)) {
+        size_t prefill = s_ring_bytes * 3 / 4;
+        if (prefill > PREFILL_BYTES)
+            prefill = PREFILL_BYTES;
+        if (xStreamBufferBytesAvailable(s_ring) < prefill && !atomic_load(&s_done)) {
             atomic_store(&s_state, BUFFERING);
             return 0;
         }
@@ -685,6 +727,7 @@ void nabo_radio_finish(void) {
         vStreamBufferDelete(s_ring);
         s_ring = NULL;
     }
+    s_ring_bytes = 0;
     if (s_decode) {
         nabo_radio_decoder_free(&s_decode->mp3);
         if (s_decode->aac)
