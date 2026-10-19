@@ -13,6 +13,8 @@ unsigned nabo_radio_sleep_remaining(void);
 void nabo_radio_set_loudness(bool enabled);
 bool nabo_radio_loudness(void);
 unsigned nabo_radio_output_rate(void);
+/* Speaker-owner diagnostics only; the ring belongs to that same owner. */
+unsigned nabo_radio_buffered_bytes(void);
 int nabo_radio_meter(void);
 unsigned nabo_radio_state(void);
 void nabo_radio_set_local(int region);

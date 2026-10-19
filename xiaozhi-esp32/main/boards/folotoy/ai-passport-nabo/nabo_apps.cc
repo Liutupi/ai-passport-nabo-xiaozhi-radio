@@ -312,6 +312,8 @@ static void worker(void*) {
     int16_t samples[480];
     unsigned output_rate = 16000;
     bool usb_attached = false;
+    unsigned out_frames = 0, decoded_frames = 0, short_blocks = 0, max_decode_us = 0;
+    unsigned max_loop_us = 0, min_buffered = UINT32_MAX;
     int64_t measured_at = esp_timer_get_time();
     nabo_radio_init();
     if (nabo_radio_wanted())
@@ -380,7 +382,14 @@ static void worker(void*) {
                 if (nabo_radio_finished())
                     nabo_radio_finish();
                 else {
+                    int64_t decode_start = esp_timer_get_time();
                     audio_samples = nabo_radio_read(samples, sample_count, 0);
+                    max_decode_us = std::max(max_decode_us,
+                                            (unsigned)(esp_timer_get_time() - decode_start));
+                    decoded_frames += audio_samples;
+                    if (nabo_radio_state() == 3 && audio_samples < sample_count)
+                        ++short_blocks;
+                    min_buffered = std::min(min_buffered, nabo_radio_buffered_bytes());
                     unsigned new_rate = nabo_radio_output_rate();
                     if (new_rate != output_rate) {
                         auto codec =
@@ -414,6 +423,7 @@ static void worker(void*) {
             // DMA tail. Do not sleep again after the blocking I2S write.
             if (desired != NABO_HOME && speaker.load()) {
                 output16(samples, sample_count);
+                out_frames += sample_count;
                 audio_clocked = true;
             }
             // XiaoZhi's restore needs the decoder's memory back first.
@@ -442,8 +452,16 @@ static void worker(void*) {
         if (now - measured_at >= 5000000) {
             if (desired == NABO_HOME && !app.IsLocalAppActive() && !app.IsProtocolInitializing())
                 app.GetAudioService().LogMemoryStats();
+            else if (ready.load() && nabo_radio_active()) {
+                ESP_LOGI("FM-Audio", "rate=%u out=%u decoded=%u short=%u max_decode_us=%u max_loop_us=%u min_buffered=%u stack=%u",
+                         output_rate, out_frames, decoded_frames, short_blocks, max_decode_us,
+                         max_loop_us, min_buffered, (unsigned)uxTaskGetStackHighWaterMark(nullptr));
+            }
+            out_frames = decoded_frames = short_blocks = max_decode_us = max_loop_us = 0;
+            min_buffered = UINT32_MAX;
             measured_at = now;
         }
+        max_loop_us = std::max(max_loop_us, (unsigned)(esp_timer_get_time() - now));
         bool usb = usb_serial_jtag_is_connected();
         if (usb != usb_attached) {
             usb_attached = usb;
@@ -486,7 +504,9 @@ void nabo_apps_build(lv_obj_t* screen) {
 static void change_page(NaboApp next) {
     radio_ui_ready = false;
     if (page == NABO_RADIO) {
-        nabo_radio_view_hide();
+        // The original LVGL settings menu needs its own RAM. Release the radio
+        // scene before building it; audio keeps its independent pipeline.
+        nabo_radio_view_close();
         nabo_radio_menu_close();
     }
     if (next == NABO_HOME)

@@ -30,7 +30,7 @@
 #define COMPRESSED_BYTES (32 * 1024)
 #define PREFILL_BYTES (12 * 1024) /* 1.5 seconds at the catalog's common 64 kbit/s. */
 #define MIN_COMPRESSED_BYTES (8 * 1024)
-#define RING_BLOCK_BYTES 4096
+#define RING_BLOCK_BYTES 1024
 #define INPUT_BYTES 4096
 #define MAX_FAVORITES 128
 enum { STOPPED, CONNECTING, BUFFERING, PLAYING, WAIT_WIFI, RETRYING, FAILED, PAUSED };
@@ -46,7 +46,7 @@ static bool s_has_legacy_station;
 static uint64_t s_legacy_favorites;
 static bool s_inited;
 // Single network producer / single audio consumer. Publishing byte positions
-// with release/acquire keeps each 4 KiB block reusable without a contiguous
+// with release/acquire keeps each 1 KiB block reusable without a contiguous
 // 8-32 KiB allocation, locks, or PCM copies between tasks.
 typedef struct {
     uint8_t* block[COMPRESSED_BYTES / RING_BLOCK_BYTES];
@@ -242,6 +242,7 @@ bool nabo_radio_wanted(void) { return atomic_load(&s_wanted); }
 bool nabo_radio_active(void) { return atomic_load(&s_active); }
 unsigned nabo_radio_state(void) { return (unsigned)atomic_load(&s_state); }
 unsigned nabo_radio_output_rate(void) { return (unsigned)atomic_load(&s_rate); }
+unsigned nabo_radio_buffered_bytes(void) { return s_ring ? (unsigned)ring_available(s_ring) : 0; }
 int nabo_radio_meter(void) { return atomic_load(&s_meter); }
 bool nabo_radio_loudness(void) { return atomic_load(&s_loud); }
 void nabo_radio_set_loudness(bool on) {
@@ -577,6 +578,11 @@ bool nabo_radio_begin(void) {
     s_decode = calloc(1, sizeof(*s_decode));
     if (!s_decode)
         goto failed;
+    stage = "network task";
+    atomic_store(&s_network_ready, false);
+    if (xTaskCreate(network_worker, "fm_network", 8192, (void*)(uintptr_t)s_audio_generation, 4,
+                    &s_network) != pdPASS)
+        goto failed;
     nrf_station_t station;
     stage = "station format";
     if (!nabo_radio_station_info(nabo_radio_current_station(), &station) || station.codec > 1)
@@ -589,11 +595,6 @@ bool nabo_radio_begin(void) {
         if (esp_aac_dec_open(&cfg, sizeof(cfg), &s_decode->aac) != ESP_AUDIO_ERR_OK)
             goto failed;
     } else if (!nabo_radio_decoder_init(&s_decode->mp3))
-        goto failed;
-    stage = "network task";
-    atomic_store(&s_network_ready, false);
-    if (xTaskCreate(network_worker, "fm_network", 8192, (void*)(uintptr_t)s_audio_generation, 4,
-                    &s_network) != pdPASS)
         goto failed;
     // Voice task teardown and the animated view leave fragmented C3 SRAM.
     // Allocate codec workspaces and the contiguous network stack first; leave
