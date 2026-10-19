@@ -17,7 +17,6 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
-#include "freertos/stream_buffer.h"
 #include "freertos/task.h"
 #include "nvs.h"
 #endif
@@ -31,6 +30,7 @@
 #define COMPRESSED_BYTES (32 * 1024)
 #define PREFILL_BYTES (12 * 1024) /* 1.5 seconds at the catalog's common 64 kbit/s. */
 #define MIN_COMPRESSED_BYTES (8 * 1024)
+#define RING_BLOCK_BYTES 4096
 #define INPUT_BYTES 4096
 #define MAX_FAVORITES 128
 enum { STOPPED, CONNECTING, BUFFERING, PLAYING, WAIT_WIFI, RETRYING, FAILED, PAUSED };
@@ -45,7 +45,90 @@ static uint32_t s_legacy_station;
 static bool s_has_legacy_station;
 static uint64_t s_legacy_favorites;
 static bool s_inited;
-static StreamBufferHandle_t s_ring;
+// Single network producer / single audio consumer. Publishing byte positions
+// with release/acquire keeps each 4 KiB block reusable without a contiguous
+// 8-32 KiB allocation, locks, or PCM copies between tasks.
+typedef struct {
+    uint8_t* block[COMPRESSED_BYTES / RING_BLOCK_BYTES];
+    size_t capacity;
+    atomic_uint written, consumed;
+} radio_ring_t;
+#ifndef NRF_ENGINE_HOST
+#define ring_block_malloc malloc
+#define ring_block_free free
+#endif
+static void ring_delete(radio_ring_t* r) {
+    if (!r)
+        return;
+    for (unsigned i = 0; i < COMPRESSED_BYTES / RING_BLOCK_BYTES; i++)
+        ring_block_free(r->block[i]);
+    free(r);
+}
+static radio_ring_t* ring_create(size_t bytes) {
+#ifdef NRF_ENGINE_HOST
+    if (bytes > host_ring_limit)
+        return NULL;
+#endif
+    radio_ring_t* r = calloc(1, sizeof(*r));
+    if (!r)
+        return NULL;
+    r->capacity = bytes;
+    atomic_init(&r->written, 0);
+    atomic_init(&r->consumed, 0);
+    for (unsigned i = 0; i < bytes / RING_BLOCK_BYTES; i++) {
+        r->block[i] = ring_block_malloc(RING_BLOCK_BYTES);
+        if (!r->block[i]) {
+            ring_delete(r);
+            return NULL;
+        }
+    }
+    return r;
+}
+static size_t ring_available(radio_ring_t* r) {
+    unsigned consumed = atomic_load_explicit(&r->consumed, memory_order_acquire);
+    unsigned written = atomic_load_explicit(&r->written, memory_order_acquire);
+    unsigned used = written - consumed;
+    return used <= r->capacity ? used : r->capacity;
+}
+static size_t ring_send(radio_ring_t* r, const void* data, size_t n) {
+    unsigned written = atomic_load_explicit(&r->written, memory_order_relaxed);
+    unsigned consumed = atomic_load_explicit(&r->consumed, memory_order_acquire);
+    size_t space = r->capacity - (unsigned)(written - consumed);
+    if (n > space)
+        n = space;
+    size_t at = 0;
+    while (at < n) {
+        size_t index = (written + (unsigned)at) % r->capacity;
+        size_t offset = index % RING_BLOCK_BYTES;
+        size_t chunk = RING_BLOCK_BYTES - offset;
+        if (chunk > n - at)
+            chunk = n - at;
+        memcpy(r->block[index / RING_BLOCK_BYTES] + offset, (const uint8_t*)data + at, chunk);
+        at += chunk;
+    }
+    atomic_store_explicit(&r->written, written + (unsigned)n, memory_order_release);
+    return n;
+}
+static size_t ring_receive(radio_ring_t* r, void* data, size_t n) {
+    unsigned consumed = atomic_load_explicit(&r->consumed, memory_order_relaxed);
+    unsigned written = atomic_load_explicit(&r->written, memory_order_acquire);
+    size_t available = (unsigned)(written - consumed);
+    if (n > available)
+        n = available;
+    size_t at = 0;
+    while (at < n) {
+        size_t index = (consumed + (unsigned)at) % r->capacity;
+        size_t offset = index % RING_BLOCK_BYTES;
+        size_t chunk = RING_BLOCK_BYTES - offset;
+        if (chunk > n - at)
+            chunk = n - at;
+        memcpy((uint8_t*)data + at, r->block[index / RING_BLOCK_BYTES] + offset, chunk);
+        at += chunk;
+    }
+    atomic_store_explicit(&r->consumed, consumed + (unsigned)n, memory_order_release);
+    return n;
+}
+static radio_ring_t* s_ring;
 static size_t s_ring_bytes;
 static TaskHandle_t s_network;
 static atomic_bool s_network_ready;
@@ -449,8 +532,12 @@ static void network_worker(void* arg) {
                 if (!nabo_icy_feed(&headers.icy, raw, (size_t)n, clean, sizeof(clean), &bytes))
                     break;
                 size_t at = 0;
-                while (at < bytes && !cancelled(gen))
-                    at += xStreamBufferSend(s_ring, clean + at, bytes - at, pdMS_TO_TICKS(30));
+                while (at < bytes && !cancelled(gen)) {
+                    size_t sent = ring_send(s_ring, clean + at, bytes - at);
+                    at += sent;
+                    if (!sent)
+                        vTaskDelay(pdMS_TO_TICKS(10));
+                }
                 last = esp_timer_get_time();
             }
         }
@@ -461,7 +548,7 @@ static void network_worker(void* arg) {
         // Keep the compressed ring and reservoir intact during reconnects. The
         // speaker drains buffered frames while this task performs DNS/HTTP/TLS.
         atomic_store(&s_state, muse_wifi_connected() ? RETRYING : WAIT_WIFI);
-        if (!opened && xStreamBufferBytesAvailable(s_ring) == 0) {
+        if (!opened && ring_available(s_ring) == 0) {
             fail = true;
             break;
         }
@@ -517,7 +604,7 @@ bool nabo_radio_begin(void) {
         if (esp_get_free_heap_size() < bytes + 8 * 1024)
             continue;
 #endif
-        s_ring = xStreamBufferCreate(bytes, 1);
+        s_ring = ring_create(bytes);
         if (s_ring) {
             s_ring_bytes = bytes;
             break;
@@ -559,7 +646,7 @@ failed:
         s_decode = NULL;
     }
     if (s_ring) {
-        vStreamBufferDelete(s_ring);
+        ring_delete(s_ring);
         s_ring = NULL;
     }
     s_ring_bytes = 0;
@@ -620,7 +707,7 @@ size_t nabo_radio_read(int16_t* out, size_t frames, int wait_ms) {
         size_t prefill = s_ring_bytes * 3 / 4;
         if (prefill > PREFILL_BYTES)
             prefill = PREFILL_BYTES;
-        if (xStreamBufferBytesAvailable(s_ring) < prefill && !atomic_load(&s_done)) {
+        if (ring_available(s_ring) < prefill && !atomic_load(&s_done)) {
             atomic_store(&s_state, BUFFERING);
             return 0;
         }
@@ -638,7 +725,7 @@ size_t nabo_radio_read(int16_t* out, size_t frames, int wait_ms) {
             written += n;
             continue;
         }
-        size_t got = xStreamBufferReceive(s_ring, d->input + d->used, INPUT_BYTES - d->used, 0);
+        size_t got = ring_receive(s_ring, d->input + d->used, INPUT_BYTES - d->used);
         d->used += got;
         if (d->leading) {
             if (d->used < 10)
@@ -673,7 +760,7 @@ size_t nabo_radio_read(int16_t* out, size_t frames, int wait_ms) {
             break;
         }
         if (!info.frame_bytes) {
-            if (atomic_load(&s_done) && !xStreamBufferBytesAvailable(s_ring))
+            if (atomic_load(&s_done) && !ring_available(s_ring))
                 d->drained = true;
             if (d->used == INPUT_BYTES) {
                 memmove(d->input, d->input + 1, --d->used);
@@ -739,7 +826,7 @@ void nabo_radio_finish(void) {
     }
     atomic_store(&s_network_ready, false);
     if (s_ring) {
-        vStreamBufferDelete(s_ring);
+        ring_delete(s_ring);
         s_ring = NULL;
     }
     s_ring_bytes = 0;

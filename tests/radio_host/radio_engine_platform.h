@@ -6,6 +6,22 @@
 #include <string.h>
 extern int64_t host_engine_us;
 extern size_t host_ring_limit;
+extern int host_ring_fail_after, host_ring_allocated;
+static inline void *ring_block_malloc(size_t n) {
+  if (n > 4096 || host_ring_fail_after == 0)
+    return NULL;
+  if (host_ring_fail_after > 0)
+    --host_ring_fail_after;
+  void *p = malloc(n);
+  if (p)
+    ++host_ring_allocated;
+  return p;
+}
+static inline void ring_block_free(void *p) {
+  if (p)
+    --host_ring_allocated;
+  free(p);
+}
 static inline int64_t esp_timer_get_time(void) { return host_engine_us; }
 #define ESP_LOGI(tag, ...) ((void)(tag))
 #define ESP_OK 0

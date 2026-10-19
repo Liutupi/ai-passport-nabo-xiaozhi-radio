@@ -7,6 +7,8 @@ import importlib.util
 from pathlib import Path
 import subprocess
 import tempfile
+import threading
+import time
 from host_tools import CC, SHARED_EXPORT, unload_library
 ROOT=Path(__file__).resolve().parent
 BOARD=ROOT/'xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo'
@@ -47,6 +49,7 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
         lib.host_limit_ring(capacity)
         lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin()
         assert lib.host_ring_capacity()==capacity
+        lib.host_wrap_positions()
         offset=0;audio=[];eof=False
         for _ in range(100000):
             if offset<len(payload):
@@ -62,6 +65,9 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
     lib.host_limit_ring(0)
     lib.nabo_radio_select_station(0);assert not lib.nabo_radio_begin();assert lib.host_clean()
     lib.host_limit_ring(32768)
+    lib.host_fail_ring_after(1)
+    lib.nabo_radio_select_station(0);assert not lib.nabo_radio_begin();assert lib.host_clean()
+    lib.host_fail_ring_after(-1)
     # Pausing fades the tail to zero and frees every pipeline allocation.
     lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin()
     src=C.create_string_buffer(payload);lib.host_feed(src,len(payload));dst=(C.c_int16*480)()
@@ -78,5 +84,33 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
     lib.nabo_radio_set_sleep(1);lib.host_advance(61000);assert not lib.nabo_radio_wanted()
     for _ in range(50):
         lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin();lib.nabo_radio_stop();lib.host_eof();lib.nabo_radio_finish();assert lib.host_clean()
+    # ctypes releases the GIL for these C calls: exercise real concurrent
+    # producer/consumer publication through the production segmented ring.
+    lib.host_probe_begin.restype=C.c_bool
+    for fn in ['host_probe_write','host_probe_read']:
+        getattr(lib,fn).argtypes=[C.c_void_p,C.c_size_t]
+        getattr(lib,fn).restype=C.c_size_t
+    pattern=bytes(range(256))*4096
+    source=C.create_string_buffer(pattern)
+    for capacity in [8192,16384,32768]:
+        assert lib.host_probe_begin(capacity)
+        received=bytearray()
+        def producer():
+            at=0
+            while at<len(pattern):
+                n=lib.host_probe_write(C.byref(source,at),min(997,len(pattern)-at))
+                at+=n
+                if not n:time.sleep(.0001)
+        def consumer():
+            dst=(C.c_uint8*701)()
+            while len(received)<len(pattern):
+                n=lib.host_probe_read(dst,len(dst));received.extend(dst[:n])
+                if not n:time.sleep(.0001)
+        threads=[threading.Thread(target=fn,daemon=True) for fn in [producer,consumer]]
+        for t in threads:t.start()
+        for t in threads:t.join(10)
+        assert not any(t.is_alive() for t in threads),'concurrent ring stalled'
+        assert received==pattern
+        lib.host_probe_end();assert lib.host_clean()
     unload_library(lib._handle)
-    print(f'PASS: production compressed ring -> Helix -> half-band DSP; {len(expected)} exact samples at 5 read sizes and 8/16/32 KiB rings; allocation-failure cleanup, EOF drain, pause tail, 50 clean cycles, 1105-station favorites and sleep expiry')
+    print(f'PASS: production segmented ring -> Helix -> half-band DSP; {len(expected)} exact samples at 5 read sizes and 8/16/32 KiB rings; 3 MiB concurrent transfer, position wrap, partial-allocation cleanup, EOF drain, pause tail, 50 clean cycles, 1105-station favorites and sleep expiry')
