@@ -173,7 +173,11 @@ void Es8311AudioCodec::CreateDuplexChannels(gpio_num_t mclk, gpio_num_t bclk, gp
 
 bool Es8311AudioCodec::SetDuplexSampleRate(int rate) {
     std::lock_guard<std::mutex> lock(data_if_mutex_);
-    if (dev_ || input_enabled_ || output_enabled_ || (rate != 16000 && rate != 24000))
+    // Radio keeps 44.1/22.05 kHz material on its native clock family. Change
+    // the rate only while both sides of this duplex device are closed.
+    const bool supported = rate == 8000 || rate == 11025 || rate == 12000 || rate == 16000 ||
+                           rate == 22050 || rate == 24000;
+    if (dev_ || input_enabled_ || output_enabled_ || !supported)
         return false;
     input_sample_rate_ = output_sample_rate_ = rate;
     ESP_LOGI(TAG, "Duplex rate=%d Hz, bus=%d channels", rate, bus_channels_);

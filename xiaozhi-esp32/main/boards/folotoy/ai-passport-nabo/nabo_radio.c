@@ -1,10 +1,16 @@
-/* Tab5's station catalog on the no-PSRAM Passport; no Flash audio spooling. */
+/* NABO FM: network producer -> 32 KiB compressed ring -> speaker-owner decoder.
+ * No network read runs on the I2S owner. No decoded PCM queue or Flash spooling.
+ */
 #include "nabo_radio.h"
 #include <errno.h>
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#ifdef NRF_ENGINE_HOST
+#include "radio_engine_platform.h"
+#else
+#include "esp_aac_dec.h"
 #include "esp_crt_bundle.h"
 #include "esp_heap_caps.h"
 #include "esp_http_client.h"
@@ -13,162 +19,339 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/stream_buffer.h"
 #include "freertos/task.h"
+#include "nvs.h"
+#endif
 #include "muse_settings.h"
 #include "muse_wifi.h"
 #include "nabo_radio_decoder.h"
+#include "nabo_radio_dsp.h"
 #include "nabo_radio_stations.h"
 #include "nabo_radio_stream.h"
-#include "nvs.h"
 
+#define COMPRESSED_BYTES (32 * 1024)
+#define PREFILL_BYTES (12 * 1024) /* 1.5 seconds at the catalog's common 64 kbit/s. */
 #define INPUT_BYTES 4096
-#define PCM_BYTES (12 * 1024)
-#define PCM_PREFILL (8 * 1024)
-#define RESAMPLE_CHUNK 160
-static const char* TAG = "nabo.radio";
+#define MAX_FAVORITES 128
 enum { STOPPED, CONNECTING, BUFFERING, PLAYING, WAIT_WIFI, RETRYING, FAILED, PAUSED };
-static atomic_int s_state, s_station;
-static atomic_uint s_generation, s_played, s_short_reads;
-static atomic_bool s_wanted, s_active, s_done = ATOMIC_VAR_INIT(true), s_settings_dirty;
+static const char* TAG = "nabo.radio";
+static atomic_int s_state, s_station, s_meter, s_rate = 16000, s_local = -1;
+static atomic_uint s_generation, s_played;
+static atomic_bool s_wanted, s_active, s_done = true, s_dirty, s_loud = true, s_noise = true;
 static portMUX_TYPE s_lock = portMUX_INITIALIZER_UNLOCKED;
-static uint64_t s_favorites;
-static StreamBufferHandle_t s_pcm;
-static TaskHandle_t s_worker; /* Voice owner only; the producer never deletes itself. */
-static bool s_prefilled;
-static int64_t s_retry_at;
-static unsigned s_seen_generation;
+static nrf_catalog_t s_catalog;
+static uint32_t s_favorites[MAX_FAVORITES], s_recent[10], s_saved_uid;
+static uint32_t s_legacy_station;
+static bool s_has_legacy_station;
+static uint64_t s_legacy_favorites;
 static bool s_inited;
-static unsigned s_retry_delay = 2;
+static StreamBufferHandle_t s_ring;
+static TaskHandle_t s_network;
+static atomic_uint s_retry_at;
+static int64_t s_sleep_end;
+static unsigned s_audio_generation, s_retry_delay = 1, s_tail;
+static int16_t s_last;
+typedef struct {
+    nabo_radio_decoder_t mp3;
+    void* aac;
+    nabo_radio_dsp_t dsp;
+    uint8_t input[INPUT_BYTES];
+    int16_t pcm[NABO_RADIO_MAX_SAMPLES_PER_FRAME], out[1153];
+    size_t used, ready, at, id3_left, scanned;
+    unsigned rate, codec;
+    bool prefilled, leading, drained;
+} decode_t;
+static decode_t* s_decode; /* Created/freed only by the speaker owner. */
 
-int nabo_radio_station_count(void) { return NABO_RADIO_STATION_COUNT; }
-int nabo_radio_category_count(void) { return NABO_RADIO_CATEGORY_COUNT; }
+int nabo_radio_station_count(void) {
+    return s_catalog.data ? (int)s_catalog.count : NABO_RADIO_STATION_COUNT;
+}
+const nrf_catalog_t* nabo_radio_catalog(void) { return &s_catalog; }
+bool nabo_radio_station_info(int i, nrf_station_t* out) {
+    if (s_catalog.data)
+        return nrf_catalog_get(&s_catalog, i, out);
+    if (!out || i < 0 || i >= NABO_RADIO_STATION_COUNT)
+        return false;
+    *out = (nrf_station_t){.uid = (uint32_t)i + 1,
+                           .name = nabo_radio_stations[i].name,
+                           .url = nabo_radio_stations[i].url,
+                           .py = "",
+                           .region = nabo_radio_categories[nabo_radio_stations[i].category],
+                           .region_id = nabo_radio_stations[i].category,
+                           .types = 1u << 10};
+    return true;
+}
+static uint32_t uid(int i) {
+    nrf_station_t s;
+    return nabo_radio_station_info(i, &s) ? s.uid : 0;
+}
+static int by_uid(uint32_t id) {
+    if (!id)
+        return -1;
+    for (int i = 0; i < nabo_radio_station_count(); i++)
+        if (uid(i) == id)
+            return i;
+    return -1;
+}
+bool nabo_radio_bind_catalog(const void* data, size_t size) {
+    if (atomic_load(&s_active) || s_catalog.data)
+        return s_catalog.data != NULL;
+    if (!nrf_catalog_init(&s_catalog, data, size))
+        return false;
+    // Migrate the old 47-entry bitmask by URL/name, never by the new sort order.
+    for (int j = 0; j < NABO_RADIO_STATION_COUNT; j++)
+        if (s_legacy_favorites & (UINT64_C(1) << j))
+            for (int i = 0; i < (int)s_catalog.count; i++) {
+                nrf_station_t s;
+                nrf_catalog_get(&s_catalog, i, &s);
+                const char* old_live = strstr(nabo_radio_stations[j].url, "/live/");
+                uint32_t qt = old_live ? (uint32_t)strtoul(old_live + 6, NULL, 10) : 0;
+                if ((qt && qt == s.qt) || !strcmp(s.name, nabo_radio_stations[j].name)) {
+                    if (!nabo_radio_favorite(i))
+                        nabo_radio_toggle_favorite(i);
+                    break;
+                }
+            }
+    int i = by_uid(s_saved_uid);
+    if (i < 0 && !s_saved_uid && s_has_legacy_station &&
+        s_legacy_station < NABO_RADIO_STATION_COUNT) {
+        const char* url = nabo_radio_stations[s_legacy_station].url;
+        const char* live = strstr(url, "/live/");
+        uint32_t qt = live ? (uint32_t)strtoul(live + 6, NULL, 10) : 0;
+        for (int j = 0; j < (int)s_catalog.count; j++) {
+            nrf_station_t station;
+            nrf_catalog_get(&s_catalog, j, &station);
+            if ((qt && qt == station.qt) ||
+                !strcmp(station.name, nabo_radio_stations[s_legacy_station].name)) {
+                i = j;
+                break;
+            }
+        }
+    }
+    if (i >= 0)
+        atomic_store(&s_station, i);
+    else
+        atomic_store(&s_station, 0);
+    atomic_store(&s_dirty, true);
+    return true;
+}
 const char* nabo_radio_station_name(int i) {
-    return i >= 0 && i < NABO_RADIO_STATION_COUNT ? nabo_radio_stations[i].name : "";
+    nrf_station_t s;
+    return nabo_radio_station_info(i, &s) ? s.name : "";
 }
 int nabo_radio_station_category(int i) {
-    return i >= 0 && i < NABO_RADIO_STATION_COUNT ? nabo_radio_stations[i].category : -1;
+    nrf_station_t s;
+    return nabo_radio_station_info(i, &s) ? (int)s.region_id : -1;
+}
+int nabo_radio_category_count(void) {
+    return s_catalog.data ? (int)s_catalog.regions : NABO_RADIO_CATEGORY_COUNT;
 }
 const char* nabo_radio_category_name(int i) {
-    return i >= 0 && i < NABO_RADIO_CATEGORY_COUNT ? nabo_radio_categories[i] : "";
+    return s_catalog.data                            ? nrf_catalog_region(&s_catalog, (unsigned)i)
+           : i >= 0 && i < NABO_RADIO_CATEGORY_COUNT ? nabo_radio_categories[i]
+                                                     : "";
 }
 int nabo_radio_current_station(void) { return atomic_load(&s_station); }
-bool nabo_radio_available(void) { return NABO_RADIO_STATION_COUNT > 0; }
+bool nabo_radio_available(void) { return nabo_radio_station_count() > 0; }
 bool nabo_radio_wanted(void) { return atomic_load(&s_wanted); }
 bool nabo_radio_active(void) { return atomic_load(&s_active); }
-const char* nabo_radio_state_text(void) {
-    switch (atomic_load(&s_state)) {
-        case CONNECTING:
-            return "连接中";
-        case BUFFERING:
-            return "缓冲中";
-        case PLAYING:
-            return "播放中 MP3 64k";
-        case WAIT_WIFI:
-            return "等待 Wi-Fi";
-        case RETRYING:
-            return "断线，自动重连中";
-        case FAILED:
-            return "此电台暂不可用";
-        case PAUSED:
-            return "已暂停";
-        default:
-            return "已停止";
+unsigned nabo_radio_state(void) { return (unsigned)atomic_load(&s_state); }
+unsigned nabo_radio_output_rate(void) { return (unsigned)atomic_load(&s_rate); }
+int nabo_radio_meter(void) { return atomic_load(&s_meter); }
+bool nabo_radio_loudness(void) { return atomic_load(&s_loud); }
+void nabo_radio_set_loudness(bool on) {
+    atomic_store(&s_loud, on);
+    atomic_store(&s_dirty, true);
+}
+bool nabo_radio_noise(void) { return atomic_load(&s_noise); }
+void nabo_radio_set_noise(bool on) {
+    atomic_store(&s_noise, on);
+    atomic_store(&s_dirty, true);
+}
+int nabo_radio_local(void) { return atomic_load(&s_local); }
+void nabo_radio_set_local(int i) {
+    if (i >= -1 && i < nabo_radio_category_count()) {
+        atomic_store(&s_local, i);
+        atomic_store(&s_dirty, true);
     }
 }
-
-bool nabo_radio_favorite(int i) {
-    if (i < 0 || i >= NABO_RADIO_STATION_COUNT)
-        return false;
+void nabo_radio_set_sleep(unsigned minutes) {
+    if (minutes > 720)
+        minutes = 720;
     portENTER_CRITICAL(&s_lock);
-    bool yes = (s_favorites & (UINT64_C(1) << i)) != 0;
+    s_sleep_end = minutes ? esp_timer_get_time() + (int64_t)minutes * 60000000 : 0;
+    portEXIT_CRITICAL(&s_lock);
+}
+unsigned nabo_radio_sleep_remaining(void) {
+    portENTER_CRITICAL(&s_lock);
+    int64_t end = s_sleep_end;
+    portEXIT_CRITICAL(&s_lock);
+    int64_t remain = end - esp_timer_get_time();
+    return end && remain > 0 ? (unsigned)((remain + 999999) / 1000000) : 0;
+}
+const char* nabo_radio_state_text(void) {
+    static const char* const text[] = {"按 OK 收听",       "连接中…",    "缓冲中…",
+                                       "播放中",           "等待 Wi-Fi", "信号不好，重连中",
+                                       "这个台暂时连不上", "已暂停"};
+    unsigned i = nabo_radio_state();
+    return text[i < 8 ? i : 0];
+}
+bool nabo_radio_favorite(int i) {
+    uint32_t id = uid(i);
+    if (!id)
+        return false;
+    bool yes = false;
+    portENTER_CRITICAL(&s_lock);
+    for (unsigned j = 0; j < MAX_FAVORITES; j++)
+        if (s_favorites[j] == id) {
+            yes = true;
+            break;
+        }
     portEXIT_CRITICAL(&s_lock);
     return yes;
 }
 void nabo_radio_toggle_favorite(int i) {
-    if (i < 0 || i >= NABO_RADIO_STATION_COUNT)
+    uint32_t id = uid(i);
+    if (!id)
         return;
+    int empty = -1;
     portENTER_CRITICAL(&s_lock);
-    s_favorites ^= UINT64_C(1) << i;
+    for (unsigned j = 0; j < MAX_FAVORITES; j++) {
+        if (s_favorites[j] == id) {
+            s_favorites[j] = 0;
+            empty = -2;
+            break;
+        }
+        if (!s_favorites[j] && empty < 0)
+            empty = (int)j;
+    }
+    if (empty >= 0)
+        s_favorites[empty] = id;
     portEXIT_CRITICAL(&s_lock);
-    atomic_store(&s_settings_dirty, true);
+    atomic_store(&s_dirty, true);
+}
+int nabo_radio_recent(int pos) {
+    if (pos < 0 || pos >= 10)
+        return -1;
+    portENTER_CRITICAL(&s_lock);
+    uint32_t id = s_recent[pos];
+    portEXIT_CRITICAL(&s_lock);
+    return by_uid(id);
+}
+static void remember(int i) {
+    uint32_t id = uid(i);
+    portENTER_CRITICAL(&s_lock);
+    int at = 9;
+    for (int j = 0; j < 10; j++)
+        if (s_recent[j] == id) {
+            at = j;
+            break;
+        }
+    for (int j = at; j > 0; j--)
+        s_recent[j] = s_recent[j - 1];
+    s_recent[0] = id;
+    portEXIT_CRITICAL(&s_lock);
+    atomic_store(&s_dirty, true);
 }
 static void save_settings(void) {
-    if (!atomic_exchange(&s_settings_dirty, false))
+    if (!atomic_exchange(&s_dirty, false))
         return;
-    uint64_t favorites;
+    uint32_t fav[MAX_FAVORITES], recent[10];
     portENTER_CRITICAL(&s_lock);
-    favorites = s_favorites;
+    memcpy(fav, s_favorites, sizeof(fav));
+    memcpy(recent, s_recent, sizeof(recent));
     portEXIT_CRITICAL(&s_lock);
     nvs_handle_t h;
     if (nvs_open("nabo_radio", NVS_READWRITE, &h) != ESP_OK) {
-        atomic_store(&s_settings_dirty, true);
+        atomic_store(&s_dirty, true);
         return;
     }
-    esp_err_t err = nvs_set_u64(h, "favorites", favorites);
-    if (err == ESP_OK)
-        err = nvs_set_u32(h, "station", (uint32_t)atomic_load(&s_station));
-    if (err == ESP_OK)
-        err = nvs_commit(h);
+    esp_err_t e = nvs_set_blob(h, "favorites2", fav, sizeof(fav));
+    if (!e)
+        e = nvs_set_blob(h, "recent2", recent, sizeof(recent));
+    if (!e)
+        e = nvs_set_u32(h, "station_uid", uid(nabo_radio_current_station()));
+    if (!e)
+        e = nvs_set_u8(h, "loudness", nabo_radio_loudness());
+    if (!e)
+        e = nvs_set_u8(h, "noise", nabo_radio_noise());
+    if (!e)
+        e = nvs_set_u8(h, "autoplay", nabo_radio_wanted());
+    if (!e)
+        e = nvs_set_i32(h, "local", nabo_radio_local());
+    if (!e)
+        e = nvs_commit(h);
     nvs_close(h);
-    if (err != ESP_OK) {
-        atomic_store(&s_settings_dirty, true);
-        ESP_LOGW(TAG, "Radio settings save failed");
-    }
+    if (e)
+        atomic_store(&s_dirty, true);
 }
 void nabo_radio_init(void) {
     if (s_inited)
         return;
-    ESP_LOGI(TAG,
-             "Helix DNA Client technology included. Copyright (c) RealNetworks, Inc., "
-             "1995-2002. All rights reserved. Covered source: third_party/helix-mp3 in project "
-             "repository.");
     nvs_handle_t h;
     if (nvs_open("nabo_radio", NVS_READONLY, &h) == ESP_OK) {
-        uint64_t favorites = 0;
-        uint32_t station = 0;
-        nvs_get_u64(h, "favorites", &favorites);
-        nvs_get_u32(h, "station", &station);
+        size_t n = sizeof(s_favorites);
+        bool migrated = nvs_get_blob(h, "favorites2", s_favorites, &n) == ESP_OK;
+        n = sizeof(s_recent);
+        nvs_get_blob(h, "recent2", s_recent, &n);
+        nvs_get_u32(h, "station_uid", &s_saved_uid);
+        s_has_legacy_station = nvs_get_u32(h, "station", &s_legacy_station) == ESP_OK;
+        if (!migrated)
+            nvs_get_u64(h, "favorites", &s_legacy_favorites);
+        uint8_t b;
+        if (!nvs_get_u8(h, "loudness", &b))
+            atomic_store(&s_loud, b != 0);
+        if (!nvs_get_u8(h, "noise", &b))
+            atomic_store(&s_noise, b != 0);
+        if (!nvs_get_u8(h, "autoplay", &b))
+            atomic_store(&s_wanted, b != 0);
+        int32_t local;
+        if (!nvs_get_i32(h, "local", &local))
+            atomic_store(&s_local, local);
         nvs_close(h);
-        portENTER_CRITICAL(&s_lock);
-        s_favorites = favorites;
-        portEXIT_CRITICAL(&s_lock);
-        if (station < NABO_RADIO_STATION_COUNT)
-            atomic_store(&s_station, (int)station);
     }
-    s_inited = true; /* Boot remembers the station, but never starts sound automatically. */
+    s_inited = true;
+    ESP_LOGI(TAG,
+             "Helix DNA Client technology included. Copyright (c) RealNetworks, Inc., 1995-2002. "
+             "All rights reserved.");
 }
 void nabo_radio_idle_tick(void) {
+    portENTER_CRITICAL(&s_lock);
+    bool expired = s_sleep_end && esp_timer_get_time() >= s_sleep_end;
+    if (expired)
+        s_sleep_end = 0;
+    portEXIT_CRITICAL(&s_lock);
+    if (expired)
+        nabo_radio_stop();
     if (!nabo_radio_active())
         save_settings();
 }
 void nabo_radio_select_station(int i) {
-    if (i < 0 || i >= NABO_RADIO_STATION_COUNT)
+    if (i < 0 || i >= nabo_radio_station_count())
         return;
     atomic_store(&s_station, i);
-    atomic_store(&s_settings_dirty, true);
     atomic_fetch_add(&s_generation, 1);
     atomic_store(&s_wanted, true);
+    atomic_store(&s_dirty, true);
+    s_retry_at = 0;
 }
 void nabo_radio_toggle_play(void) {
+    atomic_store(&s_dirty, true);
     if (atomic_load(&s_wanted)) {
         atomic_store(&s_wanted, false);
         atomic_store(&s_state, PAUSED);
     } else {
         atomic_fetch_add(&s_generation, 1);
         atomic_store(&s_wanted, true);
+        s_retry_at = 0;
     }
 }
 void nabo_radio_stop(void) {
+    atomic_store(&s_dirty, true);
     atomic_store(&s_wanted, false);
     atomic_store(&s_state, STOPPED);
 }
 bool nabo_radio_due(void) {
-    unsigned generation = atomic_load(&s_generation);
-    if (generation != s_seen_generation) {
-        s_seen_generation = generation;
-        s_retry_at = 0;
-        s_retry_delay = 2;
-    }
-    if (!atomic_load(&s_wanted) || atomic_load(&s_active))
+    if (!nabo_radio_wanted() || nabo_radio_active())
         return false;
     if (!muse_wifi_connected()) {
         atomic_store(&s_state, WAIT_WIFI);
@@ -178,8 +361,13 @@ bool nabo_radio_due(void) {
         nabo_radio_stop();
         return false;
     }
-    return esp_timer_get_time() >= s_retry_at;
+    uint32_t deadline = atomic_load(&s_retry_at);
+    return !deadline || (int32_t)((uint32_t)(esp_timer_get_time() / 1000) - deadline) >= 0;
 }
+static bool cancelled(unsigned gen) {
+    return !nabo_radio_wanted() || atomic_load(&s_generation) != gen || !muse_settings_speaker_on();
+}
+#ifndef NRF_ENGINE_HOST
 typedef struct {
     nabo_icy_t icy;
     bool invalid;
@@ -196,354 +384,324 @@ static esp_err_t on_http(esp_http_client_event_t* ev) {
             h->invalid = true;
         else
             nabo_icy_init(&h->icy, n);
-    } else if (!strcasecmp(ev->header_key, "Content-Type")) {
-        if (strstr(ev->header_value, "aac") || strstr(ev->header_value, "mpegurl") ||
-            strstr(ev->header_value, "text/html"))
-            h->invalid = true;
     }
+    if (!strcasecmp(ev->header_key, "Content-Type") &&
+        (strstr(ev->header_value, "mpegurl") || strstr(ev->header_value, "text/html")))
+        h->invalid = true;
     return ESP_OK;
 }
-static bool cancelled(unsigned generation) {
-    return !atomic_load(&s_wanted) || atomic_load(&s_generation) != generation ||
-           !muse_settings_speaker_on() || !muse_wifi_connected();
-}
-static bool send_pcm(const int16_t* pcm, size_t frames, unsigned generation) {
-    const uint8_t* p = (const uint8_t*)pcm;
-    size_t left = frames * 2;
-    while (left && !cancelled(generation)) {
-        size_t n = xStreamBufferSend(s_pcm, p, left, pdMS_TO_TICKS(20));
-        p += n;
-        left -= n;
-    }
-    return left == 0;
-}
-static void worker(void* arg) {
-    (void)arg;
-    unsigned generation = atomic_load(&s_generation);
-    int station = atomic_load(&s_station), frames = 0, rate = 0;
-    char stream_url[192];
-    const char* catalog_url = nabo_radio_stations[station].url;
-    // These catalog entries are public Qingting broadcasts. Their same-host
-    // HTTP MP3 endpoints leave enough C3 RAM for Helix and the old PCM prefill.
-    // Private XiaoZhi traffic continues through its own TLS transport.
-    bool public_qingting =
-        !strncmp(catalog_url, "https://", 8) &&
-        (strstr(catalog_url, ".qtfm.cn/") || strstr(catalog_url, ".qingting.fm/"));
-    snprintf(stream_url, sizeof(stream_url), public_qingting ? "http://%s" : "%s",
-             public_qingting ? catalog_url + 8 : catalog_url);
-    bool failure = false; /* The voice owner retains the network gate through finish(). */
+static void network_worker(void* arg) {
+    unsigned gen = (unsigned)(uintptr_t)arg;
+    char url[384];
+    nrf_station_t station;
+    bool fail = !nabo_radio_station_info(nabo_radio_current_station(), &station) ||
+                !nrf_catalog_url(&station, url, sizeof(url));
     esp_http_client_handle_t http = NULL;
-    nabo_radio_decoder_t* decoder = NULL;
-    uint8_t* input = NULL;
-    int16_t *pcm = NULL, *mono16 = NULL;
-    size_t used = 0, received = 0, id3_left = 0;
-    bool leading = true, need_more = false;
     headers_t headers = {0};
-    nabo_radio_resampler_t resampler = {0};
-    int64_t decode_us = 0, last_data = esp_timer_get_time(), next_progress = last_data + 5000000;
-    size_t total_samples = 0;
-    atomic_store(&s_state, CONNECTING);
-    if (cancelled(generation))
-        goto cleanup;
-    save_settings();
-    // Reserve the input block before TLS fragments the single-core C3 heap.
-    input = malloc(INPUT_BYTES);
-    if (!input) {
-        failure = true;
-        goto cleanup;
-    }
-    esp_http_client_config_t cfg = {
-        .url = stream_url,
-        .crt_bundle_attach = esp_crt_bundle_attach,
-        .timeout_ms = 5000,
-        .buffer_size = 1024,
-        .buffer_size_tx = 512,
-        .event_handler = on_http,
-        .user_data = &headers,
-        .max_redirection_count = 3,
-#if CONFIG_MBEDTLS_DYNAMIC_BUFFER
-        /* Reserve the record buffer after TLS handshake and retain it while
-         * the smaller MP3 allocations are made, as in the TTS client. */
-        .tls_dyn_buf_strategy = HTTP_TLS_DYN_BUF_RX_STATIC,
-#endif
-    };
-    http = esp_http_client_init(&cfg);
-    if (!http) {
-        failure = true;
-        goto cleanup;
-    }
-    esp_http_client_set_header(http, "Icy-MetaData", "0");
-    esp_http_client_set_header(http, "User-Agent", "NABO-Passport/1.0");
-    esp_err_t open_result = esp_http_client_open(http, 0);
-    if (open_result != ESP_OK) {
-        ESP_LOGW(TAG, "Radio HTTP open failed: err=%ld heap=%u largest=%u", (long)open_result,
-                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
-                 (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
-        failure = true;
-        goto cleanup;
-    }
-    if (cancelled(generation))
-        goto cleanup;
-    int64_t header_result = esp_http_client_fetch_headers(http);
-    int http_status = header_result < 0 ? -1 : esp_http_client_get_status_code(http);
-    ESP_LOGI(TAG, "Radio HTTP headers: result=%lld status=%d invalid=%d heap=%u largest=%u",
-             (long long)header_result, http_status, (int)headers.invalid,
-             (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
-             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
-    if (header_result < 0 || http_status != 200 || headers.invalid) {
-        failure = true;
-        goto cleanup;
-    }
-    if (cancelled(generation))
-        goto cleanup;
-    esp_http_client_set_timeout_ms(http, 1000);
-    /* TLS needs a contiguous ~17KiB RX allocation. Complete that handshake
-     * and header read before Helix and PCM fragments consume the same heap. */
-    decoder = malloc(sizeof(*decoder));
-    if (decoder)
-        memset(decoder, 0, sizeof(*decoder));
-    pcm = malloc(NABO_RADIO_MAX_SAMPLES_PER_FRAME * sizeof(int16_t));
-    mono16 = malloc((RESAMPLE_CHUNK * 2 + 2) * sizeof(int16_t));
-    ESP_LOGI(TAG, "Radio buffers: decoder=%d input=%d pcm=%d mono=%d heap=%u largest=%u",
-             decoder != NULL, input != NULL, pcm != NULL, mono16 != NULL,
-             (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
-             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
-    if (!decoder || !input || !pcm || !mono16) {
-        failure = true;
-        goto cleanup;
-    }
-    if (!nabo_radio_decoder_init(decoder)) {
-        ESP_LOGW(TAG, "Radio decoder init failed: heap=%u largest=%u",
-                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
-                 (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
-        failure = true;
-        goto cleanup;
-    }
-    if (cancelled(generation))
-        goto cleanup;
-    last_data = esp_timer_get_time();
-    atomic_store(&s_state, BUFFERING);
-    ESP_LOGI(TAG, "Radio HTTP 200: station=%d, heap=%u largest=%u", station,
-             (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
-             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
-    while (!cancelled(generation)) {
-        if (esp_timer_get_time() - last_data > 15000000) {
-            failure = true;
+    if (fail)
+        goto done;
+    while (!cancelled(gen)) {
+        memset(&headers, 0, sizeof(headers));
+        esp_http_client_config_t cfg = {.url = url,
+                                        .crt_bundle_attach = esp_crt_bundle_attach,
+                                        .timeout_ms = 3000,
+                                        .buffer_size = 1024,
+                                        .buffer_size_tx = 512,
+                                        .event_handler = on_http,
+                                        .user_data = &headers,
+                                        .max_redirection_count = 3};
+        http = esp_http_client_init(&cfg);
+        if (!http) {
+            fail = true;
             break;
         }
-        if (used < 4096 || need_more) {
-            if (INPUT_BYTES - used < 1024) {
-                failure = true;
-                break;
-            }
-            uint8_t raw[1024];
-            int n = esp_http_client_read(http, (char*)raw, sizeof(raw));
-            if (n == -ESP_ERR_HTTP_EAGAIN)
-                continue;
-            if (n <= 0) {
-                failure = true;
-                break;
-            }
-            size_t clean = 0;
-            if (!nabo_icy_feed(&headers.icy, raw, (size_t)n, input + used, INPUT_BYTES - used,
-                               &clean)) {
-                failure = true;
-                break;
-            }
-            used += clean;
-            received += clean;
-            need_more = false;
-            if (clean)
-                last_data = esp_timer_get_time();
-        }
-        if (leading) {
-            if (used < 10)
-                continue;
-            if (!id3_left && !memcmp(input, "ID3", 3)) {
-                if ((input[6] | input[7] | input[8] | input[9]) & 128) {
-                    failure = true;
-                    break;
-                }
-                id3_left = 10 + ((size_t)input[6] << 21) + ((size_t)input[7] << 14) +
-                           ((size_t)input[8] << 7) + input[9];
-                if (id3_left > 65536) {
-                    failure = true;
-                    break;
-                }
-            }
-            if (id3_left) {
-                size_t skip = used < id3_left ? used : id3_left;
-                used -= skip;
-                id3_left -= skip;
-                memmove(input, input + skip, used);
-                if (id3_left)
+        esp_http_client_set_header(http, "Icy-MetaData", "0");
+        esp_http_client_set_header(http, "User-Agent", "NABO-FM/0.2");
+        bool opened = esp_http_client_open(http, 0) == ESP_OK &&
+                      esp_http_client_fetch_headers(http) >= 0 &&
+                      esp_http_client_get_status_code(http) == 200 && !headers.invalid;
+        if (opened) {
+            esp_http_client_set_timeout_ms(http, 800);
+            int64_t last = esp_timer_get_time();
+            while (!cancelled(gen) && muse_wifi_connected()) {
+                uint8_t raw[1024], clean[1024];
+                int n = esp_http_client_read(http, (char*)raw, sizeof(raw));
+                if (n == -ESP_ERR_HTTP_EAGAIN) {
+                    if (esp_timer_get_time() - last > 8000000)
+                        break;
                     continue;
+                }
+                if (n <= 0)
+                    break;
+                size_t bytes = 0;
+                if (!nabo_icy_feed(&headers.icy, raw, (size_t)n, clean, sizeof(clean), &bytes))
+                    break;
+                size_t at = 0;
+                while (at < bytes && !cancelled(gen))
+                    at += xStreamBufferSend(s_ring, clean + at, bytes - at, pdMS_TO_TICKS(30));
+                last = esp_timer_get_time();
             }
-            leading = false;
         }
-        if (!frames && received > 96 * 1024) {
-            failure = true;
+        esp_http_client_cleanup(http);
+        http = NULL;
+        if (cancelled(gen))
+            break;
+        // Keep the compressed ring and reservoir intact during reconnects. The
+        // speaker drains buffered frames while this task performs DNS/HTTP/TLS.
+        atomic_store(&s_state, muse_wifi_connected() ? RETRYING : WAIT_WIFI);
+        if (!opened && xStreamBufferBytesAvailable(s_ring) == 0) {
+            fail = true;
             break;
         }
-        while (used > 2048 && !cancelled(generation)) {
-            nabo_radio_frame_info_t info = {0};
-            int64_t start = esp_timer_get_time();
-            int n = nabo_radio_decoder_decode(decoder, input, (int)used, pcm, &info);
-            decode_us += esp_timer_get_time() - start;
-            if (!info.frame_bytes) {
-                need_more = true;
-                break;
-            }
-            if (info.frame_bytes < 0 || (size_t)info.frame_bytes > used) {
-                failure = true;
-                goto cleanup;
-            }
-            used -= (size_t)info.frame_bytes;
-            memmove(input, input + info.frame_bytes, used);
-            if (!n)
-                continue;
-            if (n > 1152 || (info.channels != 1 && info.channels != 2) || info.hz < 8000 ||
-                info.hz > 48000) {
-                failure = true;
-                goto cleanup;
-            }
-            if (rate != info.hz) {
-                rate = info.hz;
-                nabo_radio_resampler_init(&resampler, (unsigned)rate);
-                ESP_LOGI(TAG, "MP3 %d Hz, %d channels, %d kbps", rate, info.channels,
-                         info.bitrate_kbps);
-            }
-            if (info.channels == 2)
-                for (int i = 0; i < n; ++i)
-                    pcm[i] = (int16_t)(((int32_t)pcm[2 * i] + pcm[2 * i + 1]) / 2);
-            // Resample bounded slices instead of another complete 4.6KiB frame.
-            // The resampler retains phase and the previous sample across slices.
-            for (size_t at = 0; at < (size_t)n; at += RESAMPLE_CHUNK) {
-                size_t take = (size_t)n - at;
-                if (take > RESAMPLE_CHUNK)
-                    take = RESAMPLE_CHUNK;
-                size_t out =
-                    nabo_radio_resample(&resampler, pcm + at, take, mono16, RESAMPLE_CHUNK * 2 + 2);
-                if (!out || !send_pcm(mono16, out, generation))
-                    goto cleanup;
-                total_samples += out;
-            }
-            ++frames;
-            if (esp_timer_get_time() >= next_progress) {
-                ESP_LOGI(TAG, "Radio progress: frames=%d played=%u short_reads=%u buffered=%u",
-                         frames, atomic_load(&s_played), atomic_load(&s_short_reads),
-                         (unsigned)xStreamBufferBytesAvailable(s_pcm));
-                next_progress = esp_timer_get_time() + 5000000;
-            }
-        }
-        if (used >= INPUT_BYTES - 1024) {
-            failure = true;
-            break;
-        }
+        for (int i = 0; i < 10 && !cancelled(gen); i++)
+            vTaskDelay(pdMS_TO_TICKS(50));
     }
-cleanup:
+done:
     if (http)
         esp_http_client_cleanup(http);
-    if (decoder)
-        nabo_radio_decoder_free(decoder);
-    free(decoder);
-    free(input);
-    free(pcm);
-    free(mono16);
-    /* Keep Muse reconnects blocked until the voice owner has also released
-     * the PCM ring and allowed this task's stack to be reclaimed. */
-    if (failure && !cancelled(generation))
+    if (fail && !cancelled(gen))
         atomic_store(&s_state, FAILED);
-    ESP_LOGI(TAG,
-             "Radio end: frames=%d pcm=%u decode_ms=%u played=%u short_reads=%u failure=%d "
-             "cancelled=%d stack_free=%u",
-             frames, (unsigned)total_samples, (unsigned)(decode_us / 1000), atomic_load(&s_played),
-             atomic_load(&s_short_reads), (int)failure, (int)cancelled(generation),
-             (unsigned)uxTaskGetStackHighWaterMark(NULL));
     atomic_store_explicit(&s_done, true, memory_order_release);
-    /* On single-core C3 the voice owner may preempt here and delete this
-     * non-current task before it reaches suspend. No resources are touched
-     * after done; external deletion synchronously reclaims stack and TCB. */
     for (;;)
         vTaskSuspend(NULL);
 }
-
+#else
+static void network_worker(void* arg) { (void)arg; }
+#endif
 bool nabo_radio_begin(void) {
-    if (!nabo_radio_due())
+    if (!nabo_radio_due() || !app_nabo_radio_network_begin())
         return false;
-    /* Release Muse's TLS/buffers before a large internal stack/ring allocation. */
-    if (!app_nabo_radio_network_begin()) {
-        s_retry_at = esp_timer_get_time() + 500000;
-        return false;
-    }
-    s_worker = NULL;
-    s_pcm = xStreamBufferCreate(PCM_BYTES, 2);
-    if (!s_pcm) {
-        app_nabo_radio_network_end();
-        atomic_store(&s_state, FAILED);
-        s_retry_at = esp_timer_get_time() + 2000000;
-        return false;
-    }
-    s_prefilled = false;
+    s_audio_generation = atomic_load(&s_generation);
+    save_settings();
+    atomic_store(&s_state, CONNECTING);
+    s_decode = calloc(1, sizeof(*s_decode));
+    s_ring = xStreamBufferCreate(COMPRESSED_BYTES, 1);
+    if (!s_decode || !s_ring)
+        goto failed;
+    nrf_station_t station;
+    if (!nabo_radio_station_info(nabo_radio_current_station(), &station) || station.codec > 1)
+        goto failed;
+    s_decode->codec = station.codec;
+    s_decode->leading = true;
+    if (station.codec == 1) {
+        esp_aac_dec_cfg_t cfg = ESP_AAC_DEC_CONFIG_DEFAULT();
+        if (esp_aac_dec_open(&cfg, sizeof(cfg), &s_decode->aac) != ESP_AUDIO_ERR_OK)
+            goto failed;
+    } else if (!nabo_radio_decoder_init(&s_decode->mp3))
+        goto failed;
     atomic_store(&s_done, false);
-    atomic_store(&s_played, 0);
-    atomic_store(&s_short_reads, 0);
     atomic_store(&s_active, true);
-    if (xTaskCreate(worker, "nabo_radio", 8 * 1024, NULL, 5, &s_worker) != pdPASS) {
-        s_worker = NULL;
-        vStreamBufferDelete(s_pcm);
-        s_pcm = NULL;
-        atomic_store(&s_active, false);
+    s_tail = 0;
+    s_last = 0;
+    if (xTaskCreate(network_worker, "fm_network", 8192, (void*)(uintptr_t)s_audio_generation, 4,
+                    &s_network) != pdPASS) {
         atomic_store(&s_done, true);
-        app_nabo_radio_network_end();
-        atomic_store(&s_state, FAILED);
-        s_retry_at = esp_timer_get_time() + 2000000;
-        return false;
+        atomic_store(&s_active, false);
+        goto failed;
     }
     return true;
-}
-size_t nabo_radio_read(int16_t* pcm, size_t frames, int wait_ms) {
-    if (!pcm || !frames || !s_pcm || !atomic_load(&s_wanted))
-        return 0;
-    if (!s_prefilled && !atomic_load(&s_done)) {
-        if (xStreamBufferBytesAvailable(s_pcm) < PCM_PREFILL)
-            return 0;
-        s_prefilled = true;
-        atomic_store(&s_state, PLAYING);
+failed:
+    if (s_decode) {
+        nabo_radio_decoder_free(&s_decode->mp3);
+        if (s_decode->aac)
+            esp_aac_dec_close(s_decode->aac);
+        free(s_decode);
+        s_decode = NULL;
     }
-    size_t n =
-        xStreamBufferReceive(s_pcm, pcm, frames * 2, pdMS_TO_TICKS(wait_ms > 0 ? wait_ms : 0));
-    if (n < frames * 2 && !atomic_load(&s_done))
-        atomic_fetch_add(&s_short_reads, 1);
-    atomic_fetch_add(&s_played, (unsigned)(n / 2));
-    return n / 2;
+    if (s_ring) {
+        vStreamBufferDelete(s_ring);
+        s_ring = NULL;
+    }
+    atomic_store(&s_state, FAILED);
+    s_retry_at = (uint32_t)(esp_timer_get_time() / 1000) + 3000;
+    app_nabo_radio_network_end();
+    return false;
+}
+static int decode_frame(decode_t* d, nabo_radio_frame_info_t* info) {
+    if (!d->codec)
+        return nabo_radio_decoder_decode(&d->mp3, d->input, (int)d->used, d->pcm, info);
+    // ADTS preflight bounds decoder reads and preserves split headers/frames.
+    if (d->used < 7)
+        return 0;
+    unsigned off = 0;
+    while (off + 7 <= d->used && !(d->input[off] == 255 && (d->input[off + 1] & 0xf6) == 0xf0))
+        off++;
+    if (off) {
+        info->frame_bytes = (int)off;
+        return 0;
+    }
+    size_t n = ((size_t)(d->input[3] & 3) << 11) | ((size_t)d->input[4] << 3) | (d->input[5] >> 5);
+    if (n < 7 || n > INPUT_BYTES) {
+        info->frame_bytes = 1;
+        return 0;
+    }
+    if (n > d->used)
+        return 0;
+    esp_audio_dec_in_raw_t raw = {.buffer = d->input, .len = n};
+    esp_audio_dec_out_frame_t out = {.buffer = (uint8_t*)d->pcm, .len = sizeof(d->pcm)};
+    esp_audio_dec_info_t dec = {0};
+    esp_audio_err_t err = esp_aac_dec_decode(d->aac, &raw, &out, &dec);
+    info->frame_bytes = (int)n;
+    if (err != ESP_AUDIO_ERR_OK || dec.bits_per_sample != 16 || !dec.channel || dec.channel > 2 ||
+        out.decoded_size > sizeof(d->pcm))
+        return -1;
+    info->channels = dec.channel;
+    info->hz = (int)dec.sample_rate;
+    return (int)(out.decoded_size / (2 * dec.channel));
+}
+size_t nabo_radio_read(int16_t* out, size_t frames, int wait_ms) {
+    (void)wait_ms;
+    if (!s_decode || !out || !frames)
+        return 0;
+    decode_t* d = s_decode;
+    if (cancelled(s_audio_generation)) {
+        if (!s_tail)
+            s_tail = nabo_radio_output_rate() * 60 / 1000;
+        size_t n = frames < s_tail ? frames : s_tail;
+        for (size_t i = 0; i < n; i++) {
+            s_last = (int16_t)((int32_t)s_last * (int32_t)(s_tail - 1) / (int32_t)s_tail);
+            out[i] = s_last;
+            --s_tail;
+        }
+        return n;
+    }
+    if (!d->prefilled) {
+        if (xStreamBufferBytesAvailable(s_ring) < PREFILL_BYTES && !atomic_load(&s_done)) {
+            atomic_store(&s_state, BUFFERING);
+            return 0;
+        }
+        d->prefilled = true;
+    }
+    size_t written = 0;
+    unsigned work = 0;
+    while (written < frames && work++ < 32) {
+        if (d->at < d->ready) {
+            size_t n = d->ready - d->at;
+            if (n > frames - written)
+                n = frames - written;
+            memcpy(out + written, d->out + d->at, n * 2);
+            d->at += n;
+            written += n;
+            continue;
+        }
+        size_t got = xStreamBufferReceive(s_ring, d->input + d->used, INPUT_BYTES - d->used, 0);
+        d->used += got;
+        if (d->leading) {
+            if (d->used < 10)
+                break;
+            if (!d->id3_left && !memcmp(d->input, "ID3", 3)) {
+                if ((d->input[6] | d->input[7] | d->input[8] | d->input[9]) & 128) {
+                    nabo_radio_stop();
+                    break;
+                }
+                d->id3_left = 10 + ((size_t)d->input[6] << 21) + ((size_t)d->input[7] << 14) +
+                              ((size_t)d->input[8] << 7) + d->input[9];
+                if (d->id3_left > 65536) {
+                    nabo_radio_stop();
+                    break;
+                }
+            }
+            if (d->id3_left) {
+                size_t n = d->used < d->id3_left ? d->used : d->id3_left;
+                d->used -= n;
+                d->id3_left -= n;
+                memmove(d->input, d->input + n, d->used);
+                if (d->id3_left)
+                    continue;
+            }
+            d->leading = false;
+        }
+        nabo_radio_frame_info_t info = {0};
+        int n = decode_frame(d, &info);
+        if (n < 0 || info.frame_bytes < 0 || (size_t)info.frame_bytes > d->used) {
+            nabo_radio_stop();
+            atomic_store(&s_state, FAILED);
+            break;
+        }
+        if (!info.frame_bytes) {
+            if (atomic_load(&s_done) && !xStreamBufferBytesAvailable(s_ring))
+                d->drained = true;
+            if (d->used == INPUT_BYTES) {
+                memmove(d->input, d->input + 1, --d->used);
+            }
+            break;
+        }
+        d->used -= (size_t)info.frame_bytes;
+        memmove(d->input, d->input + info.frame_bytes, d->used);
+        d->scanned += (size_t)info.frame_bytes;
+        if (!n) {
+            if (d->scanned > 96 * 1024) {
+                nabo_radio_stop();
+                atomic_store(&s_state, FAILED);
+                break;
+            }
+            continue;
+        }
+        d->scanned = 0;
+        if (n > 1152 || (info.channels != 1 && info.channels != 2) || info.hz < 8000 ||
+            info.hz > 48000) {
+            nabo_radio_stop();
+            atomic_store(&s_state, FAILED);
+            break;
+        }
+        if (d->rate != (unsigned)info.hz) {
+            d->rate = (unsigned)info.hz;
+            nabo_radio_dsp_init(&d->dsp, d->rate);
+            nabo_radio_dsp_fade(&d->dsp, true, 40);
+            atomic_store(&s_rate, (int)nabo_radio_dsp_out_rate_for(d->rate));
+            remember(nabo_radio_current_station());
+        }
+        nabo_radio_dsp_set_loudness(&d->dsp, nabo_radio_loudness());
+        d->ready = nabo_radio_dsp_feed(&d->dsp, d->pcm, (size_t)n, info.channels, d->out, 1153);
+        d->at = 0;
+        atomic_store(&s_meter, nabo_radio_dsp_meter(&d->dsp));
+        atomic_store(&s_state, PLAYING);
+        s_retry_delay = 1;
+    }
+    unsigned remaining = nabo_radio_sleep_remaining();
+    if (remaining && remaining < 60)
+        for (size_t i = 0; i < written; i++)
+            out[i] = (int16_t)((int32_t)out[i] * (int)remaining / 60);
+    if (written)
+        s_last = out[written - 1];
+    atomic_fetch_add(&s_played, (unsigned)written);
+    return written;
 }
 bool nabo_radio_finished(void) {
-    return atomic_load_explicit(&s_done, memory_order_acquire) &&
-           (!s_pcm || !atomic_load(&s_wanted) || !xStreamBufferBytesAvailable(s_pcm));
+    if (!atomic_load_explicit(&s_done, memory_order_acquire))
+        return false;
+    if (cancelled(s_audio_generation))
+        return s_last == 0;
+    return !s_decode || s_decode->drained;
 }
 void nabo_radio_finish(void) {
-    if (!atomic_load_explicit(&s_done, memory_order_acquire) || !atomic_load(&s_active))
+    if (!atomic_load_explicit(&s_done, memory_order_acquire) || !nabo_radio_active())
         return;
-    /* C3 is single-core: the producer is non-current even if this task
-     * preempted it between publishing done and suspending. Free its stack/TCB
-     * synchronously before allowing Muse to allocate a new TLS session. */
-    if (s_worker) {
-        TaskHandle_t worker = s_worker;
-        s_worker = NULL;
-        vTaskDelete(worker);
+    if (s_network) {
+        vTaskDelete(s_network);
+        s_network = NULL;
     }
-    if (s_pcm) {
-        vStreamBufferDelete(s_pcm);
-        s_pcm = NULL;
+    if (s_ring) {
+        vStreamBufferDelete(s_ring);
+        s_ring = NULL;
     }
+    if (s_decode) {
+        nabo_radio_decoder_free(&s_decode->mp3);
+        if (s_decode->aac)
+            esp_aac_dec_close(s_decode->aac);
+        free(s_decode);
+        s_decode = NULL;
+    }
+    atomic_store(&s_active, false);
+    atomic_store(&s_meter, 0);
     save_settings();
     app_nabo_radio_network_end();
-    atomic_store(&s_active, false);
-    if (atomic_load(&s_wanted)) {
+    if (nabo_radio_wanted()) {
         atomic_store(&s_state, RETRYING);
-        s_retry_at = esp_timer_get_time() + (int64_t)s_retry_delay * 1000000;
-        if (s_retry_delay < 30)
-            s_retry_delay = s_retry_delay * 2 > 30 ? 30 : s_retry_delay * 2;
+        s_retry_at = atomic_load(&s_generation) != s_audio_generation
+                         ? 0
+                         : (uint32_t)(esp_timer_get_time() / 1000) + s_retry_delay * 1000;
+        if (s_retry_delay < 8)
+            s_retry_delay *= 2;
     }
 }

@@ -4,9 +4,17 @@
 
 基于 <https://github.com/78/xiaozhi-esp32> 提交 `4632dc51f0a5ad26e08542e131e6e48da41e4ff3`，上游 MIT 许可证完整保留在根目录及 `xiaozhi-esp32/LICENSE`。新增/修改的项目代码沿用 MIT；下列第三方内容按其各自条款。
 
-## Helix MP3（仅 v1.2.0 及更早版本）
+## NABO FM 电台版新增资源
 
-v1.2.0 及更早版本的网络电台包含 Helix MP3 解码器（RealNetworks，RPSL/RCSL）。`feat/dive` 起已移除电台和全部 Helix 源码；旧版源码与许可仍保留在对应标签和发行包中。
+DJ 动画和道具来自拥有者已验收的 NABO 电台素材，保持其造型；`radio_sprites.bin` 为 13 动作 247 帧。NABO 形象和美术不因源码 MIT 许可成为 MIT 素材。
+
+台名、地区、类型及公开流地址合并自蜻蜓公开页面、既有 NABO 台表、魏宝辉台表和小海马港新马台表，仅使用公开台目事实，未使用无许可来源的播放器代码。来源：<https://www.qtfm.cn/>、<https://github.com/weibaohui/aipassport-radio>、<https://github.com/shulinbao/ai-passport-radio>。快照日期为 2026-10-19。
+
+电台 name/logo/clock 字体子集来自 LXGW WenKai Regular，ui/led 子集来自 Source Han Sans SC Normal，均保留 OFL，原文在板型的 `OFL-LXGW.txt`、`OFL-SourceHanSans.txt`。源字体及输出 SHA256 见 `docs/radio-assets.json`。Espressif AAC 按 esp_audio_codec 自身许可使用。
+
+## Helix MP3（本电台版与 v1.2.0 及更早版本）
+
+本电台版重新引入 Helix MP3（RealNetworks，RPSL/RCSL），不改授 MIT。覆盖源码和原始许可在板型 `helix/`，定制分配器在 `nabo_helix_buffers.c`。开发包同时携带到 `third_party/helix-mp3/`。中间的深潜/牌桌版未使用 Helix，历史标签分别记录。
 
 ## 字体与组件
 

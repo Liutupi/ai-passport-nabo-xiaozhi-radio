@@ -1,69 +1,32 @@
-# AI Passport · NABO × 小智 · 牌桌版
+# AI Passport · NABO FM × 小智
 
-为 **FoloToy AI Passport（ESP32-C3 / 8 MB）**制作的小智定制固件，带「**NABO 牌桌**」：2–4 人的 21 点、大话骰，以及新增的 **3–8 人谁是卧底**。一台工牌传着玩，NABO 当荷官。另有 NABO 待机与对话动画、跳一跳，以及完整的设备设置。
+ESP32-C3 / 8 MB FoloToy AI Passport 的电台专用固件，从牌桌 v1.6.0 分出。保留 NABO 小智动画和设备设置，电台采用午夜琥珀配色、霞鹜文楷台名、思源黑体小字，以及原 NABO 的 13 个 DJ 动作。
 
-本仓库从 [ai-passport-nabo-xiaozhi-dive](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-dive)（v1.3.1 深潜版）分出，保留完整历史。为给牌桌腾出空间，**移除了深潜、摇骰子、功德木鱼和蓝牙电脑快捷键**。分区表和 NVS 与此前各版兼容，配网、激活和成绩都保留；牌桌的 NABO 动画放在资源分区里，所以从其他版本切换过来时，**应用和资源两个镜像都要写**（刷写工具的 upgrade 模式会自动处理）。
+**2026-10-19 开发检查点：已通过 ESP-IDF 6.0.2 构建和宿主回归，尚未刷机验收，尚未发布正式 Release。** 图为同一套生产绘制代码在电脑上的输出，不能当作实机截图。
 
-**当前版本：v1.6.0，2026-10-18（新增谁是卧底）。** 应用 SHA256 `de9ff6def9c9e49464d77607aca6a53d4e162f8da387dc2e0f379106101d7327`。本版移除节奏回声，修复牌桌与配网提示同时刷新屏幕时的 SPI 总线争用；使用经过实机串口流程及 10 轮进出压力测试的现成镜像发布，未为发布重新编译。
+![NABO FM 生产代码画面预览](docs/images/radio/contact-sheet.png)
 
-[下载固件](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-table/releases/latest) · [使用指南](docs/USER_GUIDE.md) · [刷写说明](docs/FLASHING.md) · [编译说明](docs/BUILD.md) · [维护交接](docs/HANDOFF.md) · [验证记录](docs/VALIDATION.md) · [更新记录](CHANGELOG.md)
+已接入：
 
-![谁是卧底：3–8 人设置](docs/images/lcd-undercover-setup.png)
-![谁是卧底：结果揭晓](docs/images/lcd-undercover-end.png)
+- 1,105 台内置台表；全国、收藏、最近、类型、各地区波段；拼音首字母搜索；可手动选择本地地区。
+- 停手 500 ms 后连接；下键长按加速扫台；上键单击先移动，双击撤回并返回。
+- OK 单击播放/暂停，双击收藏，长按菜单。列表每屏七台；收藏和最近使用稳定 ID 保存。
+- 13 个动作、247 帧的 NABO DJ 动画；8 行条带直绘，按条带校验值跳过未变画面。
+- 32 KiB 压缩数据缓冲；Helix MP3、Espressif ADTS AAC 接入；半带 FIR、慢速响度均衡、高通、淡入/暂停收尾和限幅；输出跟随台的采样率。
+- 定时关闭、最后一分钟渐弱、闲置一分钟夜间时钟、任意键只唤醒、换台沙沙声开关。
+- `self.radio.search/play/next/random/pause/resume/set_volume/now_playing/favorite/sleep_timer` 设备工具；当前电台与小智切换音频所有权，播放中同时语音和 20% 压低尚未实现。
 
-*上两图来自本版真机串口截屏。谁是卧底内置 264 组词，逐人交接看词、轮流描述、投票出局并揭晓身份；3–6 人安排 1 个卧底，7–8 人安排 2 个。*
+待完成：国内网络下的逐台复测、AAC 兼容性、自动 IP 地区定位、在线台表更新、边播边语音，以及真实硬件上的音质/内存/长时间连播验证。HLS、ICY 曲名、通用点歌、离线助眠声和 DLNA 仍按原设计后续分期处理。
 
-![NABO 牌桌：封面、21 点轮到自己、21 点开牌、大话骰叫数、大话骰开盅](docs/images/lcd-table.png)
-
-![NABO 牌桌多人：4 人封面、4 人 21 点私密回合与开牌、3 人并列赢家、4 人大话骰开盅](docs/images/lcd-table-multi.png)
-
-*上两图由固件的同一套渲染代码在电脑上按一局录好的对局生成（`test_table.py` 的宿主渲染），真机串口截屏与之一致。*
-
-![NABO 跳一跳实机画面](docs/images/lcd-jump-current.png)
-
-## 已实现
-
-| 功能 | 行为 |
-|---|---|
-| 小智 + NABO | 224×224 半身原图，待机眨眼，聆听、思考、说话切换动画 |
-| 语音打开 | 对话中说“打开牌桌／大话骰／二十一点／谁是卧底／跳一跳／设置” |
-| NABO 牌桌 | 2–4 人传着一台工牌玩（封面选人数）：21 点（无明牌，轮流要牌/停牌，一起开牌，最高点并列都得分）和大话骰（两步叫数，1 点万能、叫 1 即斋，错的一方罚 1 分）；换人时出现交接屏，NABO 捂眼不看；21 点先赢满 3 / 5 / 7 局获胜，大话骰先罚满的人输 |
-| 跳一跳 | 按住 OK 蓄力、松开起跳；NABO 屈膝摆臂、落地站稳、平台旁跌坐结束；支持连续蓄力 |
-| 谁是卧底 | 3–8 人传工牌看词，264 组词，轮流描述、忘词私密查看、投票确认、出局与身份揭晓；人数独立保存 |
-| 开机即玩 | 小智还没联网（找不到 Wi-Fi、等待配网）时也能打开本地程序，退出后小智接着启动 |
-| 导航 / 设置 | 双击右侧上键返回上一级；长按上键回小智；音量、亮度、休眠、网络等 |
-
-明确的打开命令在语音识别结果到达后由设备直接处理；复杂表达仍可通过 `self.apps.open` MCP 工具执行（`table`）。进入本地程序会暂停小智，长按右侧上键恢复小智。C3 版通过 OK 开始对话，未启用本地唤醒词。
-
-牌桌的 NABO 荷官动画由项目拥有者用 Codex 出图、Grok 图生视频制作，处理成 16 个动作 215 帧，打包为 1.18 MB 的 `table_sprites.bin` 放在资源分区；扑克牌、骰子（沿用摇骰子的立体渲染）、绒布和音效都由程序实时生成。美术规格、镜头清单、起始图、源视频、处理工具和网页原型都在 [`game-art/table/`](game-art/table/)。
-
-## 下载与安装
-
-Release 提供应用 `xiaozhi.bin`、资源 `assets.bin`、包含四个分区镜像的安装 ZIP、从 `0x0` 刷写的完整固件 `…-full.bin`、`manifest.json` 和 `SHA256SUMS.txt`。ZIP 内附使用文档及带设备身份检查、备份和写后校验的刷写工具。
-
-- **本定制版（任一版本）已安装：** 使用 upgrade 模式，写应用 `0x10000` 和资源 `0x400000`，保留配网、激活及用户数据。
-- **首次安装：** 使用安装包中的四个独立镜像；先核对芯片、Flash、分区和备份。不会执行整片擦除。
-
-此固件只适配上述工牌，采用单应用自定义分区。官方标准 OTA 镜像与这个布局不兼容。请按[刷写说明](docs/FLASHING.md)操作，不要把 ZIP 当成整片 Flash 备份写入。
-
-## 源码与构建
-
-基于 [78/xiaozhi-esp32](https://github.com/78/xiaozhi-esp32) 的 `4632dc51f0a5ad26e08542e131e6e48da41e4ff3`，完整源码位于 `xiaozhi-esp32/`。本版使用 **ESP-IDF 6.0.2**、ESP32-C3、中文语言资源；组件锁定文件和发行配置一并保留。
+[使用指南](docs/USER_GUIDE.md) · [构建](docs/BUILD.md) · [交接](docs/HANDOFF.md) · [验证](docs/VALIDATION.md) · [刷写](docs/FLASHING.md) · [许可](THIRD_PARTY_NOTICES.md)
 
 ```powershell
-# 在已初始化的 ESP-IDF 6.0.2 终端中
+# 已初始化 ESP-IDF 6.0.2 的终端
 python tools/build.py
-```
-
-宿主回归测试需要 Python 3.11+、GCC/G++ 和 Pillow：
-
-```powershell
-python -m pip install -r requirements-dev.txt
+# GCC/G++ 在 PATH；Windows 的 CXX 使用 g++，避免反斜杠被 shlex 解释
 python tools/run_tests.py
 ```
 
-## 交接入口
+动画、子集字体和台表均已随源码放在板型的 `radio_assets/`，正常编译不需要外部美术目录。重新制作资源时才需要设计输入和源字体。NABO 形象和美术不随源码的 MIT 许可授权。
 
-先阅读 [HANDOFF.md](docs/HANDOFF.md)：它说明源码职责、音频与网络生命周期、已有问题的修复原因、回归测试和下一版发布流程。`validation/` 只保存去除设备标识和私人内容的验证摘要；仓库和 Release 不包含 NVS、设备整片备份、Wi-Fi 信息、账号令牌或对话日志。
-
-源码、解码器、字体及美术/音频素材的来源与许可分别列在 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。NABO 美术与社区音效不因源码的 MIT 许可证而自动变成 MIT 素材。本项目是独立定制项目，与微信及 FoloToy 官方发行无关联。
+分区及 `ai-passport-nabo` 板型身份保持兼容；升级必须同时写应用和资源。使用带 MAC、备份和写后检查的工具，勿直接用标准 OTA 或整片擦除。

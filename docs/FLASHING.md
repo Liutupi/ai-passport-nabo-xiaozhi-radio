@@ -1,5 +1,7 @@
 # 刷写与恢复
 
+**当前为 NABO FM 0.2.0 开发候选，尚未实机验收。** 本地包名 `ai-passport-nabo-xiaozhi-radio-v0.2.0.zip`，升级写应用和资源。下文旧 Release 的已验收记录仅适用于历史镜像。当前候选未提供网页刷写整片镜像，也未在 GitHub 发布。
+
 ## 镜像与分区
 
 仅支持 ESP32-C3、8 MB Flash 的 AI Passport。串口可能是 COM8，也可能是其他名称；必须使用自己的端口和 MAC。

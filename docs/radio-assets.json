@@ -1,0 +1,50 @@
+{
+  "radio_catalog.bin": {
+    "bytes": 72161,
+    "sha256": "6e725ce46cf4f248984c6f40e991afbced24ca52dc5b37b7932eb83e62cc2677"
+  },
+  "radio_clock.bin": {
+    "bytes": 8348,
+    "sha256": "69581e53393db064254a5666d945836757a751f755bbd2d30a8f9e5509766314"
+  },
+  "radio_led.bin": {
+    "bytes": 176,
+    "sha256": "882c50bebcf62991612b633314f88ab437b475728e36a63072cdf90788d4ce64"
+  },
+  "radio_logo.bin": {
+    "bytes": 420,
+    "sha256": "144a909a58a629674c4d35a50db71dfac66d129fdd95793649c14c59fe0de6de"
+  },
+  "radio_mic.bin": {
+    "bytes": 2816,
+    "sha256": "6ae2f8da9fb51bda493b8de08d3553ea334c2d953bd0739c5ba172f5e1795a0d"
+  },
+  "radio_nabo_head_24.bin": {
+    "bytes": 1736,
+    "sha256": "9cb9416d2f6337fac6fb5270ac3719bfc86054c609af70317e890c4adcbd6d10"
+  },
+  "radio_name.bin": {
+    "bytes": 192093,
+    "sha256": "6dbcdf18f5502d4891ddf9b281acab3ee65db7f8c809817bd76e473fe7b43ede"
+  },
+  "radio_sprites.bin": {
+    "bytes": 1348259,
+    "sha256": "55706d73b80e3535b483dc8d2da67b8d9bc8dbf74e783975b4f8f77eb57cbe3f"
+  },
+  "radio_ui.bin": {
+    "bytes": 67673,
+    "sha256": "7833387413fa9bc350e9082f1ac0f436e9d2f43ca32d314978c961a18df16968"
+  },
+  "total_bytes": 1693682,
+  "font_sources": {
+    "wenkai": {
+      "file": "LXGWWenKai-Regular.ttf",
+      "sha256": "bf73f995c05f3f7baf7840b9d76d8d9678c8b150a020946a394ca63c67ed1350"
+    },
+    "sans": {
+      "file": "SourceHanSansSC-Normal.otf",
+      "sha256": "1ee89e1669362dee13851129c0a8a791a87521eb4148e5efbf5d26596738e25b"
+    }
+  },
+  "font_glyphs": 805
+}

@@ -20,6 +20,7 @@
 #include "esp_timer.h"
 #include "mcp_server.h"
 #include "nabo_display.h"
+#include "nabo_radio_view.h"
 #include "nvs.h"
 #include "settings.h"
 #include "src/draw/lv_image_decoder_private.h"
@@ -27,6 +28,7 @@
 #include "wifi_manager.h"
 extern "C" {
 #include "nabo_radio.h"
+#include "nabo_radio_keys.h"
 #include "nabo_radio_menu.h"
 #include "nabo_voice_commands.h"
 LV_FONT_DECLARE(nabo_menu_font_16);
@@ -38,6 +40,7 @@ static std::atomic<int> wanted{NABO_HOME}, request_revision{0}, setting_command{
 static std::atomic<int> detail_parent{NABO_SETTINGS};
 static std::atomic<int64_t> open_after{0}, last_input{0};
 static std::atomic<bool> ready{false}, screen_off{false}, speaker{true}, wifi_on{true};
+static std::atomic<bool> local_ui_released{true};
 static std::atomic<int> volume{70}, brightness{80}, sleep_seconds{120}, mic_gain{30}, battery{-1};
 static lv_obj_t* app_screen;
 static NaboApp page = NABO_HOME;
@@ -80,6 +83,14 @@ extern "C" bool app_nabo_radio_network_begin(void) {
 // only after the decoder has stopped on return to NABO.
 extern "C" void app_nabo_radio_network_end(void) {}
 extern "C" bool app_nabo_radio_active(void) { return nabo_radio_active(); }
+static void ensure_radio_catalog() {
+    if (nabo_radio_catalog()->data)
+        return;
+    void* data = nullptr;
+    size_t size = 0;
+    if (Assets::GetInstance().GetAssetData("radio_catalog.bin", data, size))
+        nabo_radio_bind_catalog(data, size);
+}
 
 void nabo_apps_open(NaboApp app, int delay_ms) {
     if (app < NABO_HOME || app > NABO_WIFI)
@@ -228,8 +239,11 @@ static void diagnostic(const char* line) {
         struct {
             const char* name;
             NaboApp app;
-        } aliases[] = {{"home", NABO_HOME},     {"tools", NABO_TOOLS}, {"settings", NABO_SETTINGS},
-                       {"radio", NABO_RADIO},   {"status", NABO_STATUS}};
+        } aliases[] = {{"home", NABO_HOME},
+                       {"tools", NABO_TOOLS},
+                       {"settings", NABO_SETTINGS},
+                       {"radio", NABO_RADIO},
+                       {"status", NABO_STATUS}};
         bool found = false;
         for (const auto& item : aliases)
             if (!strcmp(name, item.name)) {
@@ -283,10 +297,13 @@ static void worker(void*) {
     usb_serial_jtag_vfs_use_driver();
     char command_line[96] = {};
     unsigned command_len = 0;
-    int16_t samples[320];
+    int16_t samples[480];
+    unsigned output_rate = 16000;
     bool usb_attached = false;
     int64_t measured_at = esp_timer_get_time();
     nabo_radio_init();
+    if (nabo_radio_wanted())
+        nabo_apps_open(NABO_RADIO, 1500);
     for (;;) {
         char data[64];
         int received = usb_serial_jtag_read_bytes(data, sizeof(data), 0);
@@ -308,13 +325,13 @@ static void worker(void*) {
         if (desired != NABO_HOME && now >= open_after.load() && !engaged &&
             !app.IsLocalAppActive() && !app.IsProtocolInitializing() &&
             app.GetDeviceState() != kDeviceStateActivating) {
-        // Starting (no network yet) is fine: the programs need no network, and XiaoZhi
-        // resumes its boot flow when the program closes.
+            // Starting (no network yet) is fine: the programs need no network, and XiaoZhi
+            // resumes its boot flow when the program closes.
             engaged = true;
             restored = false;
             app.BeginLocalApp();
         }
-        if (engaged && !ready.load() && app.IsLocalAppActive()) {
+        if (engaged && !ready.load() && desired != NABO_HOME && app.IsLocalAppActive()) {
             if (app.GetAudioService().WaitStopped(2000)) {
                 vTaskDelay(pdMS_TO_TICKS(30));
                 auto codec = static_cast<Es8311AudioCodec*>(Board::GetInstance().GetAudioCodec());
@@ -325,6 +342,7 @@ static void worker(void*) {
                     continue;
                 }
                 ready = true;
+                output_rate = 16000;
                 ESP_LOGI("NABO-Apps", "local audio ownership ready, heap=%u",
                          (unsigned)esp_get_free_heap_size());
             } else {
@@ -336,38 +354,68 @@ static void worker(void*) {
         if (ready.load()) {
             static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())->ReleaseGameDrawBuffer();
             memset(samples, 0, sizeof(samples));
-            // The radio decoder runs on its own task; this worker owns the speaker and
-            // stops playback whenever another page is wanted.
-            if (desired != NABO_RADIO && nabo_radio_wanted())
+            // Settings keep the program running. HOME explicitly gives the audio
+            // device and all decoder memory back to XiaoZhi before it resumes.
+            if (desired == NABO_HOME && nabo_radio_wanted())
                 nabo_radio_stop();
+            if (desired == NABO_RADIO)
+                ensure_radio_catalog();
             if (desired == NABO_RADIO && nabo_radio_due())
                 nabo_radio_begin();
+            size_t sample_count = output_rate / 50;
+            size_t audio_samples = 0;
             if (nabo_radio_active()) {
                 if (nabo_radio_finished())
                     nabo_radio_finish();
                 else {
-                    int16_t radio_pcm[320];
-                    size_t n = nabo_radio_read(radio_pcm, 320, 0);
-                    if (n && desired == NABO_RADIO)
-                        memcpy(samples, radio_pcm, n * sizeof(int16_t));
+                    audio_samples = nabo_radio_read(samples, sample_count, 0);
+                    unsigned new_rate = nabo_radio_output_rate();
+                    if (new_rate != output_rate) {
+                        auto codec =
+                            static_cast<Es8311AudioCodec*>(Board::GetInstance().GetAudioCodec());
+                        codec->EnableOutput(false);
+                        if (!codec->SetDuplexSampleRate(new_rate)) {
+                            nabo_radio_stop();
+                            audio_samples = 0;
+                        } else
+                            output_rate = new_rate;
+                        // This first block may be shorter; never reinterpret old
+                        // samples at a different rate or pad a full 320-sample tail.
+                        sample_count = output_rate / 50;
+                    }
+                }
+            }
+            if (!audio_samples && desired == NABO_RADIO && nabo_radio_wanted() &&
+                nabo_radio_noise() &&
+                (nabo_radio_state() == 1 || nabo_radio_state() == 2 || nabo_radio_state() == 5)) {
+                static uint32_t noise_rng = 0x6e61626f;
+                static int32_t noise_lp = 0;
+                for (size_t i = 0; i < sample_count; ++i) {
+                    noise_rng ^= noise_rng << 13;
+                    noise_rng ^= noise_rng >> 17;
+                    noise_rng ^= noise_rng << 5;
+                    noise_lp += ((static_cast<int16_t>(noise_rng) / 24) - noise_lp) / 3;
+                    samples[i] = static_cast<int16_t>(noise_lp);
                 }
             }
             // A continuous 20 ms clock prevents underruns and clears each effect's
             // DMA tail. Do not sleep again after the blocking I2S write.
             if (desired != NABO_HOME && speaker.load()) {
-                output16(samples, 320);
+                output16(samples, sample_count);
                 audio_clocked = true;
             }
             // XiaoZhi's restore needs the decoder's memory back first.
             if (desired == NABO_HOME && !nabo_radio_active()) {
                 Board::GetInstance().GetAudioCodec()->EnableOutput(false);
                 ready = false;
-                engaged = false;
-                if (!restored) {
-                    restored = true;
-                    app.EndLocalApp();
-                }
             }
+        }
+        // The GUI releases its 22 KiB sprite and DMA strip on the next tick.
+        // Resume TLS/Opus only after both the decoder and UI have returned RAM.
+        if (desired == NABO_HOME && !ready.load() && local_ui_released.load() && !restored) {
+            restored = true;
+            engaged = false;
+            app.EndLocalApp();
         }
         int command = setting_command.exchange(-1);
         if (command >= 0)
@@ -415,21 +463,6 @@ void nabo_apps_initialize() {
     }
 }
 
-static lv_obj_t* label(lv_obj_t* parent, uint32_t color, const char* text, int x, int y,
-                       int width = 220) {
-    auto obj = lv_label_create(parent);
-    lv_obj_set_style_text_font(obj, &nabo_menu_font_16, 0);
-    lv_obj_set_style_text_color(obj, lv_color_hex(color), 0);
-    lv_label_set_long_mode(obj, LV_LABEL_LONG_WRAP);
-    lv_obj_set_width(obj, width);
-    lv_obj_set_pos(obj, x, y);
-    lv_label_set_text(obj, text);
-    return obj;
-}
-static void show_text(lv_obj_t* obj, const char* text) {
-    if (strcmp(lv_label_get_text(obj), text))
-        lv_label_set_text(obj, text);
-}
 void nabo_apps_build(lv_obj_t* screen) {
     if (app_screen)
         return;
@@ -439,20 +472,28 @@ void nabo_apps_build(lv_obj_t* screen) {
     ESP_LOGI("NABO-Apps", "menus and radio ready");
 }
 static void change_page(NaboApp next) {
-    if (page == NABO_RADIO)
+    if (page == NABO_RADIO) {
+        nabo_radio_view_close();
         nabo_radio_menu_close();
+    }
     page = next;
     edit = -1;
     selected = next == NABO_TOOLS ? 1 : 0;
-    bool menu = next != NABO_HOME;
+    bool menu = next != NABO_HOME && next != NABO_RADIO;
     // The menu panel exists only while a menu page is shown: LVGL allocates
     // from the C3's system heap, which XiaoZhi's TLS and Opus need at home.
     if (menu) {
         menu_view::Build(app_screen);
     } else
         menu_view::Free();
-    if (next == NABO_RADIO)
+    if (next == NABO_RADIO) {
         nabo_radio_menu_open();
+        if (!nabo_radio_view_open()) {
+            snprintf(notice, sizeof(notice), "电台资源缺失，请升级应用和资源");
+            nabo_apps_open(NABO_TOOLS);
+        }
+    }
+    local_ui_released.store(next == NABO_HOME);
     ESP_LOGI("NABO-Apps", "page=%d", static_cast<int>(next));
 }
 // Renders the radio's "> item" text menus as a now-playing card plus rows.
@@ -495,6 +536,10 @@ void nabo_apps_tick() {
     }
     if (page == NABO_HOME)
         return;
+    if (page == NABO_RADIO) {
+        nabo_radio_view_tick(battery.load());
+        return;
+    }
     if (!menu_view::Built())
         return;
     namespace mv = menu_view;
@@ -556,8 +601,8 @@ void nabo_apps_tick() {
         if (battery.load() >= 0)
             snprintf(power, sizeof(power), "%d%%", battery.load());
         const char* names[] = {"Wi-Fi", "网络", "IP", "电量", "可用内存", "固件"};
-        const char* texts[] = {wifi.IsConnected() ? "已连接" : "未连接", ssid, ip, power, memory,
-                               "NABO FM 0.1"};
+        const char* texts[] = {
+            wifi.IsConnected() ? "已连接" : "未连接", ssid, ip, power, memory, "NABO FM 0.2 dev"};
         mv::Header("STATUS", "设备状态", mv::kInk, nullptr);
         mv::Info(names, texts, 6);
         hint = "OK 返回 · 双击上 上一级";
@@ -575,7 +620,8 @@ void nabo_apps_tick() {
         mv::Info(names, texts, 1, 204);
         hint = "OK 返回 · 双击上 上一级";
     } else if (page == NABO_WIFI) {
-        snprintf(text, sizeof(text), "1  手机连接热点\n    %s\n\n2  浏览器打开\n    %s\n\n3  配网完成后按 OK 返回",
+        snprintf(text, sizeof(text),
+                 "1  手机连接热点\n    %s\n\n2  浏览器打开\n    %s\n\n3  配网完成后按 OK 返回",
                  WifiManager::GetInstance().GetApSsid().c_str(),
                  WifiManager::GetInstance().GetApWebUrl().c_str());
         mv::Header("WI-FI", "添加网络", mv::kBlue, nullptr);
@@ -607,7 +653,7 @@ static void return_one_level() {
     if (current == NABO_HOME)
         return;
     bool settled = ready.load() && current == page;
-    if (settled && current == NABO_RADIO && nabo_radio_menu_key(MUSE_MENU_LEFT))
+    if (settled && current == NABO_RADIO && nabo_radio_view_back())
         return;
     if (settled && current == NABO_SETTINGS && edit >= 0) {
         edit = -1;
@@ -622,6 +668,10 @@ static void return_one_level() {
 }
 bool nabo_apps_key(muse_menu_key_t key) {
     last_input = esp_timer_get_time();
+    // The FM page owns the raw edges, including double-click and hold timing.
+    // Ignore the button library's later click/long callbacks for this page.
+    if (wanted.load() == NABO_RADIO && page == NABO_RADIO && ready.load())
+        return true;
     if (screen_off.exchange(false)) {
         Board::GetInstance().GetBacklight()->SetBrightness(brightness.load(), false);
         return true;
@@ -701,11 +751,15 @@ bool nabo_apps_key(muse_menu_key_t key) {
     }
     return true;
 }
-// The radio's menus use the debounced keys; raw edges and OK hold are unused for now.
-void nabo_apps_down_pressed(uint32_t) {}
-void nabo_apps_down_released(uint32_t) {}
-void nabo_apps_up_edge(bool, uint32_t) { last_input = esp_timer_get_time(); }
-void nabo_apps_charge(bool, uint32_t) { last_input = esp_timer_get_time(); }
+static void radio_edge(int key, bool pressed, uint32_t event_ms) {
+    last_input = esp_timer_get_time();
+    if (wanted.load() == NABO_RADIO && page == NABO_RADIO && ready.load())
+        nabo_radio_view_edge(key, pressed, event_ms);
+}
+void nabo_apps_down_pressed(uint32_t t) { radio_edge(NRF_DOWN, true, t); }
+void nabo_apps_down_released(uint32_t t) { radio_edge(NRF_DOWN, false, t); }
+void nabo_apps_up_edge(bool pressed, uint32_t t) { radio_edge(NRF_UP, pressed, t); }
+void nabo_apps_charge(bool pressed, uint32_t t) { radio_edge(NRF_OK, pressed, t); }
 void nabo_apps_register_tools() {
     auto& server = McpServer::GetInstance();
     server.AddTool(
@@ -727,6 +781,104 @@ void nabo_apps_register_tools() {
             nabo_apps_open(app, 900);
             return std::string("已安排打开 ") + name + "。程序中使用实体按键；长按上键返回小智。";
         });
+    server.AddTool(
+        "self.radio.search",
+        "搜索电台，支持中文台名、地区、类型或拼音首字母；返回最多十个 station 编号。",
+        PropertyList({Property("query", kPropertyTypeString).SetMaxLength(63)}),
+        [](const PropertyList& p) -> ToolResult {
+            ensure_radio_catalog();
+            const auto& query = p["query"].value<std::string>();
+            cJSON* result = cJSON_CreateArray();
+            int found = 0;
+            for (int i = 0; i < nabo_radio_station_count() && found < 10; ++i) {
+                nrf_station_t s;
+                if (!nabo_radio_station_info(i, &s) || !nrf_catalog_match(&s, query.c_str()))
+                    continue;
+                cJSON* item = cJSON_CreateObject();
+                cJSON_AddNumberToObject(item, "station", i);
+                cJSON_AddStringToObject(item, "name", s.name);
+                cJSON_AddStringToObject(item, "region", s.region);
+                cJSON_AddItemToArray(result, item);
+                ++found;
+            }
+            return result;
+        });
+    server.AddTool("self.radio.play",
+                   "播放 search 返回的 station 编号并打开电台。长按上键返回小智。",
+                   PropertyList({Property("station", kPropertyTypeInteger, 0, 4095)}),
+                   [](const PropertyList& p) -> ToolResult {
+                       ensure_radio_catalog();
+                       int i = p["station"].value<int>();
+                       if (i >= nabo_radio_station_count())
+                           return std::unexpected("station 超出电台表范围");
+                       nabo_radio_select_station(i);
+                       nabo_apps_open(NABO_RADIO, 900);
+                       return std::string("即将播放 ") + nabo_radio_station_name(i);
+                   });
+    server.AddTool("self.radio.next", "播放电台表中的下一台。", PropertyList(),
+                   [](const PropertyList&) -> ToolResult {
+                       ensure_radio_catalog();
+                       int i = (nabo_radio_current_station() + 1) % nabo_radio_station_count();
+                       nabo_radio_select_station(i);
+                       nabo_apps_open(NABO_RADIO, 900);
+                       return std::string(nabo_radio_station_name(i));
+                   });
+    server.AddTool("self.radio.random", "随机播放一个电台。", PropertyList(),
+                   [](const PropertyList&) -> ToolResult {
+                       ensure_radio_catalog();
+                       int i = static_cast<int>(esp_random() % nabo_radio_station_count());
+                       nabo_radio_select_station(i);
+                       nabo_apps_open(NABO_RADIO, 900);
+                       return std::string(nabo_radio_station_name(i));
+                   });
+    server.AddTool("self.radio.pause", "暂停电台。", PropertyList(),
+                   [](const PropertyList&) -> ToolResult {
+                       nabo_radio_stop();
+                       return true;
+                   });
+    server.AddTool("self.radio.resume", "继续上次的电台并打开播放器。", PropertyList(),
+                   [](const PropertyList&) -> ToolResult {
+                       ensure_radio_catalog();
+                       if (!nabo_radio_wanted())
+                           nabo_radio_toggle_play();
+                       nabo_apps_open(NABO_RADIO, 900);
+                       return true;
+                   });
+    server.AddTool("self.radio.set_volume", "设置工牌扬声器音量，0 到 100。",
+                   PropertyList({Property("volume", kPropertyTypeInteger, 0, 100)}),
+                   [](const PropertyList& p) -> ToolResult {
+                       volume = p["volume"].value<int>();
+                       setting_command = ST_VOLUME;
+                       return true;
+                   });
+    server.AddTool("self.radio.now_playing", "查询当前台名、播放状态和定时剩余秒数。",
+                   PropertyList(), [](const PropertyList&) -> ToolResult {
+                       ensure_radio_catalog();
+                       cJSON* result = cJSON_CreateObject();
+                       cJSON_AddNumberToObject(result, "station", nabo_radio_current_station());
+                       cJSON_AddStringToObject(
+                           result, "name", nabo_radio_station_name(nabo_radio_current_station()));
+                       cJSON_AddStringToObject(result, "state", nabo_radio_state_text());
+                       cJSON_AddNumberToObject(result, "sleep_seconds",
+                                               nabo_radio_sleep_remaining());
+                       return result;
+                   });
+    server.AddTool("self.radio.favorite", "收藏或取消收藏当前电台。",
+                   PropertyList({Property("favorite", kPropertyTypeBoolean)}),
+                   [](const PropertyList& p) -> ToolResult {
+                       ensure_radio_catalog();
+                       int i = nabo_radio_current_station();
+                       bool yes = p["favorite"].value<bool>();
+                       if (nabo_radio_favorite(i) != yes)
+                           nabo_radio_toggle_favorite(i);
+                       return nabo_radio_favorite(i) == yes;
+                   });
+    server.AddTool("self.radio.sleep_timer", "设置电台定时关闭，0 取消，最多 720 分钟。",
+                   PropertyList({Property("minutes", kPropertyTypeInteger, 0, 720)}),
+                   [](const PropertyList& p) -> ToolResult {
+                       nabo_radio_set_sleep(p["minutes"].value<int>());
+                       return true;
+                   });
 }
 bool nabo_apps_voice_command(const char* transcript) {
     if (nabo_apps_active())

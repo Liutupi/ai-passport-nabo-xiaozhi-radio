@@ -106,7 +106,7 @@ def main():
     receipt_path = private / (stamp+'-receipt.json')
     receipt_path.write_text(json.dumps(receipt, indent=2)+'\n', 'utf-8')
     if args.mode == 'upgrade':
-        # NABO TABLE reads its sprite pack from the assets partition, so an upgrade writes the
+        # NABO FM reads its sprite/font/catalog packs from assets, so an upgrade writes the
         # application and the assets image; bootloader and partition table must already match.
         for name in ['bootloader.bin', 'partition-table.bin']:
             offset, _, data = images[name]

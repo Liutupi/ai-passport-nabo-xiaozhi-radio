@@ -1,5 +1,30 @@
 # 维护交接
 
+## 2026-10-19 Codex 接续检查点
+
+从 Claude 的 `ca25669` bundle 恢复到独立电台仓库，设计原件仍在同级 `nabo-radio/HANDOFF.md`。以下是新增软件检查点，尚未刷机或正式发布。
+
+- `radio_assets/`：NABO 13 动作 247 帧、1,105 台 NFC1 台表、文楷 23 px / 思源黑体 12 px 子集、字标、时钟和道具；输出记录在 `radio-assets.json`。
+- `nabo_radio_sprites.c`：有界解析 NFM1；第零帧清空、顺序差分、随机跳帧重放；宿主与 Python 解码逐像素一致。
+- `nabo_radio_gfx.c` / `nabo_radio_view.cc`：单条 8 行 DMA 缓冲、条带哈希跳过未变画面；索引缓存约 22 KiB，仅电台页存在；保留 `panel_borrowed`。
+- `nabo_radio_keys.c`：250 ms 双击、650 ms 长按、下键加速重复、上键先动后撤回。列表与播放器位置分开；夜间第一次键只唤醒。
+- `nabo_radio.c`：32 KiB 压缩环，网络任务与扬声器所有者分离；12 KiB 开播；断线保留数据并在网络任务重连。MP3 经半带 DSP；ADTS AAC 调用 Espressif 解码器，超出固定 PCM 上限的格式失败退出；AAC/HE-AAC 尚未真机测试。
+- ES8311 已关闭设备的采样率白名单补齐 8/11.025/12/16/22.05/24 kHz。回小智等待解码任务及 GUI 归还内存，再恢复 TLS/Opus。
+- 收藏最多 128 个稳定 UID，最近十台也是 UID；新 NVS 键 `favorites2/recent2/station_uid/local/loudness/noise/autoplay`，保留旧键。旧 47 台按 URL 中的台号优先、台名次之迁移收藏和当前台，避免套用新排序。
+- 注册十项 `self.radio.*`；小智主页可搜索后打开电台。仍暂停语音运行电台，边播边语音/20% 压低未实现。
+- 三项新宿主脚本直接调用生产实现；`docs/images/radio/` 为宿主绘制，不是工牌截图。50 次开关是宿主资源释放检查，不是真机切台。
+
+下一步：
+
+1. 核对连接工牌 MAC、布局和完整备份，再安装候选 app + assets；构建不是设备验收。
+2. 国内 Wi-Fi 测 MP3 44.1/48/32/22.05 kHz 和港新马 AAC，记录实际堆、最大块、栈。空闲堆 60 KiB 尚未验证，32 KiB 环可能需调整。
+3. 实体键、夜间唤醒、50 次切台、1 小时连播、退出后的连续小智对话；附 app/assets SHA256。
+4. 完成在线台表（需要国内检测源）、IP 地区、通用字库缺字回退、语音与播放并行。目前地区可手动设定。
+5. HLS/ICY/play_url/队列、离线助眠声、DLNA 仍是后续分期。设计目录原型仍只用 S1/S2，与固件动画分开记录。
+6. GitHub 新仓库尚未创建/推送；当前是本地开发检查点，不能将未上机候选发布为正式 Release。
+
+下方旧记录仅适用于各自版本，不代表本次电台验收。
+
 ## 当前交接状态（NABO FM 电台版，开发中）
 
 本仓库从牌桌版 v1.6.0（`2de454a`）分出，目标是《NABO FM》电台版。设计、美术规格、电台表和交互原型在设计仓库 `nabo-radio/`（`DESIGN.md`、`ART_BRIEF.md`、`catalog/`、`prototype/`）。
