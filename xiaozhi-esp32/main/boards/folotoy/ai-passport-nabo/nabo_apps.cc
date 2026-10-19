@@ -41,6 +41,7 @@ static std::atomic<int> detail_parent{NABO_SETTINGS};
 static std::atomic<int64_t> open_after{0}, last_input{0};
 static std::atomic<bool> ready{false}, screen_off{false}, speaker{true}, wifi_on{true};
 static std::atomic<bool> local_ui_released{true};
+static std::atomic<bool> radio_ui_ready{false};
 static std::atomic<int> volume{70}, brightness{80}, sleep_seconds{120}, mic_gain{30}, battery{-1};
 static lv_obj_t* app_screen;
 static NaboApp page = NABO_HOME;
@@ -280,7 +281,16 @@ static void diagnostic(const char* line) {
         app.Schedule([key]() {
             auto display = Board::GetInstance().GetDisplay();
             DisplayLockGuard lock(display);
-            nabo_apps_key(key);
+            if (page == NABO_RADIO) {
+                if (key == MUSE_MENU_UP || key == MUSE_MENU_DOWN || key == MUSE_MENU_SELECT) {
+                    int button = key == MUSE_MENU_UP ? 0 : key == MUSE_MENU_DOWN ? 1 : 2;
+                    uint32_t now = static_cast<uint32_t>(esp_timer_get_time() / 1000);
+                    nabo_radio_view_edge(button, true, now);
+                    nabo_radio_view_edge(button, false, now + 1);
+                } else
+                    nabo_radio_view_back();
+            } else
+                nabo_apps_key(key);
         });
     } else if (!strcmp(line, ">apps.capture")) {
         app.Schedule(
@@ -360,7 +370,7 @@ static void worker(void*) {
                 nabo_radio_stop();
             if (desired == NABO_RADIO)
                 ensure_radio_catalog();
-            if (desired == NABO_RADIO && nabo_radio_due())
+            if (desired == NABO_RADIO && radio_ui_ready.load() && nabo_radio_due())
                 nabo_radio_begin();
             size_t sample_count = output_rate / 50;
             size_t audio_samples = 0;
@@ -472,10 +482,13 @@ void nabo_apps_build(lv_obj_t* screen) {
     ESP_LOGI("NABO-Apps", "menus and radio ready");
 }
 static void change_page(NaboApp next) {
+    radio_ui_ready = false;
     if (page == NABO_RADIO) {
-        nabo_radio_view_close();
+        nabo_radio_view_hide();
         nabo_radio_menu_close();
     }
+    if (next == NABO_HOME)
+        nabo_radio_view_close();
     page = next;
     edit = -1;
     selected = next == NABO_TOOLS ? 1 : 0;
@@ -491,7 +504,8 @@ static void change_page(NaboApp next) {
         if (!nabo_radio_view_open()) {
             snprintf(notice, sizeof(notice), "电台资源缺失，请升级应用和资源");
             nabo_apps_open(NABO_TOOLS);
-        }
+        } else
+            radio_ui_ready = true;
     }
     local_ui_released.store(next == NABO_HOME);
     ESP_LOGI("NABO-Apps", "page=%d", static_cast<int>(next));

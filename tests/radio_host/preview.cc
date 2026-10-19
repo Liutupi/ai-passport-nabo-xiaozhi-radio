@@ -107,6 +107,12 @@ int main(int argc, char **argv) {
   state = 3;
   advance(3000);
   save(output, "playing");
+  // Local settings hide the panel but retain the large sprite workspace so
+  // reopening the player never needs a new large allocation during playback.
+  nabo_radio_view_hide();
+  assert(nabo_radio_view_open());
+  assert(wanted && state == 3);
+  advance(40);
   int previous = current;
   click(NRF_DOWN);
   click(NRF_DOWN);

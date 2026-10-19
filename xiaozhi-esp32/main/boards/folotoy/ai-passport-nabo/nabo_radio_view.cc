@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <new>
@@ -567,11 +568,20 @@ void clock_page() {
 }  // namespace
 
 bool nabo_radio_view_open() {
-    if (v)
+    if (v) {
+        static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())
+            ->BeginDirectDraw(&v->io, &v->panel);
+        v->clock = false;
+        v->last_key = now_ms();
+        v->refresh = true;
         return true;
-    v = new (std::nothrow) View();
-    if (!v)
+    }
+    // IDF builds without exceptions can abort inside libstdc++'s nothrow new.
+    // Check malloc directly before placement construction on the C3.
+    void* storage = std::malloc(sizeof(View));
+    if (!storage)
         return false;
+    v = new (storage) View();
     const void* data;
     size_t size;
     if (asset("radio_catalog.bin", data, size))
@@ -616,21 +626,30 @@ bool nabo_radio_view_open() {
 fail:
     if (v->strip)
         heap_caps_free(v->strip);
-    delete v;
+    v->~View();
+    std::free(v);
     v = nullptr;
     ESP_LOGE("NABO-FM", "radio assets unavailable or out of memory");
     return false;
 }
-void nabo_radio_view_close() {
+void nabo_radio_view_hide() {
     if (!v)
         return;
     esp_lcd_panel_io_tx_param(v->io, 0, nullptr, 0);
-    if (v->dimmed)
+    if (v->dimmed) {
         Board::GetInstance().GetBacklight()->SetBrightness(v->brightness, false);
-    heap_caps_free(v->strip);
-    delete v;
-    v = nullptr;
+        v->dimmed = false;
+    }
     static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())->EndDirectDraw();
+}
+void nabo_radio_view_close() {
+    if (!v)
+        return;
+    nabo_radio_view_hide();
+    heap_caps_free(v->strip);
+    v->~View();
+    std::free(v);
+    v = nullptr;
 }
 void nabo_radio_view_edge(int key, bool pressed, uint32_t when) {
     if (!v || key < 0 || key > 2)
