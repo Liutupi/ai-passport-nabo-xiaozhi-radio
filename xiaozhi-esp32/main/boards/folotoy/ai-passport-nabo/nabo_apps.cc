@@ -218,6 +218,10 @@ static void apply_setting(int id) {
 static void diagnostic(const char* line) {
     auto& app = Application::GetInstance();
     if (!strcmp(line, ">apps.status")) {
+        // USB inspection must never wait for a whole GUI frame on the I2S
+        // owner. Take the display snapshot on the main task instead.
+        app.Schedule([]() {
+        auto& app = Application::GetInstance();
         DisplayLockGuard lock(Board::GetInstance().GetDisplay());
         printf(
             "\n@apps "
@@ -235,6 +239,7 @@ static void diagnostic(const char* line) {
             nabo_radio_menu_text(text, sizeof(text));
             printf("@radio-menu %s\n", text);
         }
+        });
     } else if (!strncmp(line, ">apps.open=", 11)) {
         const char* name = line + 11;
         struct {
@@ -356,6 +361,7 @@ static void worker(void*) {
                     continue;
                 }
                 ready = true;
+                static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())->ReleaseGameDrawBuffer();
                 output_rate = 16000;
                 ESP_LOGI("NABO-Apps", "local audio ownership ready, heap=%u",
                          (unsigned)esp_get_free_heap_size());
@@ -366,7 +372,6 @@ static void worker(void*) {
         }
         bool audio_clocked = false;
         if (ready.load()) {
-            static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())->ReleaseGameDrawBuffer();
             memset(samples, 0, sizeof(samples));
             // Settings keep the program running. HOME explicitly gives the audio
             // device and all decoder memory back to XiaoZhi before it resumes.
