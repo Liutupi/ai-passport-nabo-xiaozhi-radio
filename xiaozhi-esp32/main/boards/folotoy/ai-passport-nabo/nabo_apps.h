@@ -5,8 +5,7 @@ enum NaboApp {
     NABO_HOME,
     NABO_TOOLS,
     NABO_SETTINGS,
-    NABO_TABLE,
-    NABO_JUMP,
+    NABO_RADIO,
     NABO_STATUS,
     NABO_BATTERY,
     NABO_WIFI
@@ -20,11 +19,11 @@ bool nabo_apps_active();
 bool nabo_apps_is_jump();
 /* Local game that needs a fast display refresh (jump). */
 bool nabo_apps_is_fast();
-/* Press-down of the DOWN key; the table reads raw DOWN edges. */
+/* Raw DOWN press edge (unused by the menu radio). */
 void nabo_apps_down_pressed(uint32_t event_ms);
-/* Release of the DOWN key; DIVE dashes while it is held. */
+/* Raw DOWN release edge. */
 void nabo_apps_down_released(uint32_t event_ms);
-// Raw UP edges (the table uses UP as a game key with its own repeat).
+// Raw UP edges.
 void nabo_apps_up_edge(bool pressed, uint32_t event_ms);
 void nabo_apps_register_tools();
 void nabo_apps_initialize();

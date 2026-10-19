@@ -827,8 +827,6 @@ elseif(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO)
     set(BUILTIN_TEXT_FONT font_noto_sans_basic_20_4)
     set(BUILTIN_ICON_FONT font_material_symbols_20_4)
     set(DEFAULT_EMOJI_COLLECTION noto-color-emoji_32)
-    # NABO TABLE's sprite pack (tools/generate_table_sprites.py) is read in place from the assets partition.
-    set(DEFAULT_ASSETS_EXTRA_FILES "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/table_assets")
 elseif(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT)
     set(BOARD_DIR "folotoy/ai-passport")
     set(BUILTIN_TEXT_FONT font_noto_sans_basic_20_4)
@@ -1451,22 +1449,11 @@ if(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO)
 endif()
 
 if(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO)
-    target_add_binary_data(${COMPONENT_LIB} "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/jump_sprites.bin" BINARY)
-    # The scanline renderer is CPU-bound on the single-core C3. Keep the rest of
-    # XiaoZhi's size-oriented build, but inline/optimize this integer hot path.
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_jump_model.c"
-                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_jump_rig.c"
-                                PROPERTIES COMPILE_OPTIONS "-O3")
-    # NABO TABLE composes pixels and synthesizes samples on the C3; keep those paths optimized.
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_table_gfx.c"
-                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_table_shapes.c"
-                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_table_sprites.c"
-                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_table_text.c"
-                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_table_sound.c"
-                                "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/nabo_dice_render.c"
-                                PROPERTIES COMPILE_OPTIONS "-O2")
-endif()
-
-if(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO)
-    target_add_binary_data(${COMPONENT_LIB} "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/jump_sounds.bin" BINARY)
+    # Helix fixed-point MP3 decoder for the radio (RPSL/RCSL notices kept under helix/).
+    # nabo_helix_buffers.c replaces real/buffers.c with allocations sized for the C3 heap.
+    file(GLOB NABO_HELIX_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/helix/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/helix/real/*.c")
+    list(FILTER NABO_HELIX_SOURCES EXCLUDE REGEX "/real/buffers\\.c$")
+    target_sources(${COMPONENT_LIB} PRIVATE ${NABO_HELIX_SOURCES})
+    set_source_files_properties(${NABO_HELIX_SOURCES} PROPERTIES COMPILE_OPTIONS "-Wno-unused-but-set-variable")
+    target_include_directories(${COMPONENT_LIB} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/helix/pub" "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/helix/real")
 endif()

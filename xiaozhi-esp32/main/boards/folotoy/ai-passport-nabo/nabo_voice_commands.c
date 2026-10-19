@@ -58,11 +58,8 @@ const char* nabo_voice_launch_app(const char* transcript) {
     struct {
         const char* spoken;
         const char* app;
-    } aliases[] = {{"牌桌", "table"},           {"大话骰", "table"},       {"二十一点", "table"},
-                   {"21点", "table"},           {"打牌", "table"},         {"跳一跳", "jump"},
-                   {"更多设置", "settings"},
-                   {"设置", "settings"},       {"工具", "tools"},        {"谁是卧底", "undercover"},
-                   {"卧底", "undercover"}};
+    } aliases[] = {{"网络电台", "radio"}, {"电台", "radio"},    {"收音机", "radio"},
+                   {"更多设置", "settings"}, {"设置", "settings"}, {"工具", "tools"}};
     for (size_t i = 0; i < sizeof(aliases) / sizeof(*aliases); ++i) {
         const char* rest = at;
         if (!take_prefix(&rest, aliases[i].spoken))

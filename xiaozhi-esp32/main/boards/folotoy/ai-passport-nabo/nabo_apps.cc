@@ -26,9 +26,8 @@
 #include "ssid_manager.h"
 #include "wifi_manager.h"
 extern "C" {
-#include "nabo_jump_model.h"
-#include "nabo_jump_sound.h"
-#include "nabo_table.h"
+#include "nabo_radio.h"
+#include "nabo_radio_menu.h"
 #include "nabo_voice_commands.h"
 LV_FONT_DECLARE(nabo_menu_font_16);
 LV_FONT_DECLARE(nabo_mono_font_12);
@@ -40,66 +39,18 @@ static std::atomic<int> detail_parent{NABO_SETTINGS};
 static std::atomic<int64_t> open_after{0}, last_input{0};
 static std::atomic<bool> ready{false}, screen_off{false}, speaker{true}, wifi_on{true};
 static std::atomic<int> volume{70}, brightness{80}, sleep_seconds{120}, mic_gain{30}, battery{-1};
-static std::atomic<uint32_t> best_score{0};
-static std::atomic<bool> best_dirty{false};
-static std::atomic<int64_t> best_changed_at{0};
-static std::atomic<int> jump_sound{0};
 static lv_obj_t* app_screen;
 static NaboApp page = NABO_HOME;
 static int selected = 1, settings_selected = 1, edit = -1, shown_revision = -1;
 static bool initialized = false, engaged = false, restored = true;
 static int64_t last_battery = 0;
 static char notice[96] = "";
-static nabo_jump_t jump_game, jump_frame;
-static uint32_t jump_frame_time;
-static std::atomic<uint32_t> jump_frames{0}, jump_fps{0};
-struct JumpTiming {
-    uint32_t frames = 0, intervals = 0, max_us = 0, slow = 0;
-    uint64_t sum_us = 0;
-    uint64_t draw_us = 0;
-    uint32_t max_draw_us = 0;
-};
-static JumpTiming jump_timing[6];
-static uint32_t jump_draw_us = 0;
-static int64_t jump_previous_flush = 0;
-static jump_phase_t jump_previous_phase = JUMP_READY;
-static bool jump_test_mode = false;
-static std::atomic<bool> jump_round_over{false};
-void nabo_apps_record_frame() {
-    if (nabo_apps_is_jump()) {
-        jump_frames.fetch_add(1);
-        auto phase = jump_frame.phase;
-        auto& timing = jump_timing[phase];
-        ++timing.frames;
-        timing.draw_us += jump_draw_us;
-        timing.max_draw_us = std::max(timing.max_draw_us, jump_draw_us);
-        jump_draw_us = 0;
-        int64_t now = esp_timer_get_time();
-        if (jump_previous_flush && phase == jump_previous_phase) {
-            uint32_t elapsed = now - jump_previous_flush;
-            ++timing.intervals;
-            timing.sum_us += elapsed;
-            timing.max_us = std::max(timing.max_us, elapsed);
-            if (elapsed > 50000)
-                ++timing.slow;
-        }
-        jump_previous_flush = now;
-        jump_previous_phase = phase;
-        // At 100 Hz the LVGL port otherwise sleeps twice for at least one tick
-        // after a long scroll redraw. Keep its display event pending so the
-        // next due frame can run after the normal yield, without that extra wait.
-        if (phase == JUMP_SCROLLING)
-            lvgl_port_task_wake(LVGL_PORT_EVENT_USER, nullptr);
-    }
-}
-static lv_obj_t *jump_panel, *jump_image, *jump_score, *jump_best, *jump_station, *jump_hint;
-static lv_image_dsc_t jump_source = {};
-static lv_draw_buf_t* jump_strip;
-static int64_t jump_last_frame;
+// The display hook stays: NaboDisplay counts flushes for local programs.
+void nabo_apps_record_frame() {}
 
-static const char* tools[] = {"返回 NABO", "跳一跳", "NABO 牌桌", "更多设置"};
+static const char* tools[] = {"返回 NABO", "网络电台", "更多设置"};
 static constexpr int kToolCount = sizeof(tools) / sizeof(*tools);
-static const NaboApp tool_apps[] = {NABO_HOME, NABO_JUMP, NABO_TABLE, NABO_SETTINGS};
+static const NaboApp tool_apps[] = {NABO_HOME, NABO_RADIO, NABO_SETTINGS};
 enum Setting {
     ST_BACK,
     ST_VOLUME,
@@ -122,6 +73,13 @@ extern "C" bool muse_settings_speaker_on(void) { return speaker.load(); }
 extern "C" bool muse_wifi_connected(void) {
     return wifi_on.load() && WifiManager::GetInstance().IsConnected();
 }
+extern "C" bool app_nabo_radio_network_begin(void) {
+    return ready.load() && Application::GetInstance().IsLocalAppActive();
+}
+// XiaoZhi stays paused while its local program is open. The worker resumes it
+// only after the decoder has stopped on return to NABO.
+extern "C" void app_nabo_radio_network_end(void) {}
+extern "C" bool app_nabo_radio_active(void) { return nabo_radio_active(); }
 
 void nabo_apps_open(NaboApp app, int delay_ms) {
     if (app < NABO_HOME || app > NABO_WIFI)
@@ -137,10 +95,8 @@ void nabo_apps_open(NaboApp app, int delay_ms) {
     last_input.store(esp_timer_get_time());
 }
 bool nabo_apps_active() { return wanted.load() != NABO_HOME || ready.load(); }
-bool nabo_apps_is_jump() { return wanted.load() == NABO_JUMP && ready.load(); }
-bool nabo_apps_is_fast() {
-    return wanted.load() == NABO_JUMP && ready.load();
-}
+bool nabo_apps_is_jump() { return false; }
+bool nabo_apps_is_fast() { return false; }
 
 static void save_settings() {
     nvs_handle_t h;
@@ -186,9 +142,6 @@ static void load_settings() {
             speaker = flag != 0;
         if (!nvs_get_u8(h, "wifi", &flag))
             wifi_on = flag != 0;
-        uint32_t score;
-        if (!nvs_get_u32(h, "jump_best", &score))
-            best_score = score;
         nvs_close(h);
     }
     board.GetAudioCodec()->SetOutputVolume(speaker ? volume.load() : 0);
@@ -211,6 +164,8 @@ static void apply_setting(int id) {
             board.GetAudioCodec()->SetOutputVolume(speaker ? volume.load() : 0);
             break;
         case ST_SPEAKER:
+            if (!speaker)
+                nabo_radio_stop();
             board.GetAudioCodec()->SetOutputVolume(speaker ? volume.load() : 0);
             break;
         case ST_BRIGHTNESS:
@@ -222,8 +177,10 @@ static void apply_setting(int id) {
         case ST_WIFI:
             if (wifi_on)
                 WifiManager::GetInstance().StartStation();
-            else
+            else {
+                nabo_radio_stop();
                 WifiManager::GetInstance().StopStation();
+            }
             break;
         case ST_WIFI_ADD:
             WifiManager::GetInstance().StartConfigAp();
@@ -252,65 +209,30 @@ static void diagnostic(const char* line) {
         DisplayLockGuard lock(Board::GetInstance().GetDisplay());
         printf(
             "\n@apps "
-            "{\"wanted\":%d,\"page\":%d,\"ready\":%d,\"local\":%d,\"heap\":%u,\"table\":%d,"
-            "\"fps\":%lu,\"volume\":%d,\"brightness\":%d,\"sleep\":%d,\"score\":%lu,\"best\":%lu,"
-            "\"wifi\":%d,\"phase\":%d,\"gap\":%d,\"queued\":%d,\"holding\":%d,\"held_ms\":%lu,"
-            "\"distance\":%d,\"edit\":%d,\"detail_parent\":%d}"
-            "\n",
+            "{\"wanted\":%d,\"page\":%d,\"ready\":%d,\"local\":%d,\"heap\":%u,\"largest\":%u,"
+            "\"radio\":%d,\"radio_state\":\"%s\",\"station\":%d,\"volume\":%d,\"brightness\":%d,"
+            "\"sleep\":%d,\"wifi\":%d,\"edit\":%d,\"detail_parent\":%d}\n",
             wanted.load(), (int)page, ready.load(), app.IsLocalAppActive(),
-            (unsigned)esp_get_free_heap_size(), nabo_table_running(),
-            (unsigned long)jump_fps.load(), volume.load(), brightness.load(), sleep_seconds.load(),
-            (unsigned long)jump_game.score, (unsigned long)best_score.load(),
-            WifiManager::GetInstance().IsConnected(), (int)jump_game.phase, jump_game.gap,
-            jump_game.pending_charge, nabo_jump_charging(&jump_game),
-            (unsigned long)nabo_jump_charge_ms(&jump_game, esp_timer_get_time() / 1000),
-            jump_game.distance, edit, detail_parent.load());
-    } else if (!strcmp(line, ">jump.metrics")) {
-        DisplayLockGuard lock(Board::GetInstance().GetDisplay());
-        for (int phase = 0; phase < 6; ++phase) {
-            const auto& timing = jump_timing[phase];
-            printf(
-                "\n@jump-timing "
-                "{\"phase\":%d,\"frames\":%lu,\"intervals\":%lu,\"mean_us\":%lu,\"max_us\":%lu,"
-                "\"over_50ms\":%lu,\"mean_draw_us\":%lu,\"max_draw_us\":%lu}\n",
-                phase, (unsigned long)timing.frames, (unsigned long)timing.intervals,
-                (unsigned long)(timing.intervals ? timing.sum_us / timing.intervals : 0),
-                (unsigned long)timing.max_us, (unsigned long)timing.slow,
-                (unsigned long)(timing.frames ? timing.draw_us / timing.frames : 0),
-                (unsigned long)timing.max_draw_us);
+            (unsigned)esp_get_free_heap_size(),
+            (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL), nabo_radio_active(),
+            nabo_radio_state_text(), nabo_radio_current_station(), volume.load(), brightness.load(),
+            sleep_seconds.load(), WifiManager::GetInstance().IsConnected(), edit,
+            detail_parent.load());
+        if (page == NABO_RADIO) {
+            char text[640];
+            nabo_radio_menu_text(text, sizeof(text));
+            printf("@radio-menu %s\n", text);
         }
-    } else if (!strcmp(line, ">jump.metrics.reset")) {
-        DisplayLockGuard lock(Board::GetInstance().GetDisplay());
-        for (auto& timing : jump_timing)
-            timing = {};
-        jump_previous_flush = 0;
-    } else if (!strcmp(line, ">jump.test=1") || !strcmp(line, ">jump.test=0")) {
-        DisplayLockGuard lock(Board::GetInstance().GetDisplay());
-        jump_test_mode = line[11] == '1';
-        jump_game.best = best_score.load();
-    } else if (!strncmp(line, ">jump.best=", 11)) {
-        char* end;
-        unsigned long restored_best = strtoul(line + 11, &end, 10);
-        if (*end || restored_best > 1000000)
-            return;
-        DisplayLockGuard lock(Board::GetInstance().GetDisplay());
-        best_score = restored_best;
-        jump_game.best = restored_best;
-        best_dirty = true;
-        best_changed_at = esp_timer_get_time();
     } else if (!strncmp(line, ">apps.open=", 11)) {
         const char* name = line + 11;
         struct {
             const char* name;
             NaboApp app;
         } aliases[] = {{"home", NABO_HOME},     {"tools", NABO_TOOLS}, {"settings", NABO_SETTINGS},
-                       {"table", NABO_TABLE},   {"jump", NABO_JUMP},   {"status", NABO_STATUS},
-                       {"undercover", NABO_TABLE}};
+                       {"radio", NABO_RADIO},   {"status", NABO_STATUS}};
         bool found = false;
         for (const auto& item : aliases)
             if (!strcmp(name, item.name)) {
-                if (!strcmp(name, "undercover"))
-                    nabo_table_start_on(NABO_TABLE_START_UNDERCOVER);
                 nabo_apps_open(item.app);
                 found = true;
                 break;
@@ -346,41 +268,9 @@ static void diagnostic(const char* line) {
             DisplayLockGuard lock(display);
             nabo_apps_key(key);
         });
-    } else if (!strncmp(line, ">jump.hold=", 11)) {
-        char* end;
-        long hold = strtol(line + 11, &end, 10);
-        if (*end || hold < 0 || hold > 1400)
-            return;
-        app.Schedule([hold]() {
-            auto display = Board::GetInstance().GetDisplay();
-            DisplayLockGuard lock(display);
-            if (nabo_apps_is_jump()) {
-                uint32_t now = esp_timer_get_time() / 1000;
-                nabo_jump_press(&jump_game, now - hold);
-                nabo_jump_release(&jump_game, now);
-                jump_sound = 1;
-            }
-        });
-    } else if (!strncmp(line, ">table.press=", 13)) {
-        static const char* names[] = {"up", "down", "ok", "long"};
-        for (int k = 0; k < 4; ++k)
-            if (!strcmp(line + 13, names[k]))
-                nabo_table_inject(k);
-    } else if (!strcmp(line, ">table.capture")) {
-        nabo_table_capture();
-    } else if (!strcmp(line, ">table.status")) {
-        char text[384];
-        nabo_table_status(text, sizeof(text));
-        printf("\n@table %s\n", text);
     } else if (!strcmp(line, ">apps.capture")) {
         app.Schedule(
             []() { static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())->CaptureLCD(); });
-    } else if (!strcmp(line, ">jump.press") || !strcmp(line, ">jump.release")) {
-        bool pressed = !strcmp(line, ">jump.press");
-        app.Schedule([pressed]() {
-            DisplayLockGuard lock(Board::GetInstance().GetDisplay());
-            nabo_apps_charge(pressed);
-        });
     }
 }
 static void worker(void*) {
@@ -395,9 +285,8 @@ static void worker(void*) {
     unsigned command_len = 0;
     int16_t samples[320];
     bool usb_attached = false;
-    nabo_jump_sound_t jump_audio = {};
     int64_t measured_at = esp_timer_get_time();
-    uint32_t measured_frames = 0;
+    nabo_radio_init();
     for (;;) {
         char data[64];
         int received = usb_serial_jtag_read_bytes(data, sizeof(data), 0);
@@ -445,27 +334,32 @@ static void worker(void*) {
         }
         bool audio_clocked = false;
         if (ready.load()) {
-            if (desired != NABO_JUMP)
-                static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())
-                    ->ReleaseGameDrawBuffer();
+            static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())->ReleaseGameDrawBuffer();
             memset(samples, 0, sizeof(samples));
-            int tone = jump_sound.exchange(0);
-            if (tone)
-                nabo_jump_sound_start(&jump_audio, tone, 1);
-            if (desired == NABO_JUMP)
-                nabo_jump_sound_fill(&jump_audio, samples, 320);
-            else
-                nabo_jump_sound_start(&jump_audio, 0, 0);
-            if (desired == NABO_TABLE)
-                nabo_table_audio_fill(samples, 320);
+            // The radio decoder runs on its own task; this worker owns the speaker and
+            // stops playback whenever another page is wanted.
+            if (desired != NABO_RADIO && nabo_radio_wanted())
+                nabo_radio_stop();
+            if (desired == NABO_RADIO && nabo_radio_due())
+                nabo_radio_begin();
+            if (nabo_radio_active()) {
+                if (nabo_radio_finished())
+                    nabo_radio_finish();
+                else {
+                    int16_t radio_pcm[320];
+                    size_t n = nabo_radio_read(radio_pcm, 320, 0);
+                    if (n && desired == NABO_RADIO)
+                        memcpy(samples, radio_pcm, n * sizeof(int16_t));
+                }
+            }
             // A continuous 20 ms clock prevents underruns and clears each effect's
             // DMA tail. Do not sleep again after the blocking I2S write.
             if (desired != NABO_HOME && speaker.load()) {
                 output16(samples, 320);
                 audio_clocked = true;
             }
-            // The table frees its buffers on the LVGL task; XiaoZhi's restore needs that memory back first.
-            if (desired == NABO_HOME && !nabo_table_running()) {
+            // XiaoZhi's restore needs the decoder's memory back first.
+            if (desired == NABO_HOME && !nabo_radio_active()) {
                 Board::GetInstance().GetAudioCodec()->EnableOutput(false);
                 ready = false;
                 engaged = false;
@@ -478,17 +372,6 @@ static void worker(void*) {
         int command = setting_command.exchange(-1);
         if (command >= 0)
             apply_setting(command);
-        if (best_dirty.load() &&
-            (desired != NABO_JUMP ||
-             (jump_round_over.load() && now - best_changed_at.load() >= 2000000)) &&
-            best_dirty.exchange(false)) {
-            nvs_handle_t h;
-            if (!nvs_open("nabo_ui", NVS_READWRITE, &h)) {
-                nvs_set_u32(h, "jump_best", best_score.load());
-                nvs_commit(h);
-                nvs_close(h);
-            }
-        }
         if (now - last_battery > 3000000) {
             int pct;
             bool charging, discharging;
@@ -497,14 +380,8 @@ static void worker(void*) {
             last_battery = now;
         }
         if (now - measured_at >= 5000000) {
-            uint32_t frames = jump_frames.load();
-            jump_fps = (frames - measured_frames) * 1000000ULL / (now - measured_at);
-            if (desired == NABO_JUMP)
-                ESP_LOGI("NABO-Jump", "display refresh fps=%lu", (unsigned long)jump_fps.load());
-            else if (desired == NABO_HOME && !app.IsLocalAppActive() &&
-                     !app.IsProtocolInitializing())
+            if (desired == NABO_HOME && !app.IsLocalAppActive() && !app.IsProtocolInitializing())
                 app.GetAudioService().LogMemoryStats();
-            measured_frames = frames;
             measured_at = now;
         }
         bool usb = usb_serial_jtag_is_connected();
@@ -520,6 +397,7 @@ static void worker(void*) {
             screen_off = true;
             Board::GetInstance().GetBacklight()->SetBrightness(0, false);
         }
+        nabo_radio_idle_tick();
         if (!audio_clocked)
             vTaskDelay(pdMS_TO_TICKS(20));
         else
@@ -552,138 +430,60 @@ static void show_text(lv_obj_t* obj, const char* text) {
     if (strcmp(lv_label_get_text(obj), text))
         lv_label_set_text(obj, text);
 }
-static lv_result_t jump_info(lv_image_decoder_t*, lv_image_decoder_dsc_t* dsc,
-                             lv_image_header_t* header) {
-    if (dsc->src != &jump_source)
-        return LV_RESULT_INVALID;
-    *header = jump_source.header;
-    return LV_RESULT_OK;
-}
-static lv_result_t jump_open(lv_image_decoder_t*, lv_image_decoder_dsc_t* dsc) {
-    if (dsc->src != &jump_source || !jump_strip)
-        return LV_RESULT_INVALID;
-    dsc->args.no_cache = true;
-    dsc->decoded = nullptr;
-    return LV_RESULT_OK;
-}
-static lv_result_t jump_area(lv_image_decoder_t*, lv_image_decoder_dsc_t* dsc,
-                             const lv_area_t* full, lv_area_t* area) {
-    if (full->x1 < 0 || full->x2 >= 240 || full->y1 < 0 || full->y2 >= 320)
-        return LV_RESULT_INVALID;
-    int y = area->y1 == LV_COORD_MIN ? full->y1 : area->y2 + 1;
-    if (y > full->y2)
-        return LV_RESULT_INVALID;
-    int end = std::min(y + 19, static_cast<int>(full->y2));
-    auto buf = lv_draw_buf_reshape(jump_strip, LV_COLOR_FORMAT_RGB565, full->x2 - full->x1 + 1,
-                                   end - y + 1, LV_STRIDE_AUTO);
-    if (!buf)
-        return LV_RESULT_INVALID;
-    int64_t draw_start = esp_timer_get_time();
-    for (int row = y; row <= end; ++row)
-        nabo_jump_draw_row(
-            &jump_frame, jump_frame_time, row, full->x1, full->x2,
-            reinterpret_cast<uint16_t*>(buf->data) + (row - y) * buf->header.stride / 2);
-    jump_draw_us += esp_timer_get_time() - draw_start;
-    *area = {full->x1, y, full->x2, end};
-    dsc->decoded = buf;
-    return LV_RESULT_OK;
-}
 void nabo_apps_build(lv_obj_t* screen) {
     if (app_screen)
         return;
     app_screen = screen;
-    jump_panel = lv_obj_create(screen);
-    lv_obj_remove_style_all(jump_panel);
-    lv_obj_set_size(jump_panel, 240, 320);
-    lv_obj_set_style_bg_color(jump_panel, lv_color_hex(0xdfe1eb), 0);
-    lv_obj_set_style_bg_opa(jump_panel, LV_OPA_COVER, 0);
-    lv_obj_remove_flag(jump_panel, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_flag(jump_panel, LV_OBJ_FLAG_HIDDEN);
-    jump_image = lv_image_create(jump_panel);
-    lv_obj_set_size(jump_image, 240, 320);
-    jump_source.header.magic = LV_IMAGE_HEADER_MAGIC;
-    jump_source.header.cf = LV_COLOR_FORMAT_RGB565;
-    jump_source.header.w = 240;
-    jump_source.header.h = 320;
-    jump_source.header.stride = 480;
-    jump_source.data = reinterpret_cast<const uint8_t*>(&jump_source);
-    auto decoder = lv_image_decoder_create();
-    lv_image_decoder_set_info_cb(decoder, jump_info);
-    lv_image_decoder_set_open_cb(decoder, jump_open);
-    lv_image_decoder_set_get_area_cb(decoder, jump_area);
-    jump_score = label(jump_panel, 0x344251, "0", 16, 14, 112);
-    jump_best = label(jump_panel, 0xffffff, "BEST 0", 147, 17, 79);
-    lv_obj_set_style_text_font(jump_best, &lv_font_montserrat_20, 0);
-    lv_obj_set_style_bg_color(jump_best, lv_color_hex(0x344251), 0);
-    lv_obj_set_style_bg_opa(jump_best, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(jump_best, 7, 0);
-    lv_obj_set_style_pad_all(jump_best, 5, 0);
-    lv_obj_set_style_text_align(jump_best, LV_TEXT_ALIGN_CENTER, 0);
-    jump_station = label(jump_panel, 0x798295, "下一站 · NABO 靶心", 16, 70);
-    jump_hint =
-        label(jump_panel, 0x596779, "按住 OK 蓄力，松开起跳\n上：返回  下：换角色", 16, 286);
-    lv_obj_set_style_text_font(jump_hint, &nabo_menu_font_16, 0);
-    lv_obj_set_pos(jump_hint, 10, 286);
-    lv_obj_set_width(jump_hint, 230);
-    lv_obj_set_style_text_font(jump_score, &lv_font_montserrat_28, 0);
     nabo_apps_initialize();
     nabo_apps_register_tools();
-    ESP_LOGI("NABO-Apps", "menus, table and jump ready");
+    ESP_LOGI("NABO-Apps", "menus and radio ready");
 }
 static void change_page(NaboApp next) {
-    if (page == NABO_TABLE) {
-        nabo_table_close();
-        static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())->EndDirectDraw();
-    }
-    if (page == NABO_JUMP) {
-        lv_obj_add_flag(jump_panel, LV_OBJ_FLAG_HIDDEN);
-        if (jump_strip) {
-            lv_draw_buf_destroy(jump_strip);
-            jump_strip = nullptr;
-        }
-    }
+    if (page == NABO_RADIO)
+        nabo_radio_menu_close();
     page = next;
     edit = -1;
     selected = next == NABO_TOOLS ? 1 : 0;
-    bool menu = !(next == NABO_HOME || next == NABO_JUMP || next == NABO_TABLE);
+    bool menu = next != NABO_HOME;
     // The menu panel exists only while a menu page is shown: LVGL allocates
     // from the C3's system heap, which XiaoZhi's TLS and Opus need at home.
     if (menu) {
         menu_view::Build(app_screen);
     } else
         menu_view::Free();
-    if (next == NABO_TABLE) {
-        // The table draws straight to the panel; LVGL refresh pauses meanwhile. Its sprites are
-        // read in place from the assets partition.
-        void* pack = nullptr;
-        size_t pack_size = 0;
-        bool have_pack = Assets::GetInstance().GetAssetData("table_sprites.bin", pack, pack_size);
-        auto display = static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay());
-        esp_lcd_panel_io_handle_t io;
-        esp_lcd_panel_handle_t panel;
-        display->BeginDirectDraw(&io, &panel);
-        if (!have_pack || !nabo_table_open(io, panel, esp_random(), pack, pack_size)) {
-            display->EndDirectDraw();
-            snprintf(notice, sizeof(notice), have_pack ? "内存不足，请退出重试" : "缺少牌桌素材，请更新资源分区");
-            nabo_apps_open(NABO_TOOLS);
-        }
-    }
-    if (next == NABO_JUMP) {
-        jump_strip = lv_draw_buf_create(240, 20, LV_COLOR_FORMAT_RGB565, LV_STRIDE_AUTO);
-        if (jump_strip) {
-            nabo_jump_reset(&jump_game, esp_random(), best_score.load());
-            jump_frame = jump_game;
-            jump_frame_time = esp_timer_get_time() / 1000;
-            lv_image_set_src(jump_image, &jump_source);
-            lv_obj_remove_flag(jump_panel, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_move_foreground(jump_panel);
-            jump_last_frame = 0;
-        } else {
-            snprintf(notice, sizeof(notice), "内存不足，请退出重试");
-            nabo_apps_open(NABO_TOOLS);
-        }
-    }
+    if (next == NABO_RADIO)
+        nabo_radio_menu_open();
     ESP_LOGI("NABO-Apps", "page=%d", static_cast<int>(next));
+}
+// Renders the radio's "> item" text menus as a now-playing card plus rows.
+static void display_text_menu(char* text) {
+    if (strncmp(text, "> ", 2) && !strstr(text, "\n> ")) {
+        menu_view::Body(text, 96);
+        return;
+    }
+    const char* header[2] = {"", ""};
+    const char* items[12];
+    int headers = 0, count = 0, cursor = 0;
+    for (char* line = text; line;) {
+        char* next = strchr(line, '\n');
+        if (next)
+            *next++ = 0;
+        bool item = (line[0] == '>' || line[0] == ' ') && line[1] == ' ';
+        if (item && count < 12) {
+            if (line[0] == '>')
+                cursor = count;
+            items[count++] = line + 2;
+        } else if (line[0] && !count && headers < 2)
+            header[headers++] = line;
+        line = next;
+    }
+    if (header[1][0]) {
+        menu_view::Card(header[0], header[1]);
+        menu_view::Rows(items, count, cursor, false, 162, 4);
+    } else {
+        menu_view::Body(header[0], 94);
+        menu_view::Rows(items, count, cursor, false, 124, 5);
+    }
 }
 void nabo_apps_tick() {
     if (!app_screen)
@@ -695,63 +495,6 @@ void nabo_apps_tick() {
     }
     if (page == NABO_HOME)
         return;
-    if (page == NABO_TABLE)
-        return;   // the table runs on its own task
-    if (page == NABO_JUMP) {
-        uint32_t now = esp_timer_get_time() / 1000;
-        auto previous = jump_game.phase;
-        nabo_jump_tick(&jump_game, now);
-        jump_round_over = jump_game.phase == JUMP_OVER;
-        if (jump_game.sound) {
-            jump_game.sound = false;
-            jump_sound = jump_game.pending_charge && !jump_game.pending_released ? 5
-                         : jump_game.centered                                    ? 2
-                                                                                 : 3;
-        }
-        if (previous == JUMP_SCROLLING && jump_game.phase == JUMP_FLYING)
-            jump_sound = 1;
-        if (jump_game.phase == JUMP_FALLING && previous != JUMP_FALLING)
-            jump_sound = 4;
-        if (!jump_test_mode && jump_game.best > best_score.load()) {
-            best_score = jump_game.best;
-            best_dirty = true;
-            best_changed_at = esp_timer_get_time();
-        }
-        char text[80];
-        snprintf(text, sizeof(text), "%lu", (unsigned long)jump_game.score);
-        show_text(jump_score, text);
-        snprintf(text, sizeof(text), "BEST\n%lu", (unsigned long)jump_game.best);
-        show_text(jump_best, text);
-        static const char* station_names[] = {"NABO 医院", "NABO 靶心", "床旁书房",
-                                              "功德木鱼",  "NABO 播客", "值班咖啡"};
-        snprintf(text, sizeof(text), "下一站 · %s", station_names[jump_game.next_skin]);
-        show_text(jump_station, text);
-        show_text(jump_hint, jump_game.phase == JUMP_OVER ? "游戏结束  OK：再来一局\n上：返回"
-                             : jump_game.phase == JUMP_SCROLLING && jump_game.centered
-                                 ? "正中！连击加分\n上：返回  下：换角色"
-                                 : "按住 OK 蓄力，松开起跳\n上：返回  下：换角色");
-        if (esp_timer_get_time() - jump_last_frame >= 14000) {
-            jump_last_frame = esp_timer_get_time();
-            int x0, y0, x1, y1, a0, b0, a1, b1;
-            auto bounds = nabo_jump_camera_moving(&jump_frame, jump_frame_time) ||
-                                  nabo_jump_camera_moving(&jump_game, now)
-                              ? nabo_jump_scene_bounds
-                              : nabo_jump_character_bounds;
-            bounds(&jump_frame, jump_frame_time, &x0, &y0, &x1, &y1);
-            bounds(&jump_game, now, &a0, &b0, &a1, &b1);
-            lv_area_t area = {std::min(x0, a0), std::min(y0, b0), std::max(x1, a1),
-                              std::max(y1, b1)};
-            bool charge_bar = nabo_jump_charging(&jump_frame) || nabo_jump_charging(&jump_game);
-            jump_frame = jump_game;
-            jump_frame_time = now;
-            lv_obj_invalidate_area(jump_image, &area);
-            if (charge_bar) {
-                lv_area_t bar = {30, 281, 210, 286};
-                lv_obj_invalidate_area(jump_image, &bar);
-            }
-        }
-        return;
-    }
     if (!menu_view::Built())
         return;
     namespace mv = menu_view;
@@ -798,6 +541,11 @@ void nabo_apps_tick() {
         }
         if (edit >= 0)
             hint = "上/下 调整 · OK 保存";
+    } else if (page == NABO_RADIO) {
+        mv::Header("RADIO", "网络电台", mv::kPink, nullptr);
+        nabo_radio_menu_text(text, sizeof(text));
+        display_text_menu(text);
+        hint = "OK 确定 · 双击上 上一级";
     } else if (page == NABO_STATUS) {
         auto& wifi = WifiManager::GetInstance();
         char memory[24], ip[24], ssid[40];
@@ -809,7 +557,7 @@ void nabo_apps_tick() {
             snprintf(power, sizeof(power), "%d%%", battery.load());
         const char* names[] = {"Wi-Fi", "网络", "IP", "电量", "可用内存", "固件"};
         const char* texts[] = {wifi.IsConnected() ? "已连接" : "未连接", ssid, ip, power, memory,
-                               "NABO 1.2"};
+                               "NABO FM 0.1"};
         mv::Header("STATUS", "设备状态", mv::kInk, nullptr);
         mv::Info(names, texts, 6);
         hint = "OK 返回 · 双击上 上一级";
@@ -859,6 +607,8 @@ static void return_one_level() {
     if (current == NABO_HOME)
         return;
     bool settled = ready.load() && current == page;
+    if (settled && current == NABO_RADIO && nabo_radio_menu_key(MUSE_MENU_LEFT))
+        return;
     if (settled && current == NABO_SETTINGS && edit >= 0) {
         edit = -1;
         return;
@@ -876,11 +626,6 @@ bool nabo_apps_key(muse_menu_key_t key) {
         Board::GetInstance().GetBacklight()->SetBrightness(brightness.load(), false);
         return true;
     }
-    // In the table, UP is a game key: tapping it twice or holding it to scroll a bid must not
-    // throw the players out. Double or long UP leave only from the table's cover menu.
-    if (page == NABO_TABLE && wanted.load() == NABO_TABLE &&
-        (key == MUSE_MENU_LEFT || key == MUSE_MENU_BACK) && !nabo_table_on_cover())
-        return true;
     // Double UP returns through nested menus. Long UP keeps its direct HOME path.
     if (key == MUSE_MENU_LEFT) {
         return_one_level();
@@ -903,15 +648,9 @@ bool nabo_apps_key(muse_menu_key_t key) {
     }
     if (!ready)
         return true;
-    if (page == NABO_TABLE)
-        return true;   // the table reads raw button edges (repeat, long OK) itself
-    if (page == NABO_JUMP) {
-        if (key == MUSE_MENU_UP)
+    if (page == NABO_RADIO) {
+        if (!nabo_radio_menu_key(key))
             nabo_apps_open(NABO_TOOLS);
-        else if (key == MUSE_MENU_DOWN)
-            jump_game.character = 1 - jump_game.character;
-        else if (key == MUSE_MENU_RIGHT)
-            nabo_jump_reset(&jump_game, esp_random(), best_score.load());
         return true;
     }
     if (page == NABO_TOOLS) {
@@ -962,73 +701,29 @@ bool nabo_apps_key(muse_menu_key_t key) {
     }
     return true;
 }
-void nabo_apps_down_pressed(uint32_t event_ms) {
-    if (page == NABO_TABLE && ready.load() && wanted.load() == NABO_TABLE)
-        nabo_table_button(NABO_TABLE_DOWN, true, event_ms);
-}
-void nabo_apps_down_released(uint32_t event_ms) {
-    if (page == NABO_TABLE)
-        nabo_table_button(NABO_TABLE_DOWN, false, event_ms);
-}
-void nabo_apps_up_edge(bool pressed, uint32_t event_ms) {
-    last_input = esp_timer_get_time();
-    if (page == NABO_TABLE && (!pressed || (ready.load() && wanted.load() == NABO_TABLE)))
-        nabo_table_button(NABO_TABLE_UP, pressed, event_ms);
-}
-void nabo_apps_charge(bool pressed, uint32_t event_ms) {
-    last_input = esp_timer_get_time();
-    if (!event_ms)
-        event_ms = esp_timer_get_time() / 1000;
-    if (page == NABO_TABLE && (!pressed || (ready.load() && wanted.load() == NABO_TABLE))) {
-        nabo_table_button(NABO_TABLE_OK, pressed, event_ms);
-        return;
-    }
-    if (!nabo_apps_is_jump())
-        return;
-    if (pressed) {
-        nabo_jump_press(&jump_game, event_ms);
-        jump_round_over = jump_game.phase == JUMP_OVER;
-        if (nabo_jump_charging(&jump_game))
-            jump_sound = 5;
-    } else {
-        bool charging = jump_game.phase == JUMP_CHARGING;
-        bool pending = jump_game.pending_charge && !jump_game.pending_released;
-        nabo_jump_release(&jump_game, event_ms);
-        if (charging)
-            jump_sound = 1;
-        else if (pending)
-            jump_sound = 6;
-    }
-}
+// The radio's menus use the debounced keys; raw edges and OK hold are unused for now.
+void nabo_apps_down_pressed(uint32_t) {}
+void nabo_apps_down_released(uint32_t) {}
+void nabo_apps_up_edge(bool, uint32_t) { last_input = esp_timer_get_time(); }
+void nabo_apps_charge(bool, uint32_t) { last_input = esp_timer_get_time(); }
 void nabo_apps_register_tools() {
     auto& server = McpServer::GetInstance();
     server.AddTool(
         "self.apps.open",
-        "打开工牌内置程序。app "
-        "可用：跳一跳(jump)、NABO 牌桌(table，21 点、大话骰)、谁是卧底(undercover，在牌桌里)"
-        "、设置(settings)、工具(tools)。进入程序会暂停语音对话；双击上键返回上一级，长按上键回到 "
-        "NABO "
-        "恢复小智。",
+        "打开工牌内置程序。app 可用：网络电台(radio)、设置(settings)、工具(tools)。"
+        "进入程序会暂停语音对话；双击上键返回上一级，长按上键回到 NABO 恢复小智。",
         PropertyList({Property("app", kPropertyTypeString).SetMaxLength(40)}),
         [](const PropertyList& properties) -> ToolResult {
             const auto& name = properties["app"].value<std::string>();
             NaboApp app = NABO_HOME;
-            if (name == "jump" || name == "跳一跳")
-                app = NABO_JUMP;
-            else if (name == "table" || name == "牌桌" || name == "NABO 牌桌" || name == "21点" ||
-                     name == "21 点" || name == "大话骰")
-                app = NABO_TABLE;
-            else if (name == "undercover" || name == "谁是卧底" || name == "卧底") {
-                app = NABO_TABLE;
-                nabo_table_start_on(NABO_TABLE_START_UNDERCOVER);
-            }
+            if (name == "radio" || name == "电台" || name == "网络电台" || name == "收音机")
+                app = NABO_RADIO;
             else if (name == "settings" || name == "设置")
                 app = NABO_SETTINGS;
             else if (name == "tools" || name == "工具")
                 app = NABO_TOOLS;
             else
-                return std::unexpected(
-                    "Unknown app. Use jump, table, undercover, settings or tools.");
+                return std::unexpected("Unknown app. Use radio, settings or tools.");
             nabo_apps_open(app, 900);
             return std::string("已安排打开 ") + name + "。程序中使用实体按键；长按上键返回小智。";
         });
@@ -1039,10 +734,7 @@ bool nabo_apps_voice_command(const char* transcript) {
     const char* name = nabo_voice_launch_app(transcript);
     if (!name)
         return false;
-    if (!strcmp(name, "undercover"))
-        nabo_table_start_on(NABO_TABLE_START_UNDERCOVER);
-    NaboApp target = !strcmp(name, "table") || !strcmp(name, "undercover") ? NABO_TABLE
-                     : !strcmp(name, "jump")     ? NABO_JUMP
+    NaboApp target = !strcmp(name, "radio")      ? NABO_RADIO
                      : !strcmp(name, "settings") ? NABO_SETTINGS
                                                  : NABO_TOOLS;
     nabo_apps_open(target);
