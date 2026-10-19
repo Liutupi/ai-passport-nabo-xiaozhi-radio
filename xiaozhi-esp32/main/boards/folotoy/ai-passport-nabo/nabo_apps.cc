@@ -283,7 +283,9 @@ static void diagnostic(const char* line) {
             DisplayLockGuard lock(display);
             if (page == NABO_RADIO) {
                 if (key == MUSE_MENU_UP || key == MUSE_MENU_DOWN || key == MUSE_MENU_SELECT) {
-                    int button = key == MUSE_MENU_UP ? 0 : key == MUSE_MENU_DOWN ? 1 : 2;
+                    int button = key == MUSE_MENU_UP     ? NRF_UP
+                                 : key == MUSE_MENU_DOWN ? NRF_DOWN
+                                                         : NRF_OK;
                     uint32_t now = static_cast<uint32_t>(esp_timer_get_time() / 1000);
                     nabo_radio_view_edge(button, true, now);
                     nabo_radio_view_edge(button, false, now + 1);

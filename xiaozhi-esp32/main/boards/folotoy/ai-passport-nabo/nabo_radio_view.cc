@@ -33,6 +33,7 @@ constexpr uint16_t BG = 0x0842, TEXT = 0xf77c, MUTED = 0x8c94, DIM = 0x526c, AMB
                    RED = 0xf9c6, LEVEL = 0x6718, DESK = 0x1926, ROW = 0x2129, DIAL = 0x1080,
                    TICK = 0x6a84;
 constexpr int SLEEPS[] = {0, 15, 30, 60, 90};
+constexpr size_t SPRITE_PIXELS = 158 * 139;
 const char* const MENU_ITEMS[] = {"电台列表", "拼音搜台", "定时关闭", "换台沙沙声",
                                   "响度均衡", "本地地区", "设置",     "返回"};
 const char* const ACTIONS[] = {"idle_off", "phones_on", "phones_off", "tune", "groove",
@@ -43,7 +44,7 @@ struct View {
     nrf_sprite_t sprite;
     nrf_keys_t keys;
     nrf_font_t name, ui, logo, clockfont, led;
-    uint8_t pixels[158 * 139];
+    uint8_t* pixels;
     esp_lcd_panel_io_handle_t io;
     esp_lcd_panel_handle_t panel;
     uint16_t* strip;
@@ -578,16 +579,27 @@ bool nabo_radio_view_open() {
     }
     // IDF builds without exceptions can abort inside libstdc++'s nothrow new.
     // Check malloc directly before placement construction on the C3.
-    void* storage = std::malloc(sizeof(View));
-    if (!storage)
+    // Keep the sprite pixels and display list in separate allocations: their
+    // combined 33 KiB no longer fits a common 32 KiB free region after Wi-Fi.
+    void* sprite_pixels = std::malloc(SPRITE_PIXELS);
+    if (!sprite_pixels) {
+        ESP_LOGE("NABO-FM", "cannot allocate sprite pixels (%u bytes)", (unsigned)SPRITE_PIXELS);
         return false;
+    }
+    void* storage = std::malloc(sizeof(View));
+    if (!storage) {
+        std::free(sprite_pixels);
+        ESP_LOGE("NABO-FM", "cannot allocate display list (%u bytes)", (unsigned)sizeof(View));
+        return false;
+    }
     v = new (storage) View();
+    v->pixels = static_cast<uint8_t*>(sprite_pixels);
     const void* data;
     size_t size;
     if (asset("radio_catalog.bin", data, size))
         nabo_radio_bind_catalog(data, size);
     if (!asset("radio_sprites.bin", data, size) ||
-        !nrf_sprite_init(&v->sprite, data, size, v->pixels, sizeof(v->pixels)))
+        !nrf_sprite_init(&v->sprite, data, size, v->pixels, SPRITE_PIXELS))
         goto fail;
     if (!asset("radio_name.bin", data, size) || !nrf_font_init(&v->name, data, size))
         goto fail;
@@ -626,6 +638,7 @@ bool nabo_radio_view_open() {
 fail:
     if (v->strip)
         heap_caps_free(v->strip);
+    std::free(v->pixels);
     v->~View();
     std::free(v);
     v = nullptr;
@@ -647,6 +660,7 @@ void nabo_radio_view_close() {
         return;
     nabo_radio_view_hide();
     heap_caps_free(v->strip);
+    std::free(v->pixels);
     v->~View();
     std::free(v);
     v = nullptr;

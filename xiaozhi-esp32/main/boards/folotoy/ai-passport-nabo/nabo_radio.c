@@ -432,6 +432,7 @@ static void network_worker(void* arg) {
             ESP_LOGW(TAG, "stream open failed: err=%d status=%d header=%d invalid=%d",
                      (int)open_error, status, length >= 0, headers.invalid);
         if (opened) {
+            ESP_LOGI(TAG, "stream connected: status=%d", status);
             esp_http_client_set_timeout_ms(http, 800);
             int64_t last = esp_timer_get_time();
             while (!cancelled(gen) && muse_wifi_connected()) {
@@ -703,6 +704,8 @@ size_t nabo_radio_read(int16_t* out, size_t frames, int wait_ms) {
             nabo_radio_dsp_fade(&d->dsp, true, 40);
             atomic_store(&s_rate, (int)nabo_radio_dsp_out_rate_for(d->rate));
             remember(nabo_radio_current_station());
+            ESP_LOGI(TAG, "decoded stream: rate=%d channels=%d output=%u", info.hz,
+                     info.channels, nabo_radio_output_rate());
         }
         nabo_radio_dsp_set_loudness(&d->dsp, nabo_radio_loudness());
         d->ready = nabo_radio_dsp_feed(&d->dsp, d->pcm, (size_t)n, info.channels, d->out, 1153);
