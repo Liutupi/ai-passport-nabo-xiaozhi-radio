@@ -20,6 +20,7 @@
 #include "esp_timer.h"
 #include "mcp_server.h"
 #include "nabo_display.h"
+#include "nabo_radio_clock.h"
 #include "nabo_radio_view.h"
 #include "nvs.h"
 #include "settings.h"
@@ -78,12 +79,35 @@ extern "C" bool muse_wifi_connected(void) {
     return wifi_on.load() && WifiManager::GetInstance().IsConnected();
 }
 extern "C" bool app_nabo_radio_network_begin(void) {
-    return ready.load() && Application::GetInstance().IsLocalAppActive();
+    if (!ready.load() || !Application::GetInstance().IsLocalAppActive())
+        return false;
+    // The idle voice state enables MAX_MODEM sleep. Continuous radio must
+    // receive promptly rather than wait for power-save bursts.
+    Board::GetInstance().SetPowerSaveLevel(PowerSaveLevel::PERFORMANCE);
+    return true;
 }
 // XiaoZhi stays paused while its local program is open. The worker resumes it
 // only after the decoder has stopped on return to NABO.
-extern "C" void app_nabo_radio_network_end(void) {}
+extern "C" void app_nabo_radio_network_end(void) {
+    Board::GetInstance().SetPowerSaveLevel(PowerSaveLevel::LOW_POWER);
+}
 extern "C" bool app_nabo_radio_active(void) { return nabo_radio_active(); }
+extern "C" void app_nabo_radio_store_clock(unsigned seconds) {
+    // Persist one key outside the GUI lock and speaker owner. No new task or
+    // bulk rewrite of favorites is needed for a timeout preference.
+    Application::GetInstance().Schedule([seconds]() {
+        nvs_handle_t handle;
+        esp_err_t error = nvs_open("nabo_radio", NVS_READWRITE, &handle);
+        if (error == ESP_OK) {
+            error = nvs_set_u32(handle, "clock_sec", seconds);
+            if (error == ESP_OK)
+                error = nvs_commit(handle);
+            nvs_close(handle);
+        }
+        if (error != ESP_OK)
+            ESP_LOGW("NABO-Apps", "clock preference save failed: %d", error);
+    });
+}
 static void ensure_radio_catalog() {
     if (nabo_radio_catalog()->data)
         return;
@@ -223,23 +247,47 @@ static void diagnostic(const char* line) {
         app.Schedule([]() {
         auto& app = Application::GetInstance();
         DisplayLockGuard lock(Board::GetInstance().GetDisplay());
+        char clock[8];
+        nrf_clock_text(clock, sizeof(clock), esp_timer_get_time());
         printf(
             "\n@apps "
             "{\"wanted\":%d,\"page\":%d,\"ready\":%d,\"local\":%d,\"heap\":%u,\"largest\":%u,"
             "\"radio\":%d,\"radio_state\":\"%s\",\"station\":%d,\"volume\":%d,\"brightness\":%d,"
-            "\"sleep\":%d,\"wifi\":%d,\"edit\":%d,\"detail_parent\":%d}\n",
+            "\"sleep\":%d,\"wifi\":%d,\"edit\":%d,\"detail_parent\":%d,\"clock\":\"%s\","
+            "\"standby\":%u}\n",
             wanted.load(), (int)page, ready.load(), app.IsLocalAppActive(),
             (unsigned)esp_get_free_heap_size(),
             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL), nabo_radio_active(),
             nabo_radio_state_text(), nabo_radio_current_station(), volume.load(), brightness.load(),
             sleep_seconds.load(), WifiManager::GetInstance().IsConnected(), edit,
-            detail_parent.load());
+            detail_parent.load(), clock, nabo_radio_clock_seconds());
         if (page == NABO_RADIO) {
             char text[640];
             nabo_radio_menu_text(text, sizeof(text));
             printf("@radio-menu %s\n", text);
         }
         });
+    } else if (!strncmp(line, ">radio.play=", 12)) {
+        char* end;
+        long station = strtol(line + 12, &end, 10);
+        if (end == line + 12 || *end || station < 0 || station >= 4096) {
+            printf("\n@radio.play invalid\n");
+            return;
+        }
+        app.Schedule([station]() {
+            ensure_radio_catalog();
+            if (station >= nabo_radio_station_count()) {
+                printf("\n@radio.play invalid_index\n");
+                return;
+            }
+            nabo_radio_select_station(static_cast<int>(station));
+            if (page == NABO_RADIO) {
+                DisplayLockGuard lock(Board::GetInstance().GetDisplay());
+                nabo_radio_view_select_station(static_cast<int>(station));
+            } else
+                nabo_apps_open(NABO_RADIO);
+        });
+        printf("\n@radio.play queued\n");
     } else if (!strncmp(line, ">apps.open=", 11)) {
         const char* name = line + 11;
         struct {
@@ -458,9 +506,15 @@ static void worker(void*) {
             if (desired == NABO_HOME && !app.IsLocalAppActive() && !app.IsProtocolInitializing())
                 app.GetAudioService().LogMemoryStats();
             else if (ready.load() && nabo_radio_active()) {
-                ESP_LOGI("FM-Audio", "rate=%u out=%u decoded=%u short=%u max_decode_us=%u max_loop_us=%u min_buffered=%u stack=%u",
-                         output_rate, out_frames, decoded_frames, short_blocks, max_decode_us,
-                         max_loop_us, min_buffered, (unsigned)uxTaskGetStackHighWaterMark(nullptr));
+                ESP_LOGI("FM-Audio",
+                         "ms=%u rate=%u out=%u decoded=%u short=%u max_decode_us=%u max_loop_us=%u "
+                         "min_buffered=%u heap=%u largest=%u stack=%u",
+                         (unsigned)((now - measured_at) / 1000), output_rate, out_frames,
+                         decoded_frames, short_blocks, max_decode_us, max_loop_us, min_buffered,
+                         (unsigned)esp_get_free_heap_size(),
+                         (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL |
+                                                                    MALLOC_CAP_8BIT),
+                         (unsigned)uxTaskGetStackHighWaterMark(nullptr));
             }
             out_frames = decoded_frames = short_blocks = max_decode_us = max_loop_us = 0;
             min_buffered = UINT32_MAX;

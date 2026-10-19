@@ -7,10 +7,10 @@
 static const int16_t kSide[8] = {-69, 152, -309, 564, -976, 1688, -3225, 10344};
 
 #define CENTRE (NABO_RADIO_DSP_TAPS / 2)
-#define LOUD_TARGET (2600 << 12) /* mean |x| the leveller aims for, Q12 (about -18 dBFS RMS) */
+#define LOUD_TARGET (5200 << 12) /* +6 dB over 0.2.6; retain headroom and soft limiting */
 #define LOUD_FLOOR (180 << 12)   /* below this the input is treated as silence: no boost */
 #define AGC_MIN (2048 << 8)      /* -6 dB, Q20 */
-#define AGC_MAX (16384 << 8)     /* +12 dB, Q20 */
+#define AGC_MAX (32768 << 8)     /* +18 dB, Q20; quiet stations reach the same target */
 #define HEADROOM 26029           /* -2 dB, Q15 */
 #define KNEE 22000               /* soft limiter starts here */
 
@@ -23,6 +23,7 @@ unsigned nabo_radio_dsp_out_rate_for(unsigned stream_rate) {
 void nabo_radio_dsp_init(nabo_radio_dsp_t* d, unsigned stream_rate) {
     memset(d, 0, sizeof(*d));
     d->agc = 4096 << 8;
+    d->agc_target = d->agc;
     d->env = LOUD_FLOOR;
     d->loudness = true;
     stream_rate = stream_rate ? stream_rate : 48000;
@@ -43,8 +44,11 @@ void nabo_radio_dsp_reset(nabo_radio_dsp_t* d, unsigned stream_rate) {
 
 void nabo_radio_dsp_set_loudness(nabo_radio_dsp_t* d, bool on) {
     d->loudness = on;
-    if (!on)
+    if (!on) {
         d->agc = 4096 << 8;
+        d->agc_target = d->agc;
+        d->gain_phase = 0;
+    }
 }
 
 void nabo_radio_dsp_fade(nabo_radio_dsp_t* d, bool in, unsigned ms) {
@@ -68,7 +72,7 @@ int nabo_radio_dsp_meter(nabo_radio_dsp_t* d) {
 
 static int16_t finish(nabo_radio_dsp_t* d, int32_t x) {
     /* 120 Hz-ish one-pole high-pass keeps the small speaker from slapping. */
-    int32_t xs = x << 16;
+    int64_t xs = (int64_t)x * 65536;
     d->hp_lp += (xs - d->hp_lp) >> 5;
     x = (xs - d->hp_lp) >> 16;
 
@@ -77,10 +81,17 @@ static int16_t finish(nabo_radio_dsp_t* d, int32_t x) {
         /* Rises in about 0.34 s, falls in about 1.4 s (24 kHz). */
         d->env += mag > d->env ? (mag - d->env) >> 13 : (mag - d->env) >> 15;
         /* Pauses, talk gaps and hiss sit under the floor: drift back to unity, never boost them. */
-        int32_t want = d->env > LOUD_FLOOR
-                           ? clamp32((int32_t)(((int64_t)LOUD_TARGET << 20) / d->env), AGC_MIN, AGC_MAX)
-                           : (1 << 20);
-        d->agc += (want - d->agc) >> 12;  /* gain glides; never pumps on single beats */
+        /* The envelope changes over hundreds of milliseconds. Re-evaluate
+         * its reciprocal every 32 samples (<=4 ms), rather than running a
+         * software 64-bit division at 8-24 kHz on the C3. Gain still glides
+         * every sample, independent of decoder block boundaries. */
+        if (!d->gain_phase)
+            d->agc_target =
+                d->env > LOUD_FLOOR
+                    ? clamp32((int32_t)(((int64_t)LOUD_TARGET << 20) / d->env), AGC_MIN, AGC_MAX)
+                    : (1 << 20);
+        d->gain_phase = (d->gain_phase + 1) & 31;
+        d->agc += (d->agc_target - d->agc) >> 12; /* never pumps on single beats */
         x = (int32_t)(((int64_t)x * d->agc) >> 20);
     }
 
@@ -128,7 +139,7 @@ size_t nabo_radio_dsp_feed(nabo_radio_dsp_t* d, const int16_t* pcm, size_t frame
             break;
         /* w[0] is the oldest sample of the 31-sample window, w[30] the newest. */
         const int16_t* w = d->hist + d->pos;
-        int32_t acc = (int32_t)w[CENTRE] << 14;  /* centre tap 0.5 */
+        int32_t acc = (int32_t)w[CENTRE] * 16384; /* centre tap 0.5; also valid for negatives */
         for (int k = 0; k < 8; ++k)
             acc += (int32_t)kSide[k] * ((int32_t)w[2 * k] + w[NABO_RADIO_DSP_TAPS - 1 - 2 * k]);
         out[written++] = finish(d, (acc + (1 << 14)) >> 15);

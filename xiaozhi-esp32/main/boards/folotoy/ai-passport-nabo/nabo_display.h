@@ -33,6 +33,7 @@ private:
     muse_mode_t mode_ = MUSE_MODE_COUNT;
     int64_t mode_started_ = 0;
     uint32_t revision_ = 0;
+    char radio_clock_[6] = {};
     void Tick();
     void SetGameDrawBuffer(bool active);
     static lv_result_t Info(lv_image_decoder_t*, lv_image_decoder_dsc_t*, lv_image_header_t*);

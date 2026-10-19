@@ -8,9 +8,9 @@ BOARD=ROOT/'xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo'
 out=ROOT/'private/fm-preview'
 out.mkdir(parents=True,exist_ok=True)
 objects=[]
-for module in ['catalog','gfx','keys','sprites']:
+for module in ['catalog','gfx','keys','sprites','clock']:
     obj=out/(module+'.o')
-    subprocess.run([CC,'-std=c11','-O2','-Wall','-Wextra','-Werror','-c',str(BOARD/f'nabo_radio_{module}.c'),'-o',str(obj)],check=True)
+    subprocess.run([CC,'-std=c11','-O2','-Wall','-Wextra','-Werror','-DNRF_CLOCK_HOST','-c',str(BOARD/f'nabo_radio_{module}.c'),'-o',str(obj)],check=True)
     objects.append(str(obj))
 exe=out/('preview.exe' if os.name=='nt' else 'preview')
 subprocess.run([CXX,'-std=c++20','-O2','-Wall','-Wextra','-Werror','-DNRF_HOST_PREVIEW','-I',str(ROOT/'tests/radio_host'),'-I',str(BOARD),

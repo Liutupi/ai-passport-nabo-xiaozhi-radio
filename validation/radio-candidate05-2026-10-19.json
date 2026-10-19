@@ -1,0 +1,20 @@
+{
+  "application_sha256": "0756decddde8dffd61729cb6d6a9d9737718a9baacdd3716dc0c88eff6f7ae6a",
+  "elf_sha256": "eb9e5bc57a8cc6cf10e3b9c61e77a470715ec7201dea0fa5d9dfc7b02258d124",
+  "flash_and_readback": "PASS; application and all protected regions verified",
+  "pipeline_initialization": "PASS; compressed ring 8192 B, free heap 21456 B, largest 8704 B; allocation problem not observed",
+  "first_decoded_formats": [
+    {
+      "input_rate": 48000,
+      "channels": 2,
+      "output_rate": 24000
+    }
+  ],
+  "device_sustained_playback": "FAIL: first frame decoded, then speaker owner stopped progressing around output sample-rate/device reopen; no FM-Audio windows or responses to later status commands while main-task Display warnings continued",
+  "owner_windows": 0,
+  "unexpected_crash_observed": false,
+  "cause": "UNCONFIRMED; need matching task stacks for exact cause. Audio priority 11 and I2S/control reconfiguration are candidates, not established conclusions.",
+  "action": "User-authorized exact candidate 03 rollback completed; full application/protected-region verification PASS. Current device is 03.",
+  "recorded_at_utc": "2026-10-19T12:04:10.251129+00:00",
+  "feedback_attribution": "A later volume/continuity reply answered the stale 05 question after rollback; user then asked which version was running. Clarified current 03. Do not count this as candidate 05 listening PASS."
+}

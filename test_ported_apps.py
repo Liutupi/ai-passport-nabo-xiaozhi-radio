@@ -18,8 +18,8 @@ ROOT = Path(__file__).resolve().parent
 BOARD = ROOT / 'xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo'
 workspace = tempfile.TemporaryDirectory(prefix='nabo-production-tests-')
 TESTROOT = Path(workspace.name)
-shutil.copytree(BOARD, TESTROOT/'firmware')
-shutil.copytree(BOARD/'helix', TESTROOT/'third_party/helix-mp3')
+shutil.copytree(BOARD, TESTROOT/'firmware', ignore=shutil.ignore_patterns('._*'))
+shutil.copytree(BOARD/'helix', TESTROOT/'third_party/helix-mp3', ignore=shutil.ignore_patterns('._*'))
 os.environ['CC'] = CC
 sys.path.insert(0, str(ROOT/'tests/legacy'))
 suite = unittest.TestSuite()

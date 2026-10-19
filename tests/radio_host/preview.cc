@@ -4,6 +4,7 @@
 #include "radio_host_platform.h"
 extern "C" {
 #include "nabo_radio.h"
+#include "nabo_radio_clock.h"
 #include "nabo_radio_keys.h"
 }
 #include <cassert>
@@ -16,6 +17,7 @@ static nrf_catalog_t catalog;
 static int current = 0, local = -1, state = 0;
 static bool wanted = false, loud = true, noise = true;
 static unsigned sleep_time = 0;
+static unsigned clock_seconds = 60;
 static std::set<int> favorites;
 extern "C" {
 bool muse_wifi_connected() { return true; }
@@ -64,6 +66,8 @@ int nabo_radio_meter() { return state == 3 ? 160 : 0; }
 bool nabo_radio_loudness() { return loud; }
 void nabo_radio_set_loudness(bool on) { loud = on; }
 bool nabo_radio_noise() { return noise; }
+unsigned nabo_radio_clock_seconds() { return clock_seconds; }
+void nabo_radio_set_clock_seconds(unsigned seconds) { clock_seconds = seconds; }
 void nabo_radio_set_noise(bool on) { noise = on; }
 }
 static void advance(unsigned ms) {
@@ -137,6 +141,7 @@ int main(int argc, char **argv) {
   advance(300);
   hold(NRF_OK);
   single(NRF_DOWN);
+  single(NRF_DOWN);
   single(NRF_OK);
   save(output, "search");
   single(NRF_OK);
@@ -156,13 +161,114 @@ int main(int argc, char **argv) {
   assert(nabo_radio_view_open());
   state = 3;
   advance(100);
+  assert(nrf_clock_http_date("Mon, 19 Oct 2026 10:25:00 GMT", host_us));
   advance(61000);
+  char clock[8];
+  assert(nrf_clock_text(clock, sizeof(clock), host_us));
+  assert(std::string(clock) == "18:26");
   save(output, "clock");
   int before = current;
   click(NRF_DOWN);
   advance(600);
   assert(current == before);
   save(output, "awakened");
+  // External station selection keeps the scene and next-button position in
+  // sync, without reallocating the complete view during audio playback.
+  nabo_radio_select_station(1059);
+  nabo_radio_view_select_station(1059);
+  advance(100);
+  click(NRF_DOWN);
+  advance(600);
+  assert(current == 1060);
+  // A direct favorites menu entry opens only saved stations. Removing the
+  // final row clamps selection; removing every row gives a safe empty list.
+  nabo_radio_view_close();
+  favorites = {101, 1059};
+  assert(nabo_radio_view_open());
+  state = 3;
+  advance(100);
+  hold(NRF_OK);
+  single(NRF_DOWN);
+  single(NRF_OK);
+  save(output, "favorites-direct");
+  single(NRF_OK);
+  assert(current == 101 && wanted);
+  hold(NRF_OK);
+  single(NRF_DOWN);
+  single(NRF_OK);
+  single(NRF_DOWN);
+  click(NRF_OK);
+  click(NRF_OK);
+  advance(300);
+  assert(!favorites.count(1059) && favorites.count(101));
+  single(NRF_OK);
+  assert(current == 101); // selected row was clamped after removing row 2
+  hold(NRF_OK);
+  single(NRF_DOWN);
+  single(NRF_OK);
+  click(NRF_OK);
+  click(NRF_OK);
+  advance(300);
+  assert(favorites.empty());
+  save(output, "favorites-empty");
+  single(NRF_OK);
+  assert(current == 101 && wanted);
+  host_opened = -1;
+  click(NRF_UP);
+  click(NRF_UP);
+  advance(300);
+  assert(host_opened == -1);
+  single(NRF_DOWN);
+  advance(600);
+  assert(current == 102); // empty favorites falls back to the national band
+  state = 3;
+  advance(100);
+  // Disable standby via the actual menu: a key after 61s must tune immediately,
+  // whereas the old always-on clock would swallow it just to wake the screen.
+  hold(NRF_OK);
+  for (int i = 0; i < 6; i++)
+    single(NRF_DOWN);
+  single(NRF_OK);
+  save(output, "standby-options");
+  for (int i = 0; i < 3; i++)
+    single(NRF_DOWN);
+  single(NRF_OK);
+  assert(clock_seconds == 600);
+  hold(NRF_OK);
+  save(output, "menu-10min");
+  for (int i = 0; i < 6; i++)
+    single(NRF_DOWN);
+  single(NRF_OK); // current setting is option 3 (10 minutes)
+  single(NRF_DOWN);
+  single(NRF_OK);
+  assert(clock_seconds == 0);
+  advance(61000);
+  before = current;
+  single(NRF_DOWN);
+  advance(600);
+  assert(current == before + 1);
+  state = 3;
+  advance(100);
+  hold(NRF_OK);
+  for (int i = 0; i < 6; i++)
+    single(NRF_DOWN);
+  single(NRF_OK);   // current setting is option 4 (disabled)
+  single(NRF_DOWN); // 1 minute
+  single(NRF_DOWN); // 3 minutes
+  single(NRF_OK);
+  assert(clock_seconds == 180);
+  advance(61000);
+  before = current;
+  single(NRF_DOWN);
+  advance(600);
+  assert(current == before + 1);
+  state = 3;
+  advance(100);
+  advance(180100);
+  before = current;
+  single(NRF_DOWN);
+  advance(600);
+  assert(current == before); // clock now wakes; it must not tune
   nabo_radio_view_close();
   puts("PASS: production FM scene; 1105 catalog entries, deferred scan, "
        "favorite double click, hold menu, nested back, wake suppression");

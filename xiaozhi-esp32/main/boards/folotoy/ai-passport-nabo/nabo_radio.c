@@ -22,6 +22,7 @@
 #endif
 #include "muse_settings.h"
 #include "muse_wifi.h"
+#include "nabo_radio_clock.h"
 #include "nabo_radio_decoder.h"
 #include "nabo_radio_dsp.h"
 #include "nabo_radio_stations.h"
@@ -31,12 +32,15 @@
 #define PREFILL_BYTES (12 * 1024) /* 1.5 seconds at the catalog's common 64 kbit/s. */
 #define MIN_COMPRESSED_BYTES (8 * 1024)
 #define RING_BLOCK_BYTES 1024
+#define NETWORK_RESERVE_BYTES (16 * 1024)
+#define NETWORK_MIN_BLOCK_BYTES 4096
 #define INPUT_BYTES 4096
 #define MAX_FAVORITES 128
 enum { STOPPED, CONNECTING, BUFFERING, PLAYING, WAIT_WIFI, RETRYING, FAILED, PAUSED };
 static const char* TAG = "nabo.radio";
 static atomic_int s_state, s_station, s_meter, s_rate = 16000, s_local = -1;
 static atomic_uint s_generation, s_played;
+static atomic_uint s_clock_seconds = 60;
 static atomic_bool s_wanted, s_active, s_done = true, s_dirty, s_loud = true, s_noise = true;
 static portMUX_TYPE s_lock = portMUX_INITIALIZER_UNLOCKED;
 static nrf_catalog_t s_catalog;
@@ -56,6 +60,10 @@ typedef struct {
 #ifndef NRF_ENGINE_HOST
 #define ring_block_malloc malloc
 #define ring_block_free free
+static size_t radio_heap_free(void) { return esp_get_free_heap_size(); }
+static size_t radio_heap_largest(void) {
+    return heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+}
 #endif
 static void ring_delete(radio_ring_t* r) {
     if (!r)
@@ -250,6 +258,15 @@ void nabo_radio_set_loudness(bool on) {
     atomic_store(&s_dirty, true);
 }
 bool nabo_radio_noise(void) { return atomic_load(&s_noise); }
+unsigned nabo_radio_clock_seconds(void) { return atomic_load(&s_clock_seconds); }
+void nabo_radio_set_clock_seconds(unsigned seconds) {
+    if (seconds != 0 && seconds != 60 && seconds != 180 && seconds != 300 && seconds != 600)
+        return;
+    if (atomic_exchange(&s_clock_seconds, seconds) != seconds) {
+        atomic_store(&s_dirty, true);
+        app_nabo_radio_store_clock(seconds);
+    }
+}
 void nabo_radio_set_noise(bool on) {
     atomic_store(&s_noise, on);
     atomic_store(&s_dirty, true);
@@ -366,6 +383,8 @@ static void save_settings(void) {
     if (!e)
         e = nvs_set_i32(h, "local", nabo_radio_local());
     if (!e)
+        e = nvs_set_u32(h, "clock_sec", nabo_radio_clock_seconds());
+    if (!e)
         e = nvs_commit(h);
     nvs_close(h);
     if (e)
@@ -391,6 +410,10 @@ void nabo_radio_init(void) {
             atomic_store(&s_noise, b != 0);
         if (!nvs_get_u8(h, "autoplay", &b))
             atomic_store(&s_wanted, b != 0);
+        uint32_t clock;
+        if (!nvs_get_u32(h, "clock_sec", &clock) &&
+            (clock == 0 || clock == 60 || clock == 180 || clock == 300 || clock == 600))
+            atomic_store(&s_clock_seconds, clock);
         int32_t local;
         if (!nvs_get_i32(h, "local", &local))
             atomic_store(&s_local, local);
@@ -463,6 +486,8 @@ static esp_err_t on_http(esp_http_client_event_t* ev) {
     headers_t* h = ev->user_data;
     if (ev->event_id != HTTP_EVENT_ON_HEADER || !h)
         return ESP_OK;
+    if (!strcasecmp(ev->header_key, "Date"))
+        nrf_clock_http_date(ev->header_value, esp_timer_get_time());
     if (!strcasecmp(ev->header_key, "icy-metaint")) {
         char* end;
         errno = 0;
@@ -495,7 +520,7 @@ static void network_worker(void* arg) {
         memset(&headers, 0, sizeof(headers));
         esp_http_client_config_t cfg = {.url = url,
                                         .crt_bundle_attach = esp_crt_bundle_attach,
-                                        .timeout_ms = 3000,
+                                        .timeout_ms = 5000,
                                         .buffer_size = 1024,
                                         .buffer_size_tx = 512,
                                         .event_handler = on_http,
@@ -508,9 +533,26 @@ static void network_worker(void* arg) {
         }
         esp_http_client_set_header(http, "Icy-MetaData", "0");
         esp_http_client_set_header(http, "User-Agent", "NABO-FM/0.2");
-        esp_err_t open_error = esp_http_client_open(http, 0);
-        int64_t length = open_error == ESP_OK ? esp_http_client_fetch_headers(http) : -1;
-        int status = esp_http_client_get_status_code(http);
+        esp_err_t open_error = ESP_OK;
+        int64_t length = -1;
+        int status = 0;
+        // open/fetch_headers are the streaming API: max_redirection_count
+        // only follows redirects inside perform(), which cannot return for
+        // a live stream. Regional stations use redirectors to pick a server.
+        for (unsigned redirects = 0; !cancelled(gen); redirects++) {
+            memset(&headers, 0, sizeof(headers));
+            open_error = esp_http_client_open(http, 0);
+            length = open_error == ESP_OK ? esp_http_client_fetch_headers(http) : -1;
+            status = esp_http_client_get_status_code(http);
+            bool redirect =
+                status == 301 || status == 302 || status == 303 || status == 307 || status == 308;
+            if (open_error != ESP_OK || length < 0 || !redirect || redirects >= 3)
+                break;
+            open_error = esp_http_client_set_redirection(http);
+            if (open_error != ESP_OK)
+                break;
+            esp_http_client_close(http);
+        }
         bool opened = open_error == ESP_OK && length >= 0 && status == 200 && !headers.invalid;
         if (!opened)
             ESP_LOGW(TAG, "stream open failed: err=%d status=%d header=%d invalid=%d",
@@ -601,11 +643,17 @@ bool nabo_radio_begin(void) {
     // room for HTTP/I2S instead of consuming every remaining byte in a ring.
     stage = "compressed buffer";
     for (size_t bytes = COMPRESSED_BYTES; bytes >= MIN_COMPRESSED_BYTES; bytes /= 2) {
-#ifndef NRF_ENGINE_HOST
-        if (esp_get_free_heap_size() < bytes + 8 * 1024)
+        if (radio_heap_free() < bytes + NETWORK_RESERVE_BYTES)
             continue;
-#endif
         s_ring = ring_create(bytes);
+        // Include the real per-block allocator overhead and retain a block
+        // large enough for network receive buffers. A successful ring must
+        // not leave HTTP/TCP fighting over the last 1 KiB fragments.
+        if (s_ring && (radio_heap_free() < NETWORK_RESERVE_BYTES ||
+                       radio_heap_largest() < NETWORK_MIN_BLOCK_BYTES)) {
+            ring_delete(s_ring);
+            s_ring = NULL;
+        }
         if (s_ring) {
             s_ring_bytes = bytes;
             break;
@@ -729,8 +777,14 @@ size_t nabo_radio_read(int16_t* out, size_t frames, int wait_ms) {
         size_t got = ring_receive(s_ring, d->input + d->used, INPUT_BYTES - d->used);
         d->used += got;
         if (d->leading) {
-            if (d->used < 10)
+            if (d->used < 10) {
+                // An HTTP failure or truncated ID3 header can end before the
+                // first frame. Let the owner reclaim RAM and retry that case
+                // too; otherwise it remains active forever with zero audio.
+                if (atomic_load(&s_done) && !ring_available(s_ring))
+                    d->drained = true;
                 break;
+            }
             if (!d->id3_left && !memcmp(d->input, "ID3", 3)) {
                 if ((d->input[6] | d->input[7] | d->input[8] | d->input[9]) & 128) {
                     nabo_radio_stop();
@@ -763,6 +817,13 @@ size_t nabo_radio_read(int16_t* out, size_t frames, int wait_ms) {
         if (!info.frame_bytes) {
             if (atomic_load(&s_done) && !ring_available(s_ring))
                 d->drained = true;
+            else if (!ring_available(s_ring)) {
+                // Keep the partial frame and Helix reservoir. Recover a useful
+                // cushion after starvation instead of playing each arriving
+                // packet followed by another short gap.
+                d->prefilled = false;
+                atomic_store(&s_state, BUFFERING);
+            }
             if (d->used == INPUT_BYTES) {
                 memmove(d->input, d->input + 1, --d->used);
             }

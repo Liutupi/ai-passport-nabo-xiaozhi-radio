@@ -911,6 +911,7 @@ file(GLOB BOARD_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_DIR}/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_DIR}/*.c
 )
+list(FILTER BOARD_SOURCES EXCLUDE REGEX "/\\._")
 list(APPEND SOURCES ${BOARD_SOURCES})
 
 # Select one audio engine for each chip family
@@ -1016,10 +1017,12 @@ set(LANG_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/assets/lang_config.h")
 
 # Collect current language audio files
 file(GLOB LANG_SOUNDS ${CMAKE_CURRENT_SOURCE_DIR}/assets/locales/${LANG_DIR}/*.ogg)
+list(FILTER LANG_SOUNDS EXCLUDE REGEX "/\\._")
 
 # If not en-US, collect en-US audio files as fallback for missing files
 if(NOT LANG_DIR STREQUAL "en-US")
     file(GLOB EN_US_SOUNDS ${CMAKE_CURRENT_SOURCE_DIR}/assets/locales/en-US/*.ogg)
+    list(FILTER EN_US_SOUNDS EXCLUDE REGEX "/\\._")
 
     # Extract filenames (without path) from current language
     set(EXISTING_NAMES "")
@@ -1039,6 +1042,7 @@ if(NOT LANG_DIR STREQUAL "en-US")
 endif()
 
 file(GLOB COMMON_SOUNDS ${CMAKE_CURRENT_SOURCE_DIR}/assets/common/*.ogg)
+list(FILTER COMMON_SOUNDS EXCLUDE REGEX "/\\._")
 
 # If target chip is ESP32, exclude specific files to avoid build errors
 if(CONFIG_IDF_TARGET_ESP32)
@@ -1458,6 +1462,7 @@ if(CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO)
     # Helix fixed-point MP3 decoder for the radio (RPSL/RCSL notices kept under helix/).
     # nabo_helix_buffers.c replaces real/buffers.c with allocations sized for the C3 heap.
     file(GLOB NABO_HELIX_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/helix/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/boards/folotoy/ai-passport-nabo/helix/real/*.c")
+    list(FILTER NABO_HELIX_SOURCES EXCLUDE REGEX "/\\._")
     list(FILTER NABO_HELIX_SOURCES EXCLUDE REGEX "/real/buffers\\.c$")
     target_sources(${COMPONENT_LIB} PRIVATE ${NABO_HELIX_SOURCES})
     set_source_files_properties(${NABO_HELIX_SOURCES} PROPERTIES COMPILE_OPTIONS "-Wno-unused-but-set-variable")

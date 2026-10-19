@@ -21,6 +21,8 @@ void nabo_radio_set_local(int region);
 int nabo_radio_local(void);
 void nabo_radio_set_noise(bool enabled);
 bool nabo_radio_noise(void);
+unsigned nabo_radio_clock_seconds(void);
+void nabo_radio_set_clock_seconds(unsigned seconds);
 
 /* UI calls publish intent only; the existing voice task owns speaker writes. */
 int nabo_radio_station_count(void);
@@ -52,3 +54,4 @@ void nabo_radio_finish(void);
 bool app_nabo_radio_network_begin(void);
 void app_nabo_radio_network_end(void);
 bool app_nabo_radio_active(void);
+void app_nabo_radio_store_clock(unsigned seconds);

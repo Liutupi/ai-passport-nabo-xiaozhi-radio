@@ -48,7 +48,7 @@ def get_sound_files(directory):
     """获取目录中的音效文件列表"""
     if not os.path.exists(directory):
         return []
-    return [f for f in os.listdir(directory) if f.endswith('.ogg')]
+    return [f for f in os.listdir(directory) if f.endswith('.ogg') and not f.startswith('._')]
 
 def generate_header(lang_code, output_path):
     # 从输出路径推导项目结构

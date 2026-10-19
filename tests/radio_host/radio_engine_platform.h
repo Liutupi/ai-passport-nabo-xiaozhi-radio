@@ -7,6 +7,12 @@
 extern int64_t host_engine_us;
 extern size_t host_ring_limit;
 extern int host_ring_fail_after, host_ring_allocated;
+extern size_t host_pipeline_heap, host_pipeline_largest;
+static inline size_t radio_heap_free(void) {
+  size_t used = (size_t)host_ring_allocated * (1024 + 8);
+  return used < host_pipeline_heap ? host_pipeline_heap - used : 0;
+}
+static inline size_t radio_heap_largest(void) { return host_pipeline_largest; }
 static inline void *ring_block_malloc(size_t n) {
   if (n > 4096 || host_ring_fail_after == 0)
     return NULL;

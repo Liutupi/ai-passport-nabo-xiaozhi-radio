@@ -9,6 +9,7 @@
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "nabo_apps.h"
+#include "nabo_radio_clock.h"
 #include "src/display/lv_display_private.h"
 
 namespace {
@@ -296,9 +297,20 @@ void NaboDisplay::Tick() {
     if (emoji_box_)
         lv_obj_set_flag(emoji_box_, LV_OBJ_FLAG_HIDDEN,
                         nabo_apps_active() && Application::GetInstance().IsLocalAppActive());
-    if (nabo_apps_active())
+    if (nabo_apps_active()) {
+        radio_clock_[0] = 0;
         return;
+    }
     auto state = Application::GetInstance().GetDeviceState();
+    if (state == kDeviceStateIdle) {
+        char clock[6];
+        if (nrf_clock_text(clock, sizeof(clock), esp_timer_get_time()) &&
+            memcmp(clock, radio_clock_, sizeof(clock))) {
+            memcpy(radio_clock_, clock, sizeof(clock));
+            SetStatus(clock);
+        }
+    } else
+        radio_clock_[0] = 0;
     muse_mode_t mode = MUSE_MODE_IDLE;
     if (state == kDeviceStateStarting)
         mode = MUSE_MODE_BOOT;

@@ -19,3 +19,4 @@ main/mmap_generate_emoji.h
 !main/boards/folotoy/ai-passport-nabo/radio_assets/*.bin
 mmap_generate_*.h
 .clangd
+._*

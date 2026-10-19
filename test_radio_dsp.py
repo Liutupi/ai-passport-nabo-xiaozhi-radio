@@ -98,6 +98,7 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
     assert quiet > plain_quiet * 2.0, (quiet, plain_quiet)          # raised at least 6 dB
     assert loud < 16000 / math.sqrt(2) * 0.794 * 0.75, loud         # lowered at least 2.5 dB
     assert loud / quiet < 3.0, (loud, quiet)                         # 21 dB spread -> under 10 dB
+    assert quiet > plain_quiet * 4.0, ('quiet station still too soft', quiet)  # old target gave ~2x
     hiss = run(make(loud=True), [random.randint(-40, 40) for _ in range(48000 * 4)])
     assert rms(hiss[-12000:]) < 40, rms(hiss[-12000:])
     checks += 1
@@ -125,5 +126,16 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as folder:
         m2 = lib.nabo_radio_dsp_meter(d)
     assert m1 > 100 and m2 < m1 // 4, (m1, m2)
     checks += 1
+    # Full-scale polarity reversals must produce a transient of the correct
+    # sign. Q16 differences exceed int32 here; wrapping reverses the pulse.
+    for rate in (8000, 16000, 22050, 24000):
+        d = make(rate)
+        run(d, [-32768] * 2048)
+        edge = run(d, [32767] * 2048)
+        assert edge[0] > 20000 and all(x >= 0 for x in edge), (rate, edge[:8])
+        edge = run(d, [-32768] * 2048)
+        assert edge[0] < -20000 and all(x <= 0 for x in edge), (rate, edge[:8])
+        assert abs(edge[-1]) <= 1
+        checks += 1
     unload_library(lib._handle)
 print(f'PASS: {checks} radio output-stage checks (half-band 2:1, leveller, fade, limiter, high-pass, meter)')

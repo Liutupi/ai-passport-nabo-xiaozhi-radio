@@ -3,6 +3,16 @@
 int64_t host_engine_us = 1000000;
 size_t host_ring_limit = 32768;
 int host_ring_fail_after = -1, host_ring_allocated;
+size_t host_pipeline_heap = 256 * 1024, host_pipeline_largest = 256 * 1024;
+unsigned host_saved_clock = 60;
+void app_nabo_radio_store_clock(unsigned seconds) {
+  host_saved_clock = seconds;
+}
+unsigned host_stored_clock(void) { return host_saved_clock; }
+void host_heap_budget(unsigned available, unsigned largest) {
+  host_pipeline_heap = available;
+  host_pipeline_largest = largest;
+}
 bool muse_wifi_connected(void) { return true; }
 bool muse_settings_speaker_on(void) { return true; }
 bool app_nabo_radio_network_begin(void) { return true; }

@@ -1,13 +1,13 @@
 """Convert test_radio_view.py's exact production RGB565 frames to review PNGs."""
 from pathlib import Path
-import struct
+import struct, math
 from PIL import Image, ImageDraw
 ROOT=Path(__file__).resolve().parents[1]
 folder=ROOT/'private/fm-preview'
 dest=ROOT/'docs/images/radio'
 dest.mkdir(parents=True,exist_ok=True)
-names=['player','playing','favorite','menu','list','favorites-list','search','search-a','clock','awakened']
-sheet=Image.new('RGB',(5*256,2*356),'#111725')
+names=['player','playing','favorite','menu','list','favorites-list','search','search-a','clock','awakened','favorites-direct','favorites-empty','standby-options','menu-10min']
+sheet=Image.new('RGB',(5*256,math.ceil(len(names)/5)*356),'#111725')
 draw=ImageDraw.Draw(sheet)
 for i,name in enumerate(names):
     values=struct.unpack('<76800H',(folder/(name+'.rgb565')).read_bytes())

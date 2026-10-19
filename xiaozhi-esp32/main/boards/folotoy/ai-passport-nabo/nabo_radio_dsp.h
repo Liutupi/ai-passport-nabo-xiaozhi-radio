@@ -18,9 +18,11 @@ extern "C" {
 typedef struct {
     int16_t hist[2 * NABO_RADIO_DSP_TAPS]; /* doubled ring: a window is always contiguous */
     uint8_t pos, odd, decimate;
-    int32_t hp_lp;       /* high-pass state, Q16 */
+    int64_t hp_lp;       /* Q16; FIR overshoot and full-scale edges need >32 bits */
     int32_t env;         /* loudness envelope (mean |x|), Q12 */
     int32_t agc;         /* loudness gain, Q20 (1 << 20 = 0 dB) */
+    int32_t agc_target;  /* control-rate target; sample-rate smoothing stays below */
+    uint8_t gain_phase;
     int32_t fade;        /* fade gain, Q15 */
     int32_t fade_target; /* Q15 */
     int32_t fade_step;   /* per output sample, Q15 */

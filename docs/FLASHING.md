@@ -1,6 +1,10 @@
 # 刷写与恢复
 
-**当前为 NABO FM 0.2.6 开发检查点，已经上机调试，音质尚未验收。** 精确镜像在 `checkpoints/radio-dev-0.2.6/`，详细交接在根目录 `HANDOFF.md`。当前工牌保留的兼容 bootloader 与构建包字节不同，通用 upgrade 工具会保护性拒绝；不要绕过检查或整片擦除。下文旧 Release 的安装与已验收记录仅适用于历史镜像。
+**NABO FM v1.0.0 是首版体验固件，应用对应已实测的候选 03。** 当前作者工牌仅更新应用并读回验证保留区；以下完整安装包没有在空白设备执行本次全套首装验证。已知限制见 [首版说明](RELEASE_FM_v1.0.0.md)。
+
+社区/网页使用的 `ai-passport-nabo-xiaozhi-radio-v1.0.0-full.bin` 从 `0x0` 写入，**会清空配网、激活和 NVS 用户设置**，需重新配网/激活。它由构建镜像合并，空隙为 `0xFF`，不含任何人的设备备份或凭据。
+
+希望保留配网和用户数据时，下载 ZIP 使用受保护的分区升级方式。当前作者工牌保留的兼容 bootloader 与包中字节不同，普通 upgrade 会保护性拒绝；不要为此改用网页完整固件或擦除 Flash，应先核对自己的设备、兼容性和写入范围。
 
 ## 镜像与分区
 
@@ -20,7 +24,7 @@ Release ZIP 是独立镜像集合，不是可直接写到 `0x0` 的单个文件�
 
 ## 准备
 
-下载并解压 `ai-passport-nabo-xiaozhi-table-v1.6.0.zip`。在解压目录执行：
+下载并解压 `ai-passport-nabo-xiaozhi-radio-v1.0.0.zip`。在解压目录执行：
 
 ```powershell
 python -m pip install -r requirements-flash.txt

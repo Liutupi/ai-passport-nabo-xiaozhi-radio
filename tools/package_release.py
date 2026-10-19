@@ -41,9 +41,11 @@ if manifest['release_version'] != args.version:
     raise RuntimeError('Directory version does not match manifest')
 for filename in ['LICENSE', 'THIRD_PARTY_NOTICES.md', 'requirements-flash.txt', 'CHANGELOG.md']:
     shutil.copy2(root/filename, dest/filename)
+preview = manifest.get('channel') == 'preview'
 (dest/'README.md').write_text(
-    '# AI Passport NABO FM · 电台开发版 v'+args.version+' 刷写包\n\n'
-    '此为开发测试构建，尚未通过电台真机验收，不能当作正式 Release。\n\n'
+    '# AI Passport NABO FM · '+('首版体验固件' if preview else '电台开发版')+' v'+args.version+' 刷写包\n\n'
+    + ('沿用候选 03 的精确实机应用。MP3 短时播放、收藏和待机时钟已验证；AAC、部分台源及长播仍未通过。详见 docs/RELEASE_FM_v1.0.0.md。\n\n' if preview else '此为开发测试构建，尚未通过电台真机验收，不能当作正式 Release。\n\n')
+    +
     '适用 ESP32-C3 / 8 MB AI Passport。镜像校验和与偏移见 manifest.json。\n\n'
     '先读 docs/FLASHING.md，按自己的端口和设备 MAC 执行：\n\n'
     '```powershell\npython -m pip install -r requirements-flash.txt\n'

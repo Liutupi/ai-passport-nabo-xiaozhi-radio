@@ -1,0 +1,129 @@
+{
+  "release_version": "1.0.0",
+  "channel": "preview",
+  "source_ref": "v1.0.0",
+  "firmware_candidate": "fm-audio-20261019-03",
+  "source_base_commit": "ec786dfd959183fae30c6b59e2b5262991a776b9",
+  "source_patch_sha256": "62bab0438bb725d389255c5f3296467c0f670ccaa90bb0274cb06b59d35c4b96",
+  "sdk": "ESP-IDF v6.0.2",
+  "application": {
+    "file": "xiaozhi.bin",
+    "bytes": 3481808,
+    "sha256": "9360db685bd23a5b99b9fb8196ab1cf2e1db60b0ed9f44b59251f1cec661e44b"
+  },
+  "debug_elf_sha256": "70e2690baa167a01ce2a9ff93f54f1d9739df5dcf299b2a66fd8f098dce7b8f6",
+  "source_files": [
+    {
+      "path": "test_ported_apps.py",
+      "sha256": "9ce71ee13d705a7bc451e5425a35aec943c318dcf5d5d685ae06a8a26813b49b"
+    },
+    {
+      "path": "test_radio_clock.py",
+      "sha256": "79a7e1c73b78b6ff95f27123ccac8f1db4b5fe4ea46a3f26c66255f252f3dec6"
+    },
+    {
+      "path": "test_radio_dsp.py",
+      "sha256": "bb77107ac9871ce37b1ce84b08b4b25e9fcf575541726e7c334723b131160171"
+    },
+    {
+      "path": "test_radio_engine.py",
+      "sha256": "22e3f04760a48cc89ce1fd94f98b43ec1d320462af3c38c3d22cdd128b0ed830"
+    },
+    {
+      "path": "test_radio_view.py",
+      "sha256": "3122dd523376476e5a77f4a0210e625386ca88c5b4f6840bf864b195218792e0"
+    },
+    {
+      "path": "tests/radio_host/engine.c",
+      "sha256": "bd564b1bc90b40fdeedd1473ec1cbbd1d98d01efedec3009409b1fed7e03a919"
+    },
+    {
+      "path": "tests/radio_host/preview.cc",
+      "sha256": "e9e8b1ef6dd9bad8eecb9b83e9c06739ce7c32acda5c9d42b314857b99e7162b"
+    },
+    {
+      "path": "tests/radio_host/radio_engine_platform.h",
+      "sha256": "b05e56c8dc7f6f6ce7df2d35f002a892a964a2868f7fbf70902f2b80b8581342"
+    },
+    {
+      "path": "tools/run_tests.py",
+      "sha256": "eda18ce7f6fad91007a88e87a35c3c4ffa403bc921c401f79367e12bbea1965c"
+    },
+    {
+      "path": "validation/radio-source-audit-2026-10-19.json",
+      "sha256": "261b35b3b6669c223e34bda4cb68e20d781dcb1edcbcb7b2334e91cc112e7643"
+    },
+    {
+      "path": "xiaozhi-esp32/.gitignore",
+      "sha256": "1079de7f1758f6652b8a532bb91ee4778485211da1a57559c487a42f5e7df6c8"
+    },
+    {
+      "path": "xiaozhi-esp32/main/CMakeLists.txt",
+      "sha256": "b16983cbc1fcffc0cc3d50b51beb385a03bd104a8fad61d424e4440caffc451d"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_apps.cc",
+      "sha256": "35cb58e3086ab4af2af342f66246382f0e49c8b23cf575521cd6d9e8a907c342"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_display.cc",
+      "sha256": "c4b920a6b37c26975a3b58041adc20bc1bbeb51258c0ad4fb20af502d5e356db"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_display.h",
+      "sha256": "b0043f0a089331670858ac4e08d44d0842ea2836afa0afa5acab081c81e61b56"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_radio.c",
+      "sha256": "0ca6e06dbabe576bde597cb53f71e208e3418deb5dc346a095eef2193f3dfcbe"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_radio.h",
+      "sha256": "9ef80de67e1e305d358d3d5bfe19c2e5e9881edafdfe4c368873facb0fb26684"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_radio_clock.c",
+      "sha256": "bb8e3f0fea0de26208e36f997bff41031bae713d79d6e9b381e11ad069f3e060"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_radio_clock.h",
+      "sha256": "7a08cd9852ecf7e72694a90719925f62e35b82ee34aae9a0a346228899c5fa15"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_radio_dsp.c",
+      "sha256": "0ab3212a0a6a45a3e28ef32387b42b46146d9831f8a0568695d2407e0492e5a4"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_radio_dsp.h",
+      "sha256": "5972b5639a092d59a11c3b5af85ee1528bcf56c56ee1a591f8a6ca8cd643f41d"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_radio_view.cc",
+      "sha256": "b1cbe2fd1389a39bd919fe3af5efc2e25789fbe74e793dd50a8356d07d76a990"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/nabo_radio_view.h",
+      "sha256": "c0a37ec22991ea448501b33ef90a88f0a6a6c700b2f55bf7fe763cf285aa6d9f"
+    },
+    {
+      "path": "xiaozhi-esp32/scripts/gen_lang.py",
+      "sha256": "83a94b38798133fa2d098d6b0439ecefcabff468b93cb562f77059df47caf589"
+    }
+  ],
+  "host_suite": "PASS: complete suite on restored candidate 03 sources",
+  "device_validation": "PARTIAL: candidate 03 MP3 decoding, favorites and clock; exact application rollback followed by about five minutes of observation including station changes",
+  "full_install_on_blank_device": "NOT RUN; layout/image/hash/blank NVS gaps verified during packaging",
+  "known_limitations": [
+    "1105 catalog entries are not an all-stations playback certification",
+    "AAC/HE-AAC workspace allocation failure remains",
+    "Some station URLs return HTTP 404 or time out",
+    "Residual supply gaps possible; one-hour continuous playback and 50 physical station changes not completed",
+    "Radio pauses voice; simultaneous radio/voice not implemented"
+  ],
+  "evidence": [
+    "radio-candidate03-2026-10-19.json",
+    "radio-rollback03-2026-10-19.json",
+    "radio-source-audit-2026-10-19.json"
+  ],
+  "private_device_data_included": false
+}

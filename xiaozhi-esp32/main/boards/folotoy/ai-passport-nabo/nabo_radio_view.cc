@@ -23,19 +23,34 @@
 extern "C" {
 #include "muse_wifi.h"
 #include "nabo_radio.h"
+#include "nabo_radio_clock.h"
 #include "nabo_radio_gfx.h"
 #include "nabo_radio_keys.h"
 }
 
 namespace {
-enum Page { PLAYER, MENU, LIST, SEARCH, SLEEP, LOCAL };
+enum Page { PLAYER, MENU, LIST, SEARCH, SLEEP, LOCAL, STANDBY };
+enum MenuItem {
+    M_LIST,
+    M_FAVORITES,
+    M_SEARCH,
+    M_SLEEP,
+    M_NOISE,
+    M_LOUD,
+    M_CLOCK,
+    M_LOCAL,
+    M_SETTINGS,
+    M_BACK,
+    M_COUNT
+};
 constexpr uint16_t BG = 0x0842, TEXT = 0xf77c, MUTED = 0x8c94, DIM = 0x526c, AMBER = 0xf5ca,
                    RED = 0xf9c6, LEVEL = 0x6718, DESK = 0x1926, ROW = 0x2129, DIAL = 0x1080,
                    TICK = 0x6a84;
 constexpr int SLEEPS[] = {0, 15, 30, 60, 90};
+constexpr unsigned STANDBY_SECONDS[] = {60, 180, 300, 600, 0};
 constexpr size_t SPRITE_PIXELS = 158 * 139;
-const char* const MENU_ITEMS[] = {"电台列表", "拼音搜台", "定时关闭", "换台沙沙声",
-                                  "响度均衡", "本地地区", "设置",     "返回"};
+const char* const MENU_ITEMS[] = {"电台列表", "收藏列表", "拼音搜台", "定时关闭", "换台沙沙声",
+                                  "响度均衡", "待机时钟", "本地地区", "设置",     "返回"};
 const char* const ACTIONS[] = {"idle_off", "phones_on", "phones_off", "tune", "groove",
                                "listen",   "sip",       "love",       "oops", "doze",
                                "wave",     "search",    "sing"};
@@ -98,6 +113,21 @@ const char* band_name(int b) {
         return "最近";
     return b < 14 ? nrf_catalog_type(b - 3) : nabo_radio_category_name(b - 14);
 }
+void locate_current() {
+    nrf_station_t station;
+    if (!nabo_radio_station_info(v->current, &station))
+        return;
+    v->band =
+        nabo_radio_local() < 0 || station.region_id == static_cast<unsigned>(nabo_radio_local())
+            ? 0
+            : 14 + station.region_id;
+    v->position = 0;
+    for (int i = 0; i < v->count[v->band]; i++)
+        if (band_station(v->band, i) == v->current) {
+            v->position = i;
+            break;
+        }
+}
 void rebuild() {
     memset(v->count, 0, sizeof(v->count));
     v->bands = std::min(80, 14 + nabo_radio_category_count());
@@ -122,10 +152,8 @@ void rebuild() {
         v->start[b] = v->total;
         v->total += v->count[b];
     }
-    if (!v->count[v->band]) {
-        v->band = 0;
-        v->position = 0;
-    }
+    if (!v->count[v->band] && !(v->page == LIST && v->band == 1))
+        locate_current();
     v->position = std::clamp(v->position, 0, std::max(0, v->count[v->band] - 1));
 }
 int station_at(int flat, int* band = nullptr) {
@@ -181,11 +209,11 @@ void move(int direction) {
         if (nabo_radio_wanted())
             action(3);
     } else {
-        int n = v->page == MENU     ? 8
-                : v->page == LIST   ? v->count[v->band]
-                : v->page == SEARCH ? 28 + v->hit_count
-                : v->page == SLEEP  ? 5
-                                    : nabo_radio_category_count() + 1;
+        int n = v->page == MENU                          ? M_COUNT
+                : v->page == LIST                        ? v->count[v->band]
+                : v->page == SEARCH                      ? 28 + v->hit_count
+                : v->page == SLEEP || v->page == STANDBY ? 5
+                                                         : nabo_radio_category_count() + 1;
         if (n)
             v->selection = (v->selection + direction + n) % n;
     }
@@ -196,6 +224,10 @@ void favorite(int id) {
     bool was = nabo_radio_favorite(id);
     nabo_radio_toggle_favorite(id);
     rebuild();
+    if (v->page == LIST && v->band == 1) {
+        v->selection = std::clamp(v->selection, 0, std::max(0, v->count[1] - 1));
+        v->top = std::min(v->top, v->selection);
+    }
     toast(nabo_radio_favorite(id) ? "已收藏" : was ? "已取消收藏" : "收藏已满 128 台");
     action(7);
 }
@@ -214,35 +246,43 @@ void choose() {
         int s = v->selection;
         v->selection = 0;
         v->top = 0;
-        if (s == 0) {
+        if (s == M_LIST || s == M_FAVORITES) {
             v->player_band = v->band;
             v->player_position = v->position;
+            if (s == M_FAVORITES)
+                v->band = 1;
             v->page = LIST;
         }
-        if (s == 1) {
+        if (s == M_SEARCH) {
             v->page = SEARCH;
             v->query[0] = 0;
             v->hit_count = 0;
         }
-        if (s == 2)
+        if (s == M_SLEEP)
             v->page = SLEEP;
-        if (s == 3) {
+        if (s == M_NOISE) {
             nabo_radio_set_noise(!nabo_radio_noise());
             toast(nabo_radio_noise() ? "换台沙沙声已开启" : "换台沙沙声已关闭");
             v->page = PLAYER;
         }
-        if (s == 4) {
+        if (s == M_LOUD) {
             nabo_radio_set_loudness(!nabo_radio_loudness());
             toast(nabo_radio_loudness() ? "响度均衡已开启" : "响度均衡已关闭");
             v->page = PLAYER;
         }
-        if (s == 5) {
+        if (s == M_CLOCK) {
+            v->page = STANDBY;
+            for (int i = 0; i < 5; i++)
+                if (STANDBY_SECONDS[i] == nabo_radio_clock_seconds())
+                    v->selection = i;
+        }
+        if (s == M_LOCAL) {
             v->page = LOCAL;
             v->selection = nabo_radio_local() + 1;
         }
-        if (s == 6)
+        if (s == M_SETTINGS)
             nabo_apps_open(NABO_SETTINGS);
-        if (s == 7)
+        if (s == M_BACK)
             v->page = PLAYER;
         return;
     }
@@ -289,6 +329,12 @@ void choose() {
     if (v->page == SLEEP) {
         nabo_radio_set_sleep(SLEEPS[v->selection]);
         toast(v->selection ? "定时关闭已设置" : "已取消定时");
+        v->page = PLAYER;
+    }
+    if (v->page == STANDBY) {
+        nabo_radio_set_clock_seconds(STANDBY_SECONDS[v->selection]);
+        toast("已设置");
+        v->clock = false;
         v->page = PLAYER;
     }
     if (v->page == LOCAL) {
@@ -490,16 +536,17 @@ void overlay() {
             text("没有匹配的电台", 120, 200, 216, 0, MUTED);
         return;
     }
-    const char* title = v->page == MENU    ? "菜单"
-                        : v->page == LIST  ? band_name(v->band)
-                        : v->page == SLEEP ? "定时关闭"
-                                           : "本地地区";
+    const char* title = v->page == MENU      ? "菜单"
+                        : v->page == LIST    ? band_name(v->band)
+                        : v->page == SLEEP   ? "定时关闭"
+                        : v->page == STANDBY ? "待机时钟"
+                                             : "本地地区";
     nrf_prop(&v->gfx, v->head, 8, 21);
     text(title, 40, 38, 190, -1, AMBER);
-    int count = v->page == MENU    ? 8
-                : v->page == LIST  ? v->count[v->band]
-                : v->page == SLEEP ? 5
-                                   : nabo_radio_category_count() + 1;
+    int count = v->page == MENU                          ? M_COUNT
+                : v->page == LIST                        ? v->count[v->band]
+                : v->page == SLEEP || v->page == STANDBY ? 5
+                                                         : nabo_radio_category_count() + 1;
     if (v->selection < v->top)
         v->top = v->selection;
     if (v->selection > v->top + 6)
@@ -525,36 +572,46 @@ void overlay() {
         }
         if (v->page == MENU) {
             snprintf(label, sizeof(label), "%s", MENU_ITEMS[item]);
-            if (item == 3 || item == 4)
-                snprintf(value, sizeof(value), "%s",
-                         (item == 3 ? nabo_radio_noise() : nabo_radio_loudness()) ? "开" : "关");
+            if (item == M_NOISE || item == M_LOUD)
+                snprintf(
+                    value, sizeof(value), "%s",
+                    (item == M_NOISE ? nabo_radio_noise() : nabo_radio_loudness()) ? "开" : "关");
+            if (item == M_FAVORITES)
+                snprintf(value, sizeof(value), "%d", v->count[1]);
+            if (item == M_CLOCK) {
+                unsigned seconds = nabo_radio_clock_seconds();
+                if (seconds)
+                    snprintf(value, sizeof(value), "%u 分钟", seconds / 60);
+                else
+                    snprintf(value, sizeof(value), "关闭");
+            }
         } else if (v->page == SLEEP) {
             if (SLEEPS[item])
                 snprintf(label, sizeof(label), "%d 分钟", SLEEPS[item]);
             else
                 snprintf(label, sizeof(label), "不定时");
+        } else if (v->page == STANDBY) {
+            if (STANDBY_SECONDS[item])
+                snprintf(label, sizeof(label), "%u 分钟", STANDBY_SECONDS[item] / 60);
+            else
+                snprintf(label, sizeof(label), "关闭待机");
         } else
             snprintf(label, sizeof(label), "%s",
                      item ? nabo_radio_category_name(item - 1) : "全国（未定位）");
         text(label, 20, y + 20, 184, -1, on ? TEXT : MUTED);
-        text(value, 218, y + 20, 30, 1, AMBER);
+        text(value, 218, y + 20, 60, 1, AMBER);
     }
     if (!count)
-        text("这里还没有电台", 120, 150, 220, 0, MUTED);
+        text(v->page == LIST && v->band == 1 ? "还没有收藏" : "这里还没有电台", 120, 150, 220, 0,
+             MUTED);
     char n[32];
     snprintf(n, sizeof(n), "%d/%d", count ? v->selection + 1 : 0, count);
     text(n, 232, 278, 80, 1, MUTED);
 }
 void clock_page() {
     rect(0, 0, 240, 320, BG);
-    time_t t = time(nullptr);
-    tm local = {};
-    localtime_r(&t, &local);
     char time[24];
-    if (local.tm_year >= 124)
-        snprintf(time, sizeof(time), "%02d:%02d", local.tm_hour, local.tm_min);
-    else
-        snprintf(time, sizeof(time), "--:--");
+    nrf_clock_text(time, sizeof(time), esp_timer_get_time());
     text(time, 120, 150, 230, 0, AMBER, &v->clockfont);
     nrf_prop(&v->gfx, v->head, 108, 183);
     text(nabo_radio_station_name(v->current), 120, 235, 220, 0, MUTED);
@@ -689,11 +746,25 @@ bool nabo_radio_view_back() {
     if (v->page == LIST) {
         v->band = v->player_band;
         v->position = v->player_position;
+        if (!v->count[v->band])
+            locate_current();
     }
     v->page = v->page == SEARCH ? LIST : PLAYER;
     v->selection = 0;
     v->top = 0;
     return true;
+}
+void nabo_radio_view_select_station(int station) {
+    nrf_station_t info;
+    if (!v || !nabo_radio_station_info(station, &info))
+        return;
+    v->current = station;
+    locate_current();
+    v->connect_at = 0;
+    v->page = PLAYER;
+    v->clock = false;
+    v->last_key = now_ms();
+    action(1);
 }
 void nabo_radio_view_tick(int battery) {
     if (!v)
@@ -752,7 +823,9 @@ void nabo_radio_view_tick(int battery) {
     }
     nrf_sprite_frame(&v->sprite, frame);
     v->level = (v->level * 3 + (playing ? nabo_radio_meter() : 0)) / 4;
-    if (playing && v->page == PLAYER && now - v->last_key >= 60000)
+    unsigned standby_seconds = nabo_radio_clock_seconds();
+    if (playing && v->page == PLAYER && standby_seconds &&
+        now - v->last_key >= standby_seconds * 1000)
         v->clock = true;
     if (v->clock != v->dimmed) {
         v->dimmed = v->clock;

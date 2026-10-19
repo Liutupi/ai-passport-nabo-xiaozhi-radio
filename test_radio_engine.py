@@ -18,7 +18,9 @@ payload=fixture.FIXTURE*32
 with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
     dll=Path(temp)/'engine.dll'
     vendor=BOARD/'helix'
-    sources=sorted(vendor.glob('*.c'))+[f for f in sorted((vendor/'real').glob('*.c')) if f.name!='buffers.c']
+    sources=[f for f in sorted(vendor.glob('*.c')) if not f.name.startswith('._')]
+    sources += [f for f in sorted((vendor/'real').glob('*.c'))
+                if f.name != 'buffers.c' and not f.name.startswith('._')]
     subprocess.run([CC,'-std=gnu11','-shared','-O2','-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unused-but-set-variable',
                     SHARED_EXPORT,'-DNABO_HELIX_PORTABLE','-I',str(BOARD),'-I',str(ROOT/'tests/radio_host'),'-I',str(vendor/'pub'),'-I',str(vendor/'real'),
                     *[str(f) for f in sources],*[str(BOARD/f) for f in ['nabo_helix_buffers.c','nabo_radio_decoder.c','nabo_radio_dsp.c','nabo_radio_catalog.c']],
@@ -28,6 +30,13 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
         getattr(lib,fn).restype=C.c_bool
     lib.nabo_radio_read.argtypes=[C.POINTER(C.c_int16),C.c_size_t,C.c_int]
     lib.nabo_radio_read.restype=C.c_size_t
+    assert lib.nabo_radio_clock_seconds()==60
+    for seconds in [0,180,300,600,60]:
+        lib.nabo_radio_set_clock_seconds(seconds)
+        assert lib.nabo_radio_clock_seconds()==seconds
+        assert lib.host_stored_clock()==seconds
+    lib.nabo_radio_set_clock_seconds(1)
+    assert lib.nabo_radio_clock_seconds()==60 and lib.host_stored_clock()==60
     lib.host_feed.argtypes=[C.c_void_p,C.c_size_t];lib.host_feed.restype=C.c_size_t
     def session(chunk):
         lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin()
@@ -68,6 +77,54 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
     lib.host_fail_ring_after(1)
     lib.nabo_radio_select_station(0);assert not lib.nabo_radio_begin();assert lib.host_clean()
     lib.host_fail_ring_after(-1)
+    # Match the connected C3's ~30 KiB before allocating compressed data.
+    # The old 16 KiB ring left too little for HTTP/TCP; choose 8 KiB instead.
+    lib.host_heap_budget(30500,7680)
+    lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin()
+    assert lib.host_ring_capacity()==8192
+    lib.nabo_radio_stop();lib.host_eof();lib.nabo_radio_finish();assert lib.host_clean()
+    # Account for allocator metadata after allocation, and reject a fragmented
+    # heap even if its total byte count looks sufficient. Failed rings unwind.
+    for available,largest in [(24576,7680),(256*1024,2048)]:
+        lib.host_heap_budget(available,largest)
+        lib.nabo_radio_select_station(0);assert not lib.nabo_radio_begin()
+        assert lib.host_clean()
+    lib.host_heap_budget(256*1024,256*1024)
+    # A real network stall must rebuild a cushion, not alternate tiny decoded
+    # bursts and silence. Keep partial MP3 input/reservoir byte-exact across it.
+    lib.host_limit_ring(8192)
+    lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin()
+    src=C.create_string_buffer(payload)
+    offset=lib.host_feed(src,8192);audio=[]
+    for _ in range(10000):
+        dst=(C.c_int16*480)();n=lib.nabo_radio_read(dst,480,0);audio.extend(dst[:n])
+        if not n:break
+    else:raise AssertionError('starvation not reached')
+    assert lib.nabo_radio_state()==2
+    offset+=lib.host_feed(C.byref(src,offset),1024)
+    assert lib.nabo_radio_read(dst,480,0)==0,'resumed without a recovery cushion'
+    eof=False
+    for _ in range(10000):
+        if offset<len(payload):offset+=lib.host_feed(C.byref(src,offset),len(payload)-offset)
+        elif not eof:lib.host_eof();eof=True
+        if lib.nabo_radio_finished():break
+        n=lib.nabo_radio_read(dst,480,0);audio.extend(dst[:n])
+    else:raise AssertionError('rebuffered stream did not drain')
+    assert audio==expected,'lost compressed input or decoder state on starvation'
+    lib.nabo_radio_stop();lib.nabo_radio_finish();assert lib.host_clean()
+    lib.host_limit_ring(32768)
+    # Failed HTTP requests can finish before an MP3 header (or in an ID3 tag).
+    # They must free the pipeline and retry, never stay active silently forever.
+    for prefix in [b'', b'\xff\xfb\x94', b'ID3\x04\x00\x00\x00\x00\x20\x00xx']:
+        lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin()
+        if prefix:
+            fragment=C.create_string_buffer(prefix);assert lib.host_feed(fragment,len(prefix))==len(prefix)
+        lib.host_eof();dst=(C.c_int16*480)()
+        for _ in range(4):
+            if lib.nabo_radio_finished():break
+            assert lib.nabo_radio_read(dst,480,0)==0
+        assert lib.nabo_radio_finished(),'EOF before first frame never finished'
+        lib.nabo_radio_stop();lib.nabo_radio_finish();assert lib.host_clean()
     # Pausing fades the tail to zero and frees every pipeline allocation.
     lib.nabo_radio_select_station(0);assert lib.nabo_radio_begin()
     src=C.create_string_buffer(payload);lib.host_feed(src,len(payload));dst=(C.c_int16*480)()
