@@ -1,6 +1,10 @@
 # AI Passport · NABO FM × 小智
 
-ESP32-C3 / 8 MB FoloToy AI Passport 的电台专用固件，从牌桌 v1.6.0 分出。保留 NABO 小智动画和设备设置，电台采用午夜琥珀配色、霞鹜文楷台名、思源黑体小字，以及原 NABO 的 13 个 DJ 动作。
+让工牌，也有自己的电台时光。NABO 戴上耳机，当你的随身 DJ：听音乐、跟新闻，把喜欢的台留在收藏里，闲置时再变成一只北京时间小钟。
+
+![NABO FM 社区展示](docs/images/community-v1.0.0/gallery-preview.png)
+
+适用 ESP32-C3 / 8 MB FoloToy AI Passport；午夜琥珀界面、文楷台名与 13 个 NABO DJ 动作。展示图使用现有原画与生产代码绘制的界面，非实机照片。[查看完整海报与文案](docs/COMMUNITY_v1.0.0.md)。
 
 **首个公开版本 v1.0.0 · 体验版（2026-10-19）** 使用已在工牌运行的候选 03 精确应用；包含独立收藏列表、北京时间、1/3/5/10 分钟或关闭待机，以及提高响度的播放处理。[下载固件](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.0) · [首版说明](docs/RELEASE_FM_v1.0.0.md)。
 

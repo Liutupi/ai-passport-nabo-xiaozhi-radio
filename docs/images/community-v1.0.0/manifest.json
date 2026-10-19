@@ -1,0 +1,56 @@
+{
+  "version": "1.0.0",
+  "purpose": "AI Passport community launch gallery",
+  "dimensions": [
+    900,
+    1200
+  ],
+  "format": "SVG source + PNG publication exports",
+  "files": [
+    "01-cover.svg",
+    "02-listen.svg",
+    "03-favorites.svg",
+    "04-clock.svg",
+    "05-start.svg"
+  ],
+  "source_images": {
+    "design/nabo-radio/art/design/S2_on_air_cutout.png": "c04b9b5084e8d4b1fa5a1ba1b6fa5d978f0e16566c8f14c40440d96758a0c6f8",
+    "docs/images/radio/playing.png": "f110eac25be7ce27ef4f4df64a749157afdc7c5343151aefddb2b4f7dca389ea",
+    "docs/images/radio/favorites-direct.png": "d346548b9cfe180c7a2b3fc638e3f76f31b9c5bf242236bae39b678706c3bec5",
+    "docs/images/radio/clock.png": "47f1e60969a4752705dc5388f89a8317eb20e68b15a6de2f1f1cfadcc0984d20"
+  },
+  "font_sources": {
+    "sans": "design/nabo-radio/fonts/SourceHanSansSC-Normal.otf",
+    "title": "design/nabo-radio/fonts/LXGWWenKai-Regular.ttf",
+    "bold": "design/nabo-radio/prototype/fonts/sans_bold.woff2"
+  },
+  "provenance": "Deterministic vector layout and outlined exact copy using existing NABO artwork and production-code host UI previews. No device photos; no invented UI; development/design assisted by AI.",
+  "firmware_change": false,
+  "exports": [
+    {
+      "file": "01-cover.png",
+      "bytes": 605754,
+      "sha256": "436cf1944dbb54dce52ec6c05566cc268930714102ba13dbafafc89daf94d77b"
+    },
+    {
+      "file": "02-listen.png",
+      "bytes": 194479,
+      "sha256": "b1e7494fdfe74b74832f81e24d88e01014db5936df094f830691a80d2ad59428"
+    },
+    {
+      "file": "03-favorites.png",
+      "bytes": 130010,
+      "sha256": "a97d38bb29c92ce58c13fe51c7b250662fed0dbfc067d6b4dcefef8be3ad2e6a"
+    },
+    {
+      "file": "04-clock.png",
+      "bytes": 117325,
+      "sha256": "84ede38b3634302a852c62fa69d73567f1644ee5ddef09e0bb260c9b209ad65f"
+    },
+    {
+      "file": "05-start.png",
+      "bytes": 509295,
+      "sha256": "e7d0a50abb65380fca4f26ff69bd89b5ee5ad7dec835a652bfd77d3db76bfe40"
+    }
+  ]
+}

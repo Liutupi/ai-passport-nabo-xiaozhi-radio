@@ -3,6 +3,17 @@
 先读本文件，再读 `docs/HANDOFF.md`、`AGENTS.md` 和 `xiaozhi-esp32/AGENTS.md`。最新发布与设备身份见下节；更早的候选记录保留用于追溯。
 
 
+
+## 2026-10-19 v1.0.0 已公开发布；社区展示优化已提交
+
+- GitHub 仓库已按用户明确同意改为 **PUBLIC**，main 已更新；首版体验 Release：<https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.0>，标记 pre-release。标签源码提交 `2767690086287eeeb2b0cc1e7c428b6f171a72ec`。
+- 四个公开附件：完整 BIN（7,213,881 B）、分区 ZIP（5,976,665 B）、manifest、SHA256SUMS。四个 GitHub 服务端 SHA256 均与本地一致。完整 BIN SHA256 `c8096177a4b99a3199bb4dcf2f36a7c428ce8e11c0f5aa0e6ea394f58730dbad`，应用仍为精确 03；本轮没有操作设备。
+- 社区新作品 **1423 / NABO FM · 工牌收音机** 已提交。用户又要求优化图片与介绍，已用五张 900×1200 原创矢量排版海报替换直接截图，并重写中英文简介，重新提交审核。固件沿用已上传的 v1.0.0。审核通过前不能称公开上线。
+- 本轮用户已明确同意社区协议、发布相关权利声明及平台必要的非独占免费许可。未生成或分享社区授权码。公开素材是 NABO 原画及宿主界面预览，不是工牌照片；未上传 NVS、备份或原始日志。
+- 展示文案 `docs/COMMUNITY_v1.0.0.md`；海报 PNG/SVG 与来源校验 `docs/images/community-v1.0.0/`；可编辑排版脚本 `tools/render_community_posters.py`。公开下载包和固件镜像不因宣传图更新而替换。
+- 私有发布回执 `private/publication/v1.0.0/receipt.json`。对应 ELF/MAP/配置等仍在封存候选 03 目录。AAC、失效台源、长播等已知边界不变。
+
+
 ## 2026-10-19 首版公开发布准备：main 恢复精确 03
 
 用户已授权更新 GitHub、发布首版固件及社区作品，并明确同意仓库由私有改为公开（含源码、美术及提交历史）。发行版本为 **NABO FM v1.0.0 首版体验固件**，使用封存的候选 03 应用，不重新构建、不再次刷设备。
