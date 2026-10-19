@@ -48,6 +48,7 @@ static bool s_inited;
 static StreamBufferHandle_t s_ring;
 static size_t s_ring_bytes;
 static TaskHandle_t s_network;
+static atomic_bool s_network_ready;
 static atomic_uint s_retry_at;
 static int64_t s_sleep_end;
 static unsigned s_audio_generation, s_retry_delay = 1, s_tail;
@@ -393,6 +394,10 @@ static esp_err_t on_http(esp_http_client_event_t* ev) {
     return ESP_OK;
 }
 static void network_worker(void* arg) {
+    // The owner reserves this task's contiguous stack before selecting a ring
+    // size. It publishes the completed pipeline before this task touches it.
+    while (!atomic_load_explicit(&s_network_ready, memory_order_acquire))
+        vTaskDelay(1);
     unsigned gen = (unsigned)(uintptr_t)arg;
     char url[384];
     nrf_station_t station;
@@ -497,13 +502,18 @@ bool nabo_radio_begin(void) {
             goto failed;
     } else if (!nabo_radio_decoder_init(&s_decode->mp3))
         goto failed;
+    stage = "network task";
+    atomic_store(&s_network_ready, false);
+    if (xTaskCreate(network_worker, "fm_network", 8192, (void*)(uintptr_t)s_audio_generation, 4,
+                    &s_network) != pdPASS)
+        goto failed;
     // Voice task teardown and the animated view leave fragmented C3 SRAM.
-    // Allocate codec workspaces first; reserve room for the network task and
-    // HTTP/I2S allocations instead of consuming every remaining byte in a ring.
+    // Allocate codec workspaces and the contiguous network stack first; leave
+    // room for HTTP/I2S instead of consuming every remaining byte in a ring.
     stage = "compressed buffer";
     for (size_t bytes = COMPRESSED_BYTES; bytes >= MIN_COMPRESSED_BYTES; bytes /= 2) {
 #ifndef NRF_ENGINE_HOST
-        if (esp_get_free_heap_size() < bytes + 16 * 1024)
+        if (esp_get_free_heap_size() < bytes + 8 * 1024)
             continue;
 #endif
         s_ring = xStreamBufferCreate(bytes, 1);
@@ -518,13 +528,7 @@ bool nabo_radio_begin(void) {
     atomic_store(&s_active, true);
     s_tail = 0;
     s_last = 0;
-    stage = "network task";
-    if (xTaskCreate(network_worker, "fm_network", 8192, (void*)(uintptr_t)s_audio_generation, 4,
-                    &s_network) != pdPASS) {
-        atomic_store(&s_done, true);
-        atomic_store(&s_active, false);
-        goto failed;
-    }
+    atomic_store_explicit(&s_network_ready, true, memory_order_release);
 #ifndef NRF_ENGINE_HOST
     ESP_LOGI(TAG, "pipeline ready: ring=%u heap=%u largest=%u", (unsigned)s_ring_bytes,
              (unsigned)esp_get_free_heap_size(),
@@ -539,6 +543,13 @@ failed:
 #else
     (void)stage;
 #endif
+    if (s_network) {
+        vTaskDelete(s_network);
+        s_network = NULL;
+    }
+    atomic_store(&s_network_ready, false);
+    atomic_store(&s_done, true);
+    atomic_store(&s_active, false);
     if (s_decode) {
         nabo_radio_decoder_free(&s_decode->mp3);
         if (s_decode->aac)
@@ -723,6 +734,7 @@ void nabo_radio_finish(void) {
         vTaskDelete(s_network);
         s_network = NULL;
     }
+    atomic_store(&s_network_ready, false);
     if (s_ring) {
         vStreamBufferDelete(s_ring);
         s_ring = NULL;
