@@ -1,5 +1,24 @@
 # 维护交接
 
+## 当前交接状态（NABO FM 电台版，开发中）
+
+本仓库从牌桌版 v1.6.0（`2de454a`）分出，目标是《NABO FM》电台版。设计、美术规格、电台表和交互原型在设计仓库 `nabo-radio/`（`DESIGN.md`、`ART_BRIEF.md`、`catalog/`、`prototype/`）。
+
+已完成（`2008f4e`）：
+- 删除牌桌、谁是卧底、跳一跳及其素材、测试和生成器；`nabo_dice_render.c` 随牌桌一起删除。
+- 从 `2b59ce8^` 取回 v1.2 电台：`nabo_radio*.c/h`、Helix MP3（`helix/`，RPSL/RCSL 许可原样保留）、`nabo_helix_buffers.c` 及其宿主测试。作为可编译起点，界面暂用旧的文字菜单。
+- 工具菜单：返回 NABO / 网络电台 / 更多设置；语音“打开电台 / 网络电台 / 收音机”，MCP `self.apps.open` 的 `radio`。
+- 宿主测试全部通过（`python tools/run_tests.py`）。
+
+尚未完成：新电台界面（直绘，参照牌桌的显示列表 + 脏矩形）、NABO DJ 精灵、新音频链路（压缩数据缓冲、按台采样率 2:1 半带抽取、淡入淡出、限幅、响度均衡）、`esp_audio_codec` MP3/AAC、电台表放进资源分区、设备侧 MCP 电台工具。**本仓库尚未在 ESP-IDF 下编译，也未上机。**
+
+实测要点（2026-10-19，用户网络）：蜻蜓 64k 流为 MP3 立体声，采样率 44.1 / 48 / 32 kHz 混合；流开头落在帧中间；`lhttp.qtfm.cn` 允许跨域读取，可在浏览器里做帧头校验。
+
+---
+
+以下为牌桌版的交接记录，涉及显示争用、内存和音频所有权的修复对电台版同样适用。
+
+
 ## 当前交接状态
 
 当前版本为 **v1.6.0 谁是卧底版**：复用现成实机验证应用，3,975,984 字节，SHA256 `de9ff6def9c9e49464d77607aca6a53d4e162f8da387dc2e0f379106101d7327`。资源 SHA256 `b7230904f977912bdb4b31b21bb47ad105c7e49e4a2f7a162664ba8c43107785`，bootloader、分区表和资源与 v1.5.0 相同。新增 `nabo_table_uc.c`（3–8 人规则）、`nabo_table_scene_uc.c`（画面）和 `nabo_uc_words.c/.h`（264 组词库），原型同步至 `game-art/table/prototype/undercover.js`；词库来源为 `game-art/table/undercover/words.txt`，生成器 `tools/generate_uc_words.py`。本版删除节奏回声固件与相关测试，勿将历史文档中的节奏入口当作本版功能。
