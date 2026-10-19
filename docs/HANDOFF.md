@@ -4,6 +4,8 @@
 
 从 Claude 的 `ca25669` bundle 恢复到独立电台仓库，设计原件仍在同级 `nabo-radio/HANDOFF.md`。以下是新增软件检查点，尚未刷机或正式发布。
 
+构建源码 `3d441b50ef32ee6912133aaf2964fa68db43d68c`（分支 `codex/fm-integration`）。应用 3478912 B，资源 3019577 B；余量分别 649856 B / 126151 B。SHA256 与验证边界见 `validation/radio-dev-2026-10-19.json`。
+
 - `radio_assets/`：NABO 13 动作 247 帧、1,105 台 NFC1 台表、文楷 23 px / 思源黑体 12 px 子集、字标、时钟和道具；输出记录在 `radio-assets.json`。
 - `nabo_radio_sprites.c`：有界解析 NFM1；第零帧清空、顺序差分、随机跳帧重放；宿主与 Python 解码逐像素一致。
 - `nabo_radio_gfx.c` / `nabo_radio_view.cc`：单条 8 行 DMA 缓冲、条带哈希跳过未变画面；索引缓存约 22 KiB，仅电台页存在；保留 `panel_borrowed`。

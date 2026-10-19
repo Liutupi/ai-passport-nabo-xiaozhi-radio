@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-19",
+  "channel": "development",
+  "source_commit": "3d441b50ef32ee6912133aaf2964fa68db43d68c",
+  "baseline_commit": "ca25669",
+  "board": "ai-passport-nabo",
+  "chip": "esp32c3",
+  "esp_idf": "6.0.2",
+  "build_passed": true,
+  "images": {
+    "app": {
+      "bytes": 3478912,
+      "sha256": "68f8f60d4fec1d9a8dcc2eefc03034a148abc72fd1febce5fb0577eef52f4ca0",
+      "partition_limit": 4128768,
+      "remaining_bytes": 649856
+    },
+    "assets": {
+      "bytes": 3019577,
+      "sha256": "0de5c9d3b8f824730b169549463b06d00bbce27814daf1d633ac3b6a068dbb3f",
+      "partition_limit": 3145728,
+      "remaining_bytes": 126151
+    },
+    "bootloader": {
+      "bytes": 14976,
+      "sha256": "886f5ef7541c3e6c93914cf932f211b34f1693a793952bf0b46a392b99cecf0a",
+      "partition_limit": 32768,
+      "remaining_bytes": 17792
+    },
+    "partition_table": {
+      "bytes": 3072,
+      "sha256": "feb7ea496adb63179bf197f87431e6c8ddade47ce0228c1e671ef01421effc0c",
+      "partition_limit": 4096,
+      "remaining_bytes": 1024
+    }
+  },
+  "asset_embedding_verified": true,
+  "xiaozhi_common_font_retained": true,
+  "host_tests": {
+    "full_suite_passed": true,
+    "full_suite_source_commit": "1794e4591bb9c24f24da52462fa9714501ab9179",
+    "asset_placeholder_fix_rechecked": true,
+    "upstream": 82,
+    "package": 7,
+    "speech_cases": 55,
+    "dsp_checks": 14,
+    "legacy_radio": 48,
+    "sprite_actions": 13,
+    "sprite_frames": 247,
+    "catalog_stations": 1105,
+    "key_scenarios": 6,
+    "audio_exact_samples": 54720,
+    "audio_read_sizes": [
+      1,
+      97,
+      320,
+      441,
+      480
+    ],
+    "host_clean_cycles": 50,
+    "production_scene_harness": true
+  },
+  "hardware_validation": "not_performed",
+  "serial_port_opened": false,
+  "device_flashed": false,
+  "github_published": false,
+  "not_verified": [
+    "live radio streams",
+    "AAC hardware compatibility",
+    "speaker audio quality",
+    "physical keys",
+    "physical sleep/wake",
+    "free heap and stack watermarks",
+    "one hour playback",
+    "50 physical station switches",
+    "XiaoZhi conversation after exit"
+  ],
+  "not_implemented": [
+    "IP automatic region",
+    "online catalog update",
+    "simultaneous radio and XiaoZhi with ducking",
+    "common-font fallback",
+    "HLS",
+    "ICY titles",
+    "play_url/queue",
+    "offline ambient sounds",
+    "DLNA"
+  ]
+}
