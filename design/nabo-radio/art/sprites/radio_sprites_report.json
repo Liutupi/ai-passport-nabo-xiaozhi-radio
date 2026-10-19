@@ -1,0 +1,161 @@
+{
+ "bytes": 1348259,
+ "actions": {
+  "idle_off": {
+   "frames": 17,
+   "fps": 8,
+   "loop": true,
+   "source_frames_12fps": [
+    0,
+    24
+   ],
+   "colors": 63,
+   "key_bytes": 7809,
+   "delta_bytes_avg": 1128
+  },
+  "phones_on": {
+   "frames": 20,
+   "fps": 8,
+   "loop": false,
+   "source_frames_12fps": [
+    1,
+    60
+   ],
+   "colors": 63,
+   "key_bytes": 7793,
+   "delta_bytes_avg": 5543
+  },
+  "phones_off": {
+   "frames": 20,
+   "fps": 8,
+   "loop": false,
+   "source_frames_12fps": [
+    2,
+    57
+   ],
+   "colors": 63,
+   "key_bytes": 9119,
+   "delta_bytes_avg": 5749
+  },
+  "tune": {
+   "frames": 20,
+   "fps": 8,
+   "loop": true,
+   "source_frames_12fps": [
+    0,
+    71
+   ],
+   "colors": 63,
+   "key_bytes": 9076,
+   "delta_bytes_avg": 5179
+  },
+  "groove": {
+   "frames": 18,
+   "fps": 8,
+   "loop": true,
+   "source_frames_12fps": [
+    0,
+    26
+   ],
+   "colors": 63,
+   "key_bytes": 9189,
+   "delta_bytes_avg": 6297
+  },
+  "listen": {
+   "frames": 20,
+   "fps": 8,
+   "loop": true,
+   "source_frames_12fps": [
+    2,
+    61
+   ],
+   "colors": 63,
+   "key_bytes": 9218,
+   "delta_bytes_avg": 3548
+  },
+  "sip": {
+   "frames": 20,
+   "fps": 8,
+   "loop": false,
+   "source_frames_12fps": [
+    0,
+    70
+   ],
+   "colors": 63,
+   "key_bytes": 9052,
+   "delta_bytes_avg": 5297
+  },
+  "love": {
+   "frames": 20,
+   "fps": 8,
+   "loop": false,
+   "source_frames_12fps": [
+    1,
+    67
+   ],
+   "colors": 63,
+   "key_bytes": 9213,
+   "delta_bytes_avg": 5893
+  },
+  "oops": {
+   "frames": 20,
+   "fps": 8,
+   "loop": false,
+   "source_frames_12fps": [
+    21,
+    57
+   ],
+   "colors": 63,
+   "key_bytes": 9288,
+   "delta_bytes_avg": 5337
+  },
+  "doze": {
+   "frames": 20,
+   "fps": 8,
+   "loop": true,
+   "source_frames_12fps": [
+    13,
+    47
+   ],
+   "colors": 63,
+   "key_bytes": 8982,
+   "delta_bytes_avg": 4879
+  },
+  "wave": {
+   "frames": 20,
+   "fps": 8,
+   "loop": false,
+   "source_frames_12fps": [
+    7,
+    61
+   ],
+   "colors": 63,
+   "key_bytes": 7841,
+   "delta_bytes_avg": 5077
+  },
+  "search": {
+   "frames": 20,
+   "fps": 8,
+   "loop": true,
+   "source_frames_12fps": [
+    5,
+    69
+   ],
+   "colors": 63,
+   "key_bytes": 7784,
+   "delta_bytes_avg": 4167
+  },
+  "sing": {
+   "frames": 12,
+   "fps": 8,
+   "loop": true,
+   "source_frames_12fps": [
+    49,
+    66
+   ],
+   "colors": 63,
+   "key_bytes": 9394,
+   "delta_bytes_avg": 6805
+  }
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "date": "2026-10-19",
+ "network": "用户电脑（中国大陆家庭宽带），内置浏览器",
+ "method": "fetch 读取流的前 40 KB，从帧同步字开始按帧长连续解析 8 个合法 MP3/ADTS 帧头才算通过；失败 1.5 秒后重试一次（404 不重试）",
+ "tested": 1118,
+ "passed": 1073,
+ "sample_rates": {"44100": 543, "48000": 489, "32000": 33, "22050": 8},
+ "first_byte_ms": {"p50": 1070, "p90": 2079, "max": 3710},
+ "starts_mid_frame": 1046,
+ "dead_http404": {
+  "qingting": [3977, 4998, 5062, 20091, 20178, 5022484, 5022491, 5022526, 5022622, 5022699, 15318182, 15318191, 15318285, 15318398, 15318519, 15318571, 15318668, 20211585, 20211678, 20211693, 20212206, 20212320, 20212393, 20212410, 20500014, 20500021, 20500029, 20500035, 20500158, 20500161, 20500169, 20500175, 20500180, 20500181, 20500206, 21247],
+  "url": ["https://playerservices.streamtheworld.com/api/livestream-redirect/LANGKAWI_FM.mp3"]
+ },
+ "browser_cors_blocked_not_dead": [
+  "https://playerservices.streamtheworld.com/api/livestream-redirect/GOLD905_SC",
+  "https://playerservices.streamtheworld.com/api/livestream-redirect/CLASS95.mp3",
+  "https://playerservices.streamtheworld.com/api/livestream-redirect/LOVE972FM_SC",
+  "https://playerservices.streamtheworld.com/api/livestream-redirect/ONE_FM_913_SC",
+  "https://playerservices.streamtheworld.com/api/livestream-redirect/RIA897FM.mp3",
+  "https://playerservices.streamtheworld.com/api/livestream-redirect/SYMPHONY924.mp3",
+  "https://playerservices.streamtheworld.com/api/livestream-redirect/WARNA942FM_SC",
+  "https://playerservices.streamtheworld.com/api/livestream-redirect/YES933.mp3"
+ ],
+ "not_tested_http_only": "香港电台 6 台、马来西亚 Astro 17 台（AAC）、AsiaFM 一个 http 地址：浏览器 https 页面不能读 http 流，需上机实测",
+ "codec_corrections": {"https://live.fm891.net/96k.aac": "实为 MP3 48 kHz 立体声 96 kbps"}
+}

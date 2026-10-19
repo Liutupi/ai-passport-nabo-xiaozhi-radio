@@ -1,0 +1,36 @@
+{
+  "release_version": "0.2.6",
+  "board": "ai-passport-nabo",
+  "chip": "esp32c3",
+  "flash_bytes": 8388608,
+  "images": [
+    {
+      "file": "bootloader.bin",
+      "offset": "0x0",
+      "bytes": 14976,
+      "sha256": "886f5ef7541c3e6c93914cf932f211b34f1693a793952bf0b46a392b99cecf0a"
+    },
+    {
+      "file": "partition-table.bin",
+      "offset": "0x8000",
+      "bytes": 3072,
+      "sha256": "feb7ea496adb63179bf197f87431e6c8ddade47ce0228c1e671ef01421effc0c"
+    },
+    {
+      "file": "xiaozhi.bin",
+      "offset": "0x10000",
+      "bytes": 3478512,
+      "sha256": "a948b6e8ee75a1a4102373f7338f49658e32e330ef2841d73ca479975791abc5"
+    },
+    {
+      "file": "assets.bin",
+      "offset": "0x400000",
+      "bytes": 3019577,
+      "sha256": "0de5c9d3b8f824730b169549463b06d00bbce27814daf1d633ac3b6a068dbb3f"
+    }
+  ],
+  "private_nvs_or_device_backup_included": false,
+  "channel": "development",
+  "hardware_validated": false,
+  "source_commit": "e84fbc8dc078d966cdeddce544dfc0418f6c7c76"
+}

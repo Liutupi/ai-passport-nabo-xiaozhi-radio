@@ -16,21 +16,21 @@ python tools/render_radio_preview.py
 
 ## 重新制作资源
 
-`tools/pack_fm_assets.py` 需要设计目录 `nabo-radio`（台表、已打包动画和道具）及外部字体：
+`tools/pack_fm_assets.py` 使用已归档的设计目录及完整源字体：
 
 ```powershell
-python tools/pack_fm_assets.py --design ../nabo-radio --wenkai /path/LXGWWenKai-Regular.ttf --sans /path/SourceHanSansSC-Normal.otf
+python tools/pack_fm_assets.py --design design/nabo-radio --wenkai design/nabo-radio/fonts/LXGWWenKai-Regular.ttf --sans design/nabo-radio/fonts/SourceHanSansSC-Normal.otf
 ```
 
 输出 NFC1 台表、NFM1 精灵、NFF1 4-bit 字体和 NFP1 道具，均直接从资源分区读取。字体名、SHA256、字形数和输出大小记录在 `radio-assets.json`。二进制变化会触发资源镜像重建；升级必须同时写 app + assets。
 
-动画打包器和原视频暂留在独立设计目录。字体覆盖现有台名、地区和界面；新增缺字当前显示问号，回退到通用字库尚未接入。小智 common 20 px 通用字库保留，不能为腾空间删掉。
+动画打包器和原视频已归档于 `design/nabo-radio/`。字体覆盖现有台名、地区和界面；新增缺字当前显示问号，回退到通用字库尚未接入。小智 common 20 px 通用字库保留，不能为腾空间删掉。
 
 ## 本地开发包
 
 ```powershell
-python tools/package_release.py --version 0.2.0 --build xiaozhi-esp32/build-release
-python tools/flash_release.py --package dist/ai-passport-nabo-xiaozhi-radio-v0.2.0 --mode inspect
+python tools/package_release.py --version 0.2.6 --build xiaozhi-esp32/build-release
+python tools/flash_release.py --package dist/ai-passport-nabo-xiaozhi-radio-v0.2.6 --mode inspect
 ```
 
 开发包含四个构建输出、文档、校验和、OFL 字体许可及 Helix 对应源码/原始许可。它不是经过设备验收的正式 Release，不含对话、配网、NVS 或设备备份。刷写前需核对连接设备、MAC 和当前 bootloader/分区；候选构建不自动写入工牌。

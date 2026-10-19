@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "file": "NABO_FM_B_round3_art_pack.zip",
+  "file_size_bytes": 6955218,
+  "sha256": "702e430a13c6d38889c8a9d50cfe1da779c1c45eb57d1b68f868682bb841fe96",
+  "members": 40,
+  "crc_all_members_passed": true,
+  "animations_included": 0,
+  "source_videos_included": 0,
+  "new_props": 4,
+  "approved_sources_unchanged": true
+}

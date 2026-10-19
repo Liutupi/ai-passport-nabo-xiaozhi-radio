@@ -10,10 +10,12 @@
 #include <vector>
 using esp_lcd_panel_io_handle_t = void *;
 using esp_lcd_panel_handle_t = void *;
+#ifdef _WIN32
 inline tm *localtime_r(const time_t *t, tm *out) {
   localtime_s(out, t);
   return out;
 }
+#endif
 extern int64_t host_us;
 extern std::string host_assets;
 extern uint16_t host_lcd[240 * 320];

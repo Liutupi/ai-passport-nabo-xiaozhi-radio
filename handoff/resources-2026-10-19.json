@@ -1,0 +1,1222 @@
+{
+  "date": "2026-10-19",
+  "firmware_source_commit": "e84fbc8dc078d966cdeddce544dfc0418f6c7c76",
+  "source_design_files_copied": 187,
+  "source_design_images": 92,
+  "source_design_images_all_copied": true,
+  "excluded": "Device backups, credentials, dependency tarballs, raw logs and cloud-upload receipts remain local.",
+  "counts_by_suffix": {
+    ".py": 15,
+    ".md": 17,
+    ".json": 28,
+    ".zip": 1,
+    ".png": 117,
+    ".txt": 8,
+    ".ps1": 2,
+    ".bin": 14,
+    ".mp4": 14,
+    ".tsv": 1,
+    ".ttf": 1,
+    ".otf": 1,
+    ".b64": 8,
+    ".woff2": 5,
+    ".html": 2,
+    ".js": 1,
+    ".elf": 1,
+    ".map": 1,
+    ".gif": 1
+  },
+  "total_bytes": 160189624,
+  "files": [
+    {
+      "path": "design/nabo-radio/art/.library-transfer/round1-20261019/library_file_transfer.py",
+      "bytes": 11084,
+      "sha256": "5e1557817be17db06e2375f8c34ed83e948d520242e5ee4cb50a30c7a4c83378"
+    },
+    {
+      "path": "design/nabo-radio/art/.library-transfer/round1-20261019/library_hosted_apps.py",
+      "bytes": 12576,
+      "sha256": "97d029b097ace62b744c82dfde20ef6921ed543a33a771ecf6452bd655d11b59"
+    },
+    {
+      "path": "design/nabo-radio/art/.library-transfer/round1-20261019/library_upload.py",
+      "bytes": 44876,
+      "sha256": "5bc473dadefe1f68ee8797baaed19d6662642d0ea4bcba128fa12938faa0d767"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/ANIMATION_PROMPTS.md",
+      "bytes": 18070,
+      "sha256": "0925dc893bd65b9801505cf0d7cf2b71fe2846bd5733744bc32704d18264101c"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/IMAGEGEN_PROMPTS.json",
+      "bytes": 6061,
+      "sha256": "696ee5cde1211ed4fbe57d15e44be1c75256542af418f3fda078087ef1883fc2"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/NABO_FM_B_round3_art_pack.zip",
+      "bytes": 6955218,
+      "sha256": "702e430a13c6d38889c8a9d50cfe1da779c1c45eb57d1b68f868682bb841fe96"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/NEXT_ANIMATION_ASSETS.md",
+      "bytes": 1533,
+      "sha256": "0f756899d6a9a542979c38f0712d8f414e8f32a2e7e84f22f19cad83c4f1ff57"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/package_validation.json",
+      "bytes": 356,
+      "sha256": "57841c0f08606ee48972115775fa851be4778e8079354145b9a7fadc6526c1c2"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/README_ROUND3.md",
+      "bytes": 3194,
+      "sha256": "b835bc55cc89e01834d175e37e4484292e0ec824ba9e583cf82876634652d65b"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/delivery/round3_export_summary.json",
+      "bytes": 2472,
+      "sha256": "5802c92930c1faf6aae647ba540a967bdd76d849e9587b8762dfe7e8881b6125"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/delivery/round3_validation.json",
+      "bytes": 3337,
+      "sha256": "9b65d48fae41a193948d4f4123a8c6c58542a38d6164c239fff94a0b0c5ca5e2"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/manifest.json",
+      "bytes": 6752,
+      "sha256": "93f374f86182d3a4484a4eb6f1c9d4436468c9de59fc34e6cdc2b813133918aa"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/palette/radio.json",
+      "bytes": 1641,
+      "sha256": "74242892ebb28fc7047f7197a706f511609b5ecb914d995011bb11fc3b52cb3a"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/preview/props_radio.png",
+      "bytes": 44406,
+      "sha256": "c07fc8bc7ae7fb721e5abec13347c59210f937d51ec222366aa60b87b5fcb9b4"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/preview/props_radio_2x.png",
+      "bytes": 56198,
+      "sha256": "301f37c172f6085d2911b48c265598637ac7732b6acb70f91c4aaafcb0521be2"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/preview/props_radio_rgb565.png",
+      "bytes": 33142,
+      "sha256": "4510db8774c96e48029bd479d0f0ca794ef4fd26ddc22c73d0ce3d55e46923b8"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/preview/props_sheet.png",
+      "bytes": 104974,
+      "sha256": "a62b834a2d8e8673db1f716c73441fc968e067b77e425cf8d9ecfb27053c3ded"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/props/game/headphones.png",
+      "bytes": 2923,
+      "sha256": "40552ee78a87692584cc7f344d13d7a98984646f3ccc7350c2d1974219c5212a"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/props/game/mic.png",
+      "bytes": 2000,
+      "sha256": "4bf2cce3b0c660e708ef2de2cf5962efe58513d024da992fcd5f90be6dabf3ba"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/props/game/mug.png",
+      "bytes": 1283,
+      "sha256": "55fa9b3e829d83c87f1af303e9feb0b2e2277238550fd5ffa00771b6f8beb3a1"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/props/headphones.png",
+      "bytes": 22709,
+      "sha256": "6dfedd25de0dc89b6027d2a22100fb8d39fa349e5c522044f06c1f2e70919bf0"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/props/mic.png",
+      "bytes": 18650,
+      "sha256": "ef96192a07329d9f65821fafa083d5bd559e811ff64f691d8696855f042620e9"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/props/mug.png",
+      "bytes": 9309,
+      "sha256": "1a226a0de3903e4707df2b12c231ff6a15afb842d39c12d2d3849eb392b87964"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/props/nabo_head_24.png",
+      "bytes": 1412,
+      "sha256": "4cf68dd9eaff7ab6dd1a6a19fec743172a1fb63d3e4cd87d64490a9e7d2803bf"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/props/nabo_head_24_4x_nearest.png",
+      "bytes": 2100,
+      "sha256": "d274821899e7b0ad91a9f53e8ef5fbd4136333bf4013e4cb4af5ae28400214bb"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/review_v2/props/nabo_head_96.png",
+      "bytes": 12016,
+      "sha256": "8630f4e2651681065822c2f8a6cccb5206915796d502e88230b0fd8003825118"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/round3_export_summary.json",
+      "bytes": 2472,
+      "sha256": "5802c92930c1faf6aae647ba540a967bdd76d849e9587b8762dfe7e8881b6125"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/round3_validation.json",
+      "bytes": 3333,
+      "sha256": "e204cc340892f9a94af654204f2eb70c5ea9995ba95a609e75a2b2d0f781ed6e"
+    },
+    {
+      "path": "design/nabo-radio/art/delivery/SHA256SUMS_ROUND3.txt",
+      "bytes": 4108,
+      "sha256": "7225cf5e064353d381a24c1266e2e981408e04c005b4de7837b4c379a1ea0005"
+    },
+    {
+      "path": "design/nabo-radio/art/design/export_round1.ps1",
+      "bytes": 10242,
+      "sha256": "e5f098139742394a1c1508ac427d12d498293762782a6ee649a904b341efaeaa"
+    },
+    {
+      "path": "design/nabo-radio/art/design/export_round2.ps1",
+      "bytes": 6337,
+      "sha256": "62c7a2fe05213d6eb80cd7eab782ecbea578baea8b5bca865f6e5c8844db0bc9"
+    },
+    {
+      "path": "design/nabo-radio/art/design/headphone_palette_mask.png",
+      "bytes": 14274,
+      "sha256": "6f8e758c7176a634d7d34c8318b65bef192f6b8f3a6c5cb0765e4884e6a9610c"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_a.png",
+      "bytes": 869099,
+      "sha256": "7b7704203f61895ff537d1ba5486e615cb8c42d87d0f5b126ff135c20c774bf0"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_a_128.png",
+      "bytes": 30432,
+      "sha256": "d3b910dbb1db5ff354fe9ccfcdc5051e81960d888ef88acee2b12391a9e49452"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_a_128_4x.png",
+      "bytes": 44240,
+      "sha256": "e0af7d59a53061e5e7702a962d0bbbd14f1f64dc24ce21a71b951e620ffb178d"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_a_cutout.png",
+      "bytes": 868428,
+      "sha256": "05f3e06698acab81c08030f6bb85790ab52802876780c84ad802aab6de2a43a8"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_a_raw.png",
+      "bytes": 1603221,
+      "sha256": "151b3b4a1f8ebbc25bde7575143887d09ef0253372dfd3349e99de202e2cf6d9"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_b.png",
+      "bytes": 867965,
+      "sha256": "5032cb43ae26682c14b8bbd86f2f0a7e1bb7555e95785d66bdf484ce4af2edb0"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_b_128.png",
+      "bytes": 30426,
+      "sha256": "d87bfc2e3278f6536b163c867940347ccf63509a2fafe7aaeafa65334d54172a"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_b_128_4x.png",
+      "bytes": 44233,
+      "sha256": "a4ccbbd74d5d00a50fc72f7c218855eec710019865056e2763ac6fb39d936dd4"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_b_cutout.png",
+      "bytes": 867353,
+      "sha256": "5715ec8f9612b11b9f8b1da461db31ec8753f119789399587a3e48630f8d4cec"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_c.png",
+      "bytes": 853775,
+      "sha256": "28256a0613108b3c07927cbd182a3194c67ade8fe8ad357ca7bf67ecb7c05af5"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_c_128.png",
+      "bytes": 30329,
+      "sha256": "46752c3228e9d3bf68a7b04857703d135792772a60a5d1a8c807841c1c672bcb"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_c_128_4x.png",
+      "bytes": 44259,
+      "sha256": "fcabd4542da3664bcc428238ad5ccd6c75b393bcf316464395af2d7cc9864abe"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_c_cutout.png",
+      "bytes": 853223,
+      "sha256": "3a027222b7bb9e0213f06a01831d4d942a3603f0b2174735a97f3bf9845d58b5"
+    },
+    {
+      "path": "design/nabo-radio/art/design/phones_compare.png",
+      "bytes": 149625,
+      "sha256": "23ace9d0a31e6a48b4a25002fedeb8bf9e33f1b4cee9fe12690dba6be88670dd"
+    },
+    {
+      "path": "design/nabo-radio/art/design/PROMPT_ROUND2.txt",
+      "bytes": 1710,
+      "sha256": "fa73cc030e8309e0493bb9ef6578f5b3ad87e84fc80f400c5ed8ed85db550334"
+    },
+    {
+      "path": "design/nabo-radio/art/design/QA_ROUND1.md",
+      "bytes": 1656,
+      "sha256": "42283f3c635f7830e53dc0f2c4cef12bd25ffd9719a77d5e46a58569fd064832"
+    },
+    {
+      "path": "design/nabo-radio/art/design/QA_ROUND2.md",
+      "bytes": 1596,
+      "sha256": "5208e90f5f86f2b49d6942077d992b25692a36d1152ae0992c80dac370fb6c09"
+    },
+    {
+      "path": "design/nabo-radio/art/design/README.md",
+      "bytes": 6069,
+      "sha256": "6f08c3d2d3807a01318e9ba933bd4c5fb3396ff849aff532098631e5f77fc2dd"
+    },
+    {
+      "path": "design/nabo-radio/art/design/README_ROUND2.md",
+      "bytes": 3880,
+      "sha256": "ab6563194a603d8f433f71349c34b98101e860c4e904b1fdbeec686119a40e5e"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/headphone_palette_mask.png",
+      "bytes": 14270,
+      "sha256": "965d9105f8f5a7aac573a27f8b0c2b06149844980c43ecaf0cb61e3625f5a9f1"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_a.png",
+      "bytes": 860191,
+      "sha256": "fa7f144c1367e502b580512085c3471e650d1427eb62b58e65812e0b27f1b7ab"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_a_128.png",
+      "bytes": 30601,
+      "sha256": "4b042bd27339c6e86896c86880de8c68c713b6e42bac68d9e39436ce11f53716"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_a_128_4x.png",
+      "bytes": 44288,
+      "sha256": "31ff5ffc82cee75f3232c2e57a9faf5b3afce7bc3b7b139151451bbbca340225"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_a_cutout.png",
+      "bytes": 860500,
+      "sha256": "57b66b4ea2a824045c447fa7bd5c9a3d387d84a50d2c0b247c784ea4f3e9cf50"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_b.png",
+      "bytes": 866010,
+      "sha256": "80f5adc1ffc49276acacd1650fe2ac45524ed49599efd15fcaa96ff9cf4c46ae"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_b_128.png",
+      "bytes": 30580,
+      "sha256": "73759acbd0197a0055539a47b96f5552cf3574dba081746920431d165d7e93fb"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_b_128_4x.png",
+      "bytes": 44272,
+      "sha256": "9eea7817d4d8846f35cb87dca2adadafb6068eb8d6b883246ff7c077fc2608f1"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_b_cutout.png",
+      "bytes": 866114,
+      "sha256": "9c8284147566b10def63da4ea523cbf7e88113a25a5ea4fa4a6a9291df6bfb7a"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_c.png",
+      "bytes": 859213,
+      "sha256": "361e8fa2fcd5ea9034bc9506010c6adfda59efad659df230f6de8dce1e006455"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_c_128.png",
+      "bytes": 30671,
+      "sha256": "76ab1bcc0f0b92ad770da1d35fc4c706d1907cbc2b536860cf339cc5a80c9502"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_c_128_4x.png",
+      "bytes": 44544,
+      "sha256": "b80908d404a070e09078142d110835109d28750f9a290d449acdc29a4ea56b29"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_c_cutout.png",
+      "bytes": 859637,
+      "sha256": "e21829ef546800e6c6e83a3d749b3b1612abd713eea5bd2b6c3a2262bbe31019"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/phones_compare.png",
+      "bytes": 152179,
+      "sha256": "f6507706303a49697c7184164e37481abbc8cb178ecfa7203caa2abf5694aba5"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v1/round1_metrics.json",
+      "bytes": 1346,
+      "sha256": "8e8c1008974ecb50a42c5c8f1160eba61b2a2dd120dd953dcfb732da7ed99462"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/headphone_palette_mask.png",
+      "bytes": 14274,
+      "sha256": "6f8e758c7176a634d7d34c8318b65bef192f6b8f3a6c5cb0765e4884e6a9610c"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_a.png",
+      "bytes": 869082,
+      "sha256": "e0a92ecdebc2514925293e8d82dac66783deafd4b219993a4446d556d09457f3"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_a_128.png",
+      "bytes": 30431,
+      "sha256": "ac26f5197077bdeba706aeebe5c77460b17dfd18c915d2de5c713a5c301ac2fe"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_a_128_4x.png",
+      "bytes": 44239,
+      "sha256": "49c6fb4107923e09509fd454ad4f253cd3d2f7f21fb5395e5cd1e4f6ae9d0a61"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_a_cutout.png",
+      "bytes": 868615,
+      "sha256": "f6b63382bb4a77221ae01586cde7e78e37afa1bbf37c6e66255344a800996449"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_b.png",
+      "bytes": 867945,
+      "sha256": "d940a7b62b59e2f1db0847345297ebab8eef9885565dd6938b3e286917c66b4a"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_b_128.png",
+      "bytes": 30425,
+      "sha256": "2db0e19b9e653d84873d2fb79e9db4b73d21b5af27eac69f20bb12af8243f187"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_b_128_4x.png",
+      "bytes": 44231,
+      "sha256": "24cc22878149a72fba1a34f4a5776442532b5f9447643acf20aafc166f5a357d"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_b_cutout.png",
+      "bytes": 867608,
+      "sha256": "357aa8ff16edc908e777074e59e94af01c0f87bdd0da289ab272597398dc2a87"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_c.png",
+      "bytes": 853766,
+      "sha256": "7fcceef3ba51927d2ba03e371667490148fb6bf24d14ce74258bd949adfeb19d"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_c_128.png",
+      "bytes": 30331,
+      "sha256": "ab044170749b89611dabeffd89aa33ac2162e37861ff095ec0f77901a343b0b5"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_c_128_4x.png",
+      "bytes": 44261,
+      "sha256": "91a3f316256227d32a81ead09e8c47215ae3cd75dec1cdb2d8f4e77ae73fc5e1"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_c_cutout.png",
+      "bytes": 853388,
+      "sha256": "a3faa45a21d36da42b617138259b9132a859d1392473f99a344dbce2ad54f8cc"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/phones_compare.png",
+      "bytes": 149582,
+      "sha256": "71e7fcf37ee0f1767176c8f334350547e24d777059907cf64ee0e2b13ba13562"
+    },
+    {
+      "path": "design/nabo-radio/art/design/review_v2/round1_metrics.json",
+      "bytes": 1344,
+      "sha256": "cd75db1e3540bc8850c7ef2a3a9f85cc3afe552e57beede3f66d05cbec8bd68f"
+    },
+    {
+      "path": "design/nabo-radio/art/design/round1_metrics.json",
+      "bytes": 1338,
+      "sha256": "b0fa395e38264cef9a10c33eb3fa27ee8e3e3b5ebb5b6361a341775a473daee7"
+    },
+    {
+      "path": "design/nabo-radio/art/design/round1_validation.json",
+      "bytes": 2827,
+      "sha256": "f92ab7ff43c28a840c69fd1b7b702287efc4afb0546d6fb3cf1e693a174f0b6c"
+    },
+    {
+      "path": "design/nabo-radio/art/design/round2_export_metrics.json",
+      "bytes": 255,
+      "sha256": "cd9d4a3f28e81ee560a6185aea2114e4a7f706e2976a9d913163b0ad5952d47c"
+    },
+    {
+      "path": "design/nabo-radio/art/design/round2_validation.json",
+      "bytes": 3220,
+      "sha256": "bca0c09a0eac02b20e9071ec967a389f7056f2709dbc489293f67b6f66870a2a"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S1_edit_mask.png",
+      "bytes": 11171,
+      "sha256": "9252fefd3007b499545b630f2a796b6922b5d765ed6bbf54cc7b1d66451a5e1a"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S1_off_air.png",
+      "bytes": 737119,
+      "sha256": "a7219b908d6885924f19912b56fd1e5d8ccd3f0a888ee06e02851747041fae3a"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S1_off_air_128.png",
+      "bytes": 25568,
+      "sha256": "3fda9249f1b2a58d33522ed06f0c408e55b116acb6af5a7475255b35d1e89d02"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S1_off_air_128_4x.png",
+      "bytes": 37910,
+      "sha256": "b7a7b24da3e7b47a581b32c6ea3ce183b879c8c29f32b350664bc994457091b9"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S1_off_air_cutout.png",
+      "bytes": 738797,
+      "sha256": "994c72c1bf861170870a41fdfa825cfcab27e22588edffa82353e291c882923d"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S1_off_air_raw.png",
+      "bytes": 1575806,
+      "sha256": "01db74ca6782d5ab024c28a1bee132c1f2b5aede45d78c3c5b19b52d9a60a4b9"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S2_on_air.png",
+      "bytes": 867965,
+      "sha256": "5032cb43ae26682c14b8bbd86f2f0a7e1bb7555e95785d66bdf484ce4af2edb0"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S2_on_air_128.png",
+      "bytes": 30426,
+      "sha256": "d87bfc2e3278f6536b163c867940347ccf63509a2fafe7aaeafa65334d54172a"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S2_on_air_128_4x.png",
+      "bytes": 44233,
+      "sha256": "a4ccbbd74d5d00a50fc72f7c218855eec710019865056e2763ac6fb39d936dd4"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S2_on_air_cutout.png",
+      "bytes": 867340,
+      "sha256": "c04b9b5084e8d4b1fa5a1ba1b6fa5d978f0e16566c8f14c40440d96758a0c6f8"
+    },
+    {
+      "path": "design/nabo-radio/art/design/S_check.png",
+      "bytes": 122167,
+      "sha256": "dd948cc6fa85b0b46a7fd6e09152f4e8474e97182ec57f3b984191ccaa5c6847"
+    },
+    {
+      "path": "design/nabo-radio/art/design/SHA256SUMS.txt",
+      "bytes": 326,
+      "sha256": "f7d00a33e48755f7734ecf43613252b774092c34c878be9fd991340b7817bafc"
+    },
+    {
+      "path": "design/nabo-radio/art/design/SHA256SUMS_ROUND2.txt",
+      "bytes": 242,
+      "sha256": "647ffec67c40f75fd987fe54efce06b9fed6c352789bbed9902feb8021a5b734"
+    },
+    {
+      "path": "design/nabo-radio/art/design/validate_round1.py",
+      "bytes": 4179,
+      "sha256": "87e5e29e58847120a7e7bd7d630d91a8ccf98c9819d136d4f7dbca6bda30e574"
+    },
+    {
+      "path": "design/nabo-radio/art/design/validate_round2.py",
+      "bytes": 5048,
+      "sha256": "68f9a717b2bc90ec52751e7be1b26500f46c05d01ed48e9e8d6df11deb2eeae3"
+    },
+    {
+      "path": "design/nabo-radio/art/manifest.json",
+      "bytes": 6752,
+      "sha256": "93f374f86182d3a4484a4eb6f1c9d4436468c9de59fc34e6cdc2b813133918aa"
+    },
+    {
+      "path": "design/nabo-radio/art/palette/radio.json",
+      "bytes": 1641,
+      "sha256": "74242892ebb28fc7047f7197a706f511609b5ecb914d995011bb11fc3b52cb3a"
+    },
+    {
+      "path": "design/nabo-radio/art/palette/radio_final.json",
+      "bytes": 3341,
+      "sha256": "7e12b747564f0695ce80e94a7887ff19cbe2a4e917f03e41ce5bf2c9f01562cf"
+    },
+    {
+      "path": "design/nabo-radio/art/preview/props_radio.png",
+      "bytes": 44341,
+      "sha256": "2784c2785c20d238004ab30d0f535367a01c5b34915531dbd018326299f14911"
+    },
+    {
+      "path": "design/nabo-radio/art/preview/props_radio_2x.png",
+      "bytes": 56151,
+      "sha256": "7225fe06268e5e93d93f0dc4927ecee37522e20502b041227f622dd38a5eadff"
+    },
+    {
+      "path": "design/nabo-radio/art/preview/props_radio_rgb565.png",
+      "bytes": 33108,
+      "sha256": "3f2cb54a2e20d9aa12221cccc30ff0f20eb7a2d6ae9f41ef9ce2703a7d28ab27"
+    },
+    {
+      "path": "design/nabo-radio/art/preview/props_sheet.png",
+      "bytes": 102309,
+      "sha256": "fe4cf84d72c161a6aa56e2d9584c49a9db40629c72ad39f75faa40e9a583d3fa"
+    },
+    {
+      "path": "design/nabo-radio/art/preview/review_v1/props_radio.png",
+      "bytes": 44425,
+      "sha256": "412f55f779d2330e9a1a875595792934a0b27a6c6631486b474a07f65268d52b"
+    },
+    {
+      "path": "design/nabo-radio/art/preview/review_v1/props_radio_2x.png",
+      "bytes": 56216,
+      "sha256": "a025d597676d80802db926f2ea8e26f30b92ca68e6129b7db1fbf660b3804270"
+    },
+    {
+      "path": "design/nabo-radio/art/preview/review_v1/props_radio_rgb565.png",
+      "bytes": 33152,
+      "sha256": "09baf0ccc1e7c29c057f15a391b4f1401dae6f18382382b02cac44a2ecb4c776"
+    },
+    {
+      "path": "design/nabo-radio/art/props/game/headphones.png",
+      "bytes": 2809,
+      "sha256": "82a5a49ad0c72d8438d6139bff1153e40033ca35f5b43eee287a3ae677f4d1a6"
+    },
+    {
+      "path": "design/nabo-radio/art/props/game/mic.png",
+      "bytes": 1893,
+      "sha256": "d52246a99190fbed71f2f3fbf6cdc3b9d82f7a4ba60af649896ccfa1c88ce548"
+    },
+    {
+      "path": "design/nabo-radio/art/props/game/mug.png",
+      "bytes": 1210,
+      "sha256": "52a9f40430d5a8d882203a89c14248d4158a63d792f0510d6370962383c6875c"
+    },
+    {
+      "path": "design/nabo-radio/art/props/headphones.png",
+      "bytes": 20860,
+      "sha256": "c23e27a09594ba034c4aec0f453a8e4523330161bd513feda9798384d2637cfe"
+    },
+    {
+      "path": "design/nabo-radio/art/props/mic.png",
+      "bytes": 17510,
+      "sha256": "7e8084f379a335c80c653beccf9d5820e692ec693ae4f018e8c0908d50f6db14"
+    },
+    {
+      "path": "design/nabo-radio/art/props/mug.png",
+      "bytes": 8659,
+      "sha256": "b190b4e7056324f841fa11871672fdf5a3d6b2f53b4a6ff7cd73ada509605fc7"
+    },
+    {
+      "path": "design/nabo-radio/art/props/nabo_head_24.png",
+      "bytes": 1366,
+      "sha256": "676cbd455aba0f010cfe7201b3ffeee87dccaffdb3919ad3993510113138f411"
+    },
+    {
+      "path": "design/nabo-radio/art/props/nabo_head_24_4x_nearest.png",
+      "bytes": 2051,
+      "sha256": "4cb63928b415b5ac70d1cf706cde757e2ec0f62a57d6ecbae735cda0a8cb4748"
+    },
+    {
+      "path": "design/nabo-radio/art/props/nabo_head_96.png",
+      "bytes": 11548,
+      "sha256": "cf2785363517dd9104ea981b7637deb22d4325f82ed6547ef07dd64a58213c46"
+    },
+    {
+      "path": "design/nabo-radio/art/props/source/headphones_source.png",
+      "bytes": 982561,
+      "sha256": "6146eb804ed9d7bfc56e1c8be119a61fdc7851a8e57aa73925e84886a3a10286"
+    },
+    {
+      "path": "design/nabo-radio/art/props/source/mic_source.png",
+      "bytes": 968479,
+      "sha256": "df332a4927858572194cd5eef8d8bfa21c25d9d7acdc3190084d3718928cdfd3"
+    },
+    {
+      "path": "design/nabo-radio/art/props/source/mug_source.png",
+      "bytes": 726356,
+      "sha256": "61640dc89750c5f7cc7cac6a8dae7617a268dcfaf7de041aa5804d70cca339fd"
+    },
+    {
+      "path": "design/nabo-radio/art/QA.md",
+      "bytes": 1389,
+      "sha256": "30ce9279142378b186adb96eb54506037c2c393e3c9381a4b9446659e2711baa"
+    },
+    {
+      "path": "design/nabo-radio/art/READOUT_20261019.md",
+      "bytes": 4137,
+      "sha256": "dc5e8f244015f602b423db9d7dfdaec6b3741ff41223ed0f319a3e1d15f0c4df"
+    },
+    {
+      "path": "design/nabo-radio/art/reference/layout_annotated_3x.png",
+      "bytes": 85751,
+      "sha256": "02689ca55e1a307e469ba9a6da59b9c06229ca82b6c8960a15c18d82c879c13b"
+    },
+    {
+      "path": "design/nabo-radio/art/reference/nabo-idle.png",
+      "bytes": 32117,
+      "sha256": "c63575691d15220e8d6fafdab911a10767a5fc1c13925992dbd10e3a5e93d3fa"
+    },
+    {
+      "path": "design/nabo-radio/art/reference/nabo-idle_open_source.png",
+      "bytes": 26948,
+      "sha256": "20e1c914b833ea46ba11c027c976d2f2ee4c2940bbf358bcad11e96be34d03c2"
+    },
+    {
+      "path": "design/nabo-radio/art/reference/SHOT_LIST.md",
+      "bytes": 6556,
+      "sha256": "ee702753ef45a2052f8bb648495e5961d8f270874dfaffc5123d16e9d32aae46"
+    },
+    {
+      "path": "design/nabo-radio/art/reference/theme_options.png",
+      "bytes": 266757,
+      "sha256": "f438ff563214babbc2cc988ddc61c828de846f56d56fb6e09e6d584c843e217c"
+    },
+    {
+      "path": "design/nabo-radio/art/reference/ui_mockup_240x320.png",
+      "bytes": 35143,
+      "sha256": "039fa3a8b444d7a68044c2071b5640a2360c10e0c02cf5ce8dd629a796788d1f"
+    },
+    {
+      "path": "design/nabo-radio/art/sprites/radio_sprites.bin",
+      "bytes": 1348259,
+      "sha256": "55706d73b80e3535b483dc8d2da67b8d9bc8dbf74e783975b4f8f77eb57cbe3f"
+    },
+    {
+      "path": "design/nabo-radio/art/sprites/radio_sprites_report.json",
+      "bytes": 2381,
+      "sha256": "062315a10c1e7e7e73ae48a44fa6048f730c93e85692848f734daebcdbd19465"
+    },
+    {
+      "path": "design/nabo-radio/art/sprites/radio_sprites_sheet.png",
+      "bytes": 1829980,
+      "sha256": "fddcf392acd71179ce176b7b84978407ec8bd0e412fb432a5eb2eb1576ca1027"
+    },
+    {
+      "path": "design/nabo-radio/art/tools/export_round3.py",
+      "bytes": 11668,
+      "sha256": "b8bfdf9686a176914c8d9ae65380637331eea57d7085d9512792000d797c03cc"
+    },
+    {
+      "path": "design/nabo-radio/art/tools/normalize_round3_alpha.py",
+      "bytes": 1259,
+      "sha256": "9858c34b50f0105898ce4d1fb9993b815e12a31f68fb112882c1d30825616b21"
+    },
+    {
+      "path": "design/nabo-radio/art/tools/package_round3.py",
+      "bytes": 9404,
+      "sha256": "2a2a7156a105b014e3d0ad59a5f65d4cbccb5e4753889cc18d272471f1736f5b"
+    },
+    {
+      "path": "design/nabo-radio/art/tools/refine_round3_preview.py",
+      "bytes": 1613,
+      "sha256": "db6952e5dc4576259cd54da5c90b7f70d6a43745380000c6520ceb67061803d7"
+    },
+    {
+      "path": "design/nabo-radio/art/tools/validate_round3.py",
+      "bytes": 4514,
+      "sha256": "6a1b0e29ad6484312a3a1be8e440227b79ab710fd42bb67a6d1d6db8287241a4"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/doze.mp4",
+      "bytes": 988535,
+      "sha256": "e2980259434aa8bd6d4ab024d3a8a99f34ffd57cdd8bd26e76b2d14ee439335b"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/groove.mp4",
+      "bytes": 1313866,
+      "sha256": "f3f999f4a9e5574e1ae63431e1a2111c31a3fc767cfc305cf2e9da53a4038d05"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/idle_off.mp4",
+      "bytes": 703490,
+      "sha256": "5cad037d7cc39d3d94ec6f6d35a843968213fd53c2cf0aebfe14600e196b72b5"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/listen.mp4",
+      "bytes": 865912,
+      "sha256": "08759ac4b2f10d58c19aa0c6def1c07fec984ce21ca4fd5d15aa7eb69f1dcc19"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/love.mp4",
+      "bytes": 1122067,
+      "sha256": "d4fd8d28b67329543cb7bd9153bbea5dd2157a5c032d6025826c5ebcbacc6cde"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/oops.mp4",
+      "bytes": 1019082,
+      "sha256": "829b7d1444be3f9fa53f31b0917712f00b902b80ae09b30d5b88f9bb42081e1f"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/phones_off.mp4",
+      "bytes": 1125443,
+      "sha256": "725b44182bf02e0f3640d9e421c75d168f9a172965f97781f5f924106860c0ea"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/phones_on.mp4",
+      "bytes": 1259122,
+      "sha256": "f603783b2171acaec4c4d61e1b41461f4b1b4140ebe900baeea2000498da90a7"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/phones_on_v2.mp4",
+      "bytes": 1151967,
+      "sha256": "5313de849caf24586d336fae4d3ba60029b2b9e3fa191ff8022e3c77bff36d60"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/PICKS.md",
+      "bytes": 2357,
+      "sha256": "ca1b3c7aae824aa3de895d71f5e95232d4306b2f903d5c59342b3f0d053f0d6c"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/search.mp4",
+      "bytes": 865044,
+      "sha256": "0f1ed05c12b0bcf305e1690521b8f1190bf3c085a798bbcbac646126837c5c58"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/sing.mp4",
+      "bytes": 1283425,
+      "sha256": "634d32f611b476c413f761825c08eb75e81ec5e18348ce344882ed5be7dc3642"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/sip.mp4",
+      "bytes": 1021235,
+      "sha256": "14acacb0fc47b518bd29b92255bf067e2f5a512612bb8f91d9e1f57e4c1ae25a"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/tune.mp4",
+      "bytes": 1104768,
+      "sha256": "f30f9e791138918b3d5b86f357dba4e24f1ebf28ed59e1be38d6c4d786ccfb2d"
+    },
+    {
+      "path": "design/nabo-radio/art/video/batch1/source/wave.mp4",
+      "bytes": 1019423,
+      "sha256": "d54c6c789e39016d384aa4182f029f95c7662479a4643fa50da7474a293a4557"
+    },
+    {
+      "path": "design/nabo-radio/ART_BRIEF.md",
+      "bytes": 8804,
+      "sha256": "e4bc4e4552749d68c6c0e84669f6a79dc2ec4b5dc9a051daacae2ffeca90a13c"
+    },
+    {
+      "path": "design/nabo-radio/catalog/health_2026-10-19.json",
+      "bytes": 1921,
+      "sha256": "c04783f08776693286bfa2c322368a6fac778b90210af432a110ea8bb82fe45a"
+    },
+    {
+      "path": "design/nabo-radio/catalog/sources/nabo.json",
+      "bytes": 6954,
+      "sha256": "a71c6b890a853236480c212beb08cb90d8d6884e8d4ec009c64244f03d24ff94"
+    },
+    {
+      "path": "design/nabo-radio/catalog/sources/qingting_web.tsv",
+      "bytes": 53225,
+      "sha256": "c37af4a28c83664266ced2e3e2e534f0557c96930202d032a99082d0aaa83aef"
+    },
+    {
+      "path": "design/nabo-radio/catalog/sources/README.md",
+      "bytes": 738,
+      "sha256": "53eaa3d7f404c9909733ef6bf35da08de6d13adf519fc5a3ed2a12e14847c5e1"
+    },
+    {
+      "path": "design/nabo-radio/catalog/sources/shulinbao.json",
+      "bytes": 9940,
+      "sha256": "c4403a816b8280e1b6dca08c38771d3e04720b9a412641e27b706193ff8d223d"
+    },
+    {
+      "path": "design/nabo-radio/catalog/sources/weibaohui.json",
+      "bytes": 49236,
+      "sha256": "49a0d9d2964d9d607a3860f0c05f21b4ec2be80cc8371db56516423a58f2feb4"
+    },
+    {
+      "path": "design/nabo-radio/catalog/stations.json",
+      "bytes": 369051,
+      "sha256": "5b7ec6854a5d2d4533cdd65b0912333025030a8e8f69f7c4e7842dd397bcddce"
+    },
+    {
+      "path": "design/nabo-radio/CODEX_PROMPTS.md",
+      "bytes": 3955,
+      "sha256": "e742129ee0e8055563d465d0561158af11245627fc024c877571a1a058d9c63f"
+    },
+    {
+      "path": "design/nabo-radio/DESIGN.md",
+      "bytes": 15843,
+      "sha256": "ec631b27895ac081d8b41f8a70c624c71c1ac8347fc980d2243a4b71b9e2877d"
+    },
+    {
+      "path": "design/nabo-radio/fonts/LXGWWenKai-Regular.ttf",
+      "bytes": 25928940,
+      "sha256": "bf73f995c05f3f7baf7840b9d76d8d9678c8b150a020946a394ca63c67ed1350"
+    },
+    {
+      "path": "design/nabo-radio/fonts/OFL-LXGW.txt",
+      "bytes": 5171,
+      "sha256": "1a25e35da1031c6c3436fde545bb9cb5aca954e9873afe510c834b8b79bd21a0"
+    },
+    {
+      "path": "design/nabo-radio/fonts/OFL-SourceHanSans.txt",
+      "bytes": 4463,
+      "sha256": "fcac737e761ec63dbfbdce11030a1780161920d80315edba9c8beff1c2bac5a2"
+    },
+    {
+      "path": "design/nabo-radio/fonts/SourceHanSansSC-Normal.otf",
+      "bytes": 16414944,
+      "sha256": "1ee89e1669362dee13851129c0a8a791a87521eb4148e5efbf5d26596738e25b"
+    },
+    {
+      "path": "design/nabo-radio/HANDOFF.md",
+      "bytes": 11379,
+      "sha256": "7f0691158f89f7d4c46da4dedd47bc50a96f95136ac3a982a5ff73c77c811238"
+    },
+    {
+      "path": "design/nabo-radio/prototype/build.py",
+      "bytes": 816,
+      "sha256": "8ac2c402ec970c02963d3e659fd6626c20ce5eb41f347443bbfccd2a5f796f76"
+    },
+    {
+      "path": "design/nabo-radio/prototype/data.json",
+      "bytes": 83308,
+      "sha256": "a0cbdee85146dd80a43054818c9b25fb6a7ab7703e0eebcd0045c554ee23415b"
+    },
+    {
+      "path": "design/nabo-radio/prototype/face_closed.b64",
+      "bytes": 31092,
+      "sha256": "ed143cc808d3942053dc2d1fe64ddda29417e130581b44f7476713ad6c7cc93f"
+    },
+    {
+      "path": "design/nabo-radio/prototype/face_half.b64",
+      "bytes": 31188,
+      "sha256": "169c1169d6a03761facf219c166111678c4fff11a9cbecae26fd784af80c6e5c"
+    },
+    {
+      "path": "design/nabo-radio/prototype/face_open.b64",
+      "bytes": 31532,
+      "sha256": "4385efa3f0870a60aefd54f39c9729429f34f4c42c51592c9d9346d74ae1b090"
+    },
+    {
+      "path": "design/nabo-radio/prototype/fonts/chars.txt",
+      "bytes": 2677,
+      "sha256": "6731108b4111e12627b538fe09a6817941c3179928e6fe55b62b737ecb62a723"
+    },
+    {
+      "path": "design/nabo-radio/prototype/fonts/pixel.woff2",
+      "bytes": 38320,
+      "sha256": "38751acd988b2903144f1f4c0666aea411cba661a275a2c44611d3bc33f88b66"
+    },
+    {
+      "path": "design/nabo-radio/prototype/fonts/sans_bold.woff2",
+      "bytes": 243036,
+      "sha256": "15b62741bc2e7e0ae43108e38f6b4ee0e153ed4d639661a0d0ab3c7f3f07f4ab"
+    },
+    {
+      "path": "design/nabo-radio/prototype/fonts/sans_med.woff2",
+      "bytes": 241532,
+      "sha256": "8aa310c452bf05bb86f0118f98e75e5da31f7bb8ccf467326d27cd50bb45de2d"
+    },
+    {
+      "path": "design/nabo-radio/prototype/fonts/smiley.woff2",
+      "bytes": 117800,
+      "sha256": "e373900c9e003b2fae3245cc1c852363abf4f69c5745b5a24f4095d81b28ee11"
+    },
+    {
+      "path": "design/nabo-radio/prototype/fonts/wenkai.woff2",
+      "bytes": 209312,
+      "sha256": "4623c88adff0f4fd89cee7d9f87c500db675b07b05eb1b3e4eb9b8870bbec963"
+    },
+    {
+      "path": "design/nabo-radio/prototype/index.html",
+      "bytes": 1335275,
+      "sha256": "69666c042582fa5b735c210d4d5fb93c1a450ffd12b34c1f6e6a1f1aa96ff2aa"
+    },
+    {
+      "path": "design/nabo-radio/prototype/sprite_head.b64",
+      "bytes": 1892,
+      "sha256": "6bf210c193199262fcad3cead594698121ba84d0d1b28f57da9c6d4dd05e1a04"
+    },
+    {
+      "path": "design/nabo-radio/prototype/sprite_mic.b64",
+      "bytes": 2604,
+      "sha256": "14e6455332fb2aee24d44ac00c46c41a8467c7b39016a8f75950eb81d9df5266"
+    },
+    {
+      "path": "design/nabo-radio/prototype/sprite_mug.b64",
+      "bytes": 1616,
+      "sha256": "323bf9047f61f6382ae89f0468da30843ac2967218f8c0ea384250a965be0537"
+    },
+    {
+      "path": "design/nabo-radio/prototype/sprite_off.b64",
+      "bytes": 33452,
+      "sha256": "9e1a2abda9cd0a02a29ec0eee312d00078403a43b2c34ee16c470da0f9f61a7d"
+    },
+    {
+      "path": "design/nabo-radio/prototype/sprite_on.b64",
+      "bytes": 39692,
+      "sha256": "550ba7b5e101b1095049d81cc25710817facffabf122d377668a50a0e8e60c17"
+    },
+    {
+      "path": "design/nabo-radio/prototype/template.html",
+      "bytes": 39491,
+      "sha256": "15ede793e4796a3b6c34c5ae767706007b0ea93285221bf40c884a0c73fcd38e"
+    },
+    {
+      "path": "design/nabo-radio/tools/build_catalog.py",
+      "bytes": 6520,
+      "sha256": "f778ababfa268b77bf2610db118e7a35ea55f1f3b905aaff3d9fd43ec82edebd"
+    },
+    {
+      "path": "design/nabo-radio/tools/clip_to_frames.py",
+      "bytes": 3741,
+      "sha256": "266c566cb51b1150209f620eddd2cfecc9bcac457f62856f0b79bb662f4ff61d"
+    },
+    {
+      "path": "design/nabo-radio/tools/crawl_qingting.js",
+      "bytes": 2555,
+      "sha256": "6e5238dae57699057c4a62ae75b5dbd8a19e552494d6364f86927caca8766795"
+    },
+    {
+      "path": "design/nabo-radio/tools/import_sources.py",
+      "bytes": 2694,
+      "sha256": "349cb5448618ea654132eb652ade7a7bfc4b246e62aed59d4fccd79ba8607856"
+    },
+    {
+      "path": "design/nabo-radio/tools/pack_radio_sprites.py",
+      "bytes": 11622,
+      "sha256": "191c1a808d94c96238132348bb280472b9c0b1d4fda2111b21fe9a23c89aaee9"
+    },
+    {
+      "path": "checkpoints/radio-dev-0.2.6/assets.bin",
+      "bytes": 3019577,
+      "sha256": "0de5c9d3b8f824730b169549463b06d00bbce27814daf1d633ac3b6a068dbb3f"
+    },
+    {
+      "path": "checkpoints/radio-dev-0.2.6/bootloader.bin",
+      "bytes": 14976,
+      "sha256": "886f5ef7541c3e6c93914cf932f211b34f1693a793952bf0b46a392b99cecf0a"
+    },
+    {
+      "path": "checkpoints/radio-dev-0.2.6/build-sdkconfig.txt",
+      "bytes": 120305,
+      "sha256": "707dfbd58c2790d04b602022b69751f2e089e918c9fded85492c0ac9fc5e1b21"
+    },
+    {
+      "path": "checkpoints/radio-dev-0.2.6/manifest.json",
+      "bytes": 1042,
+      "sha256": "6364d7df03c71ee1711916971ba89a1b67279c1bb2698fc5690a804d3a7f1a50"
+    },
+    {
+      "path": "checkpoints/radio-dev-0.2.6/partition-table.bin",
+      "bytes": 3072,
+      "sha256": "feb7ea496adb63179bf197f87431e6c8ddade47ce0228c1e671ef01421effc0c"
+    },
+    {
+      "path": "checkpoints/radio-dev-0.2.6/README.md",
+      "bytes": 606,
+      "sha256": "109a82b59de1a1d7206a61592b83a9ada64b2354b1b9706d72e5e7888c2ca131"
+    },
+    {
+      "path": "checkpoints/radio-dev-0.2.6/xiaozhi.bin",
+      "bytes": 3478512,
+      "sha256": "a948b6e8ee75a1a4102373f7338f49658e32e330ef2841d73ca479975791abc5"
+    },
+    {
+      "path": "checkpoints/radio-dev-0.2.6/xiaozhi.elf",
+      "bytes": 35306208,
+      "sha256": "34a1a5e850d0ced757662e8d997b29983e25f061c5ec30352da0c16b6c5827a6"
+    },
+    {
+      "path": "checkpoints/radio-dev-0.2.6/xiaozhi.map",
+      "bytes": 17463494,
+      "sha256": "cbd74f41a673caa67657f0b1ca0fe75b27fb754ac427d89c5ae7fd425d680387"
+    },
+    {
+      "path": "docs/images/human-motion-check.png",
+      "bytes": 55231,
+      "sha256": "7fe97ffe11945eaa0cf3bf672c42a991d8b64d5f5fd7017ad5433ea79ff694a3"
+    },
+    {
+      "path": "docs/images/lcd-computer.png",
+      "bytes": 6243,
+      "sha256": "87582ccd7a4c6fd4ad6d5f398f0aabf88f6c353840edcfbe0604a188be3e9340"
+    },
+    {
+      "path": "docs/images/lcd-dive.png",
+      "bytes": 62304,
+      "sha256": "41e86c253e5151b8888b2d624fa77ad14b0f1f55bc62670ff7301ded0632a9e0"
+    },
+    {
+      "path": "docs/images/lcd-human-fail.png",
+      "bytes": 14908,
+      "sha256": "46d471db1eb1cb5284ab7fd89aab8044b3815235e7c40bd59ebc46f7f94da4fa"
+    },
+    {
+      "path": "docs/images/lcd-jump-current.png",
+      "bytes": 15237,
+      "sha256": "fa4fe00a08233cfacdc63f198f5f1e8d6d9edb45ca75b63c2133f49eb45ed860"
+    },
+    {
+      "path": "docs/images/lcd-radio.png",
+      "bytes": 6608,
+      "sha256": "6044ab471e9e115727bb651fc92faa69e567b18ad2d5ae0bc3aa9352e12b017f"
+    },
+    {
+      "path": "docs/images/lcd-table-multi.png",
+      "bytes": 178236,
+      "sha256": "48279ca55cdbecc8293fd496e7be2a0c5b46c2b10a1affc8ef706cfae6a13f3b"
+    },
+    {
+      "path": "docs/images/lcd-table.png",
+      "bytes": 187633,
+      "sha256": "3d6234b30c4ddcd88473cbb88d52b801185dd92a949e2698f9b7188cf2c32bae"
+    },
+    {
+      "path": "docs/images/lcd-undercover-confirm.png",
+      "bytes": 38616,
+      "sha256": "db1922bb04332afdfc6600d473bd031436c8e73f227a8744a52d28545b313873"
+    },
+    {
+      "path": "docs/images/lcd-undercover-end.png",
+      "bytes": 44795,
+      "sha256": "0799c4b981eebafa0791fc040d581a23d66d37d90d541f828ea99c2e950fe3f7"
+    },
+    {
+      "path": "docs/images/lcd-undercover-setup.png",
+      "bytes": 35182,
+      "sha256": "a7de0e1fbc84dffecdb11835143708a2aa79a61e64be728071bc9cd967dd702d"
+    },
+    {
+      "path": "docs/images/lcd-undercover-talk.png",
+      "bytes": 45548,
+      "sha256": "5a4fcd023067fc25d6464f4710e9b4a842b4be956fa4a0a88a7f44e927f0136c"
+    },
+    {
+      "path": "docs/images/lcd-undercover-word.png",
+      "bytes": 34306,
+      "sha256": "c797673d5bcd6633f76b66d8ac87cffe120090bf66148b0859a4df52d12c8392"
+    },
+    {
+      "path": "docs/images/nabo-idle.png",
+      "bytes": 32117,
+      "sha256": "c63575691d15220e8d6fafdab911a10767a5fc1c13925992dbd10e3a5e93d3fa"
+    },
+    {
+      "path": "docs/images/nabo-jump-motion.gif",
+      "bytes": 164280,
+      "sha256": "17b2aa90ea6ff5c9979e87e056e12513546a2d16a1644cfae1982192f834af04"
+    },
+    {
+      "path": "docs/images/radio/awakened.png",
+      "bytes": 27913,
+      "sha256": "0b3c1d88ee1582ec63dd24ab510fb34abba2f168c05179a744d52504c6248d96"
+    },
+    {
+      "path": "docs/images/radio/clock.png",
+      "bytes": 6912,
+      "sha256": "234fdb3890c06a0286a4c497da4cbd58e57f1f4ce0767438d6613f4eccb1ecef"
+    },
+    {
+      "path": "docs/images/radio/contact-sheet.png",
+      "bytes": 150360,
+      "sha256": "95968aaad03337680b4ec524b32f7af7b995c974358434fdf77f370a01224f9d"
+    },
+    {
+      "path": "docs/images/radio/favorite.png",
+      "bytes": 25921,
+      "sha256": "ec2fdf778c04b5b0b0cef3a55efedbb3bd616f26927c2b141fd7ee9ebc694b5d"
+    },
+    {
+      "path": "docs/images/radio/favorites-list.png",
+      "bytes": 9206,
+      "sha256": "03fb7146eea268cb7f8c7c209c14942675b834ca253537076740f311216d74a5"
+    },
+    {
+      "path": "docs/images/radio/list.png",
+      "bytes": 13597,
+      "sha256": "e59ae79cdab227559e0ad6d961d27c60d04633c39e9c5883b7b6b779deb0b197"
+    },
+    {
+      "path": "docs/images/radio/menu.png",
+      "bytes": 9620,
+      "sha256": "d255f4dd0f8525b42dc37720cdd5d8dc68fd5819b795a60f331e86c5ffbfcc61"
+    },
+    {
+      "path": "docs/images/radio/player.png",
+      "bytes": 26919,
+      "sha256": "836f8970140d194824fbc2c94d1f89134b8beab0e2b44021f13008bf33469bbd"
+    },
+    {
+      "path": "docs/images/radio/playing.png",
+      "bytes": 26645,
+      "sha256": "f110eac25be7ce27ef4f4df64a749157afdc7c5343151aefddb2b4f7dca389ea"
+    },
+    {
+      "path": "docs/images/radio/search-a.png",
+      "bytes": 13642,
+      "sha256": "b79dfbe082eed42c1a717d221df8b8bf6300b1af3f35e61003b2547d31445ca1"
+    },
+    {
+      "path": "docs/images/radio/search.png",
+      "bytes": 9052,
+      "sha256": "dc165efc5fa7d5c576e80c585156584d0f764a8e4460d16394373de5995d05e3"
+    },
+    {
+      "path": "game-art/fonts.json",
+      "bytes": 7962,
+      "sha256": "53b0b484048e4ec7bd8950f43f5ccd5f745f4592488605016fc869f3f92836b7"
+    },
+    {
+      "path": "game-art/original-sound-reference.json",
+      "bytes": 1023,
+      "sha256": "acc45bb3a2515c605667df1b0eb73f332574bf9cb9bd8b07349f028a14e7d7a9"
+    },
+    {
+      "path": "game-art/precomputed-effect-reference.json",
+      "bytes": 815,
+      "sha256": "ba793f99a9a1e8abf54b079ce6c666650d0c9af8c66f1edfd817400b41fb9cc0"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_catalog.bin",
+      "bytes": 72161,
+      "sha256": "6e725ce46cf4f248984c6f40e991afbced24ca52dc5b37b7932eb83e62cc2677"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_clock.bin",
+      "bytes": 8534,
+      "sha256": "4d2eb90861efbb432c631624025e77a8cf4f3fa520664798f569b86d70c8da91"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_led.bin",
+      "bytes": 176,
+      "sha256": "882c50bebcf62991612b633314f88ab437b475728e36a63072cdf90788d4ce64"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_logo.bin",
+      "bytes": 420,
+      "sha256": "144a909a58a629674c4d35a50db71dfac66d129fdd95793649c14c59fe0de6de"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_mic.bin",
+      "bytes": 2816,
+      "sha256": "6ae2f8da9fb51bda493b8de08d3553ea334c2d953bd0739c5ba172f5e1795a0d"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_nabo_head_24.bin",
+      "bytes": 1736,
+      "sha256": "9cb9416d2f6337fac6fb5270ac3719bfc86054c609af70317e890c4adcbd6d10"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_name.bin",
+      "bytes": 192093,
+      "sha256": "6dbcdf18f5502d4891ddf9b281acab3ee65db7f8c809817bd76e473fe7b43ede"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_sprites.bin",
+      "bytes": 1348259,
+      "sha256": "55706d73b80e3535b483dc8d2da67b8d9bc8dbf74e783975b4f8f77eb57cbe3f"
+    },
+    {
+      "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_ui.bin",
+      "bytes": 67673,
+      "sha256": "7833387413fa9bc350e9082f1ac0f436e9d2f43ca32d314978c961a18df16968"
+    }
+  ]
+}

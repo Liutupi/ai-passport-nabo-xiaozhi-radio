@@ -1,0 +1,2040 @@
+{
+ "source": "魏宝辉 · 网络收音机",
+ "repo": "https://github.com/weibaohui/aipassport-radio",
+ "stations": [
+  {
+   "name": "北京文艺广播",
+   "url": "https://lhttp.qtfm.cn/live/333/64k.mp3",
+   "name_truncated": true,
+   "qt": "333"
+  },
+  {
+   "name": "北京音乐广播",
+   "url": "https://lhttp.qtfm.cn/live/332/64k.mp3",
+   "name_truncated": true,
+   "qt": "332"
+  },
+  {
+   "name": "新疆汉语新闻广",
+   "url": "https://lhttp-hw.qtfm.cn/live/1902/64k.mp3",
+   "name_truncated": true,
+   "qt": "1902"
+  },
+  {
+   "name": "涿州综合广播年",
+   "url": "https://lhttp.qtfm.cn/live/5021381/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021381"
+  },
+  {
+   "name": "上海东广新闻资",
+   "url": "http://lhttp.qingting.fm/live/275/64k.mp3",
+   "name_truncated": true,
+   "qt": "275"
+  },
+  {
+   "name": "上海交通广播",
+   "url": "http://lhttp.qingting.fm/live/266/64k.mp3",
+   "name_truncated": true,
+   "qt": "266"
+  },
+  {
+   "name": "上海交通广播 FM1",
+   "url": "https://lhttp-hw.qtfm.cn/live/266/64k.mp3",
+   "name_truncated": true,
+   "qt": "266"
+  },
+  {
+   "name": "上海天气台",
+   "url": "https://lhttp.qtfm.cn/live/20500176/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500176"
+  },
+  {
+   "name": "上海戏剧曲艺广",
+   "url": "https://lhttp-hw.qtfm.cn/live/269/64k.mp3",
+   "name_truncated": true,
+   "qt": "269"
+  },
+  {
+   "name": "上海新闻广播 FM9",
+   "url": "https://lhttp-hw.qtfm.cn/live/270/64k.mp3",
+   "name_truncated": true,
+   "qt": "270"
+  },
+  {
+   "name": "上海流行音乐广",
+   "url": "https://lhttp-hw.qtfm.cn/live/274/64k.mp3",
+   "name_truncated": true,
+   "qt": "274"
+  },
+  {
+   "name": "上海第一财经广",
+   "url": "https://lhttp-hw.qtfm.cn/live/276/64k.mp3",
+   "name_truncated": true,
+   "qt": "276"
+  },
+  {
+   "name": "上海经典金曲广",
+   "url": "https://lhttp-hw.qtfm.cn/live/273/64k.mp3",
+   "name_truncated": true,
+   "qt": "273"
+  },
+  {
+   "name": "上海经典音乐广",
+   "url": "https://lhttp-hw.qtfm.cn/live/267/64k.mp3",
+   "name_truncated": true,
+   "qt": "267"
+  },
+  {
+   "name": "上海长三角之声",
+   "url": "https://lhttp-hw.qtfm.cn/live/275/64k.mp3",
+   "name_truncated": true,
+   "qt": "275"
+  },
+  {
+   "name": "浦东综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/21355/64k.mp3",
+   "name_truncated": true,
+   "qt": "21355"
+  },
+  {
+   "name": "天津经济广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318227/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318227"
+  },
+  {
+   "name": "大足综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211676/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211676"
+  },
+  {
+   "name": "巴南综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5022385/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022385"
+  },
+  {
+   "name": "永川之声100.7",
+   "url": "https://lhttp.qtfm.cn/live/20210236/64k.mp3",
+   "name_truncated": true,
+   "qt": "20210236"
+  },
+  {
+   "name": "綦江综合广播",
+   "url": "https://lhttp.qtfm.cn/live/20500201/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500201"
+  },
+  {
+   "name": "重庆都市广播",
+   "url": "https://lhttp.qtfm.cn/live/1502/64k.mp3",
+   "name_truncated": true,
+   "qt": "1502"
+  },
+  {
+   "name": "FM98.6城市音乐广",
+   "url": "https://lhttp.qingting.fm/live/20500196/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500196"
+  },
+  {
+   "name": "唐山交通文艺广",
+   "url": "https://lhttp.qtfm.cn/live/1659/64k.mp3",
+   "name_truncated": true,
+   "qt": "1659"
+  },
+  {
+   "name": "唐山经济广播",
+   "url": "https://lhttp.qtfm.cn/live/15318431/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318431"
+  },
+  {
+   "name": "崇礼综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500100/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500100"
+  },
+  {
+   "name": "廊坊戏曲广播飞",
+   "url": "http://lhttp.qingting.fm/live/20211678/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211678"
+  },
+  {
+   "name": "成安综合广播久",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211694/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211694"
+  },
+  {
+   "name": "承德综合广播",
+   "url": "https://lhttp.qtfm.cn/live/20500052/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500052"
+  },
+  {
+   "name": "抗大之声",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500096/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500096"
+  },
+  {
+   "name": "曲阳融媒FM90.4",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500219/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500219"
+  },
+  {
+   "name": "秦皇岛交通广播",
+   "url": "http://lhttp.qingting.fm/live/20849/64k.mp3",
+   "name_truncated": true,
+   "qt": "20849"
+  },
+  {
+   "name": "秦皇岛体育广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20835/64k.mp3",
+   "name_truncated": true,
+   "qt": "20835"
+  },
+  {
+   "name": "肥乡广播电视台",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500104/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500104"
+  },
+  {
+   "name": "衡水文艺广播",
+   "url": "https://lhttp.qtfm.cn/live/5021857/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021857"
+  },
+  {
+   "name": "辛集综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5021959/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021959"
+  },
+  {
+   "name": "邯郸交通广播",
+   "url": "https://lhttp.qtfm.cn/live/3950/64k.mp3",
+   "name_truncated": true,
+   "qt": "3950"
+  },
+  {
+   "name": "邯郸新闻综合广",
+   "url": "https://lhttp.qtfm.cn/live/5072/64k.mp3",
+   "name_truncated": true,
+   "qt": "5072"
+  },
+  {
+   "name": "邯郸音乐广播",
+   "url": "https://lhttp.qtfm.cn/live/4601/64k.mp3",
+   "name_truncated": true,
+   "qt": "4601"
+  },
+  {
+   "name": "高阳县怀旧金曲9",
+   "url": "http://lhttp.qingting.fm/live/5021555/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021555"
+  },
+  {
+   "name": "鹿泉区FM87.3犀牛",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211668/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211668"
+  },
+  {
+   "name": "吕梁综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/4020/64k.mp3",
+   "name_truncated": true,
+   "qt": "4020"
+  },
+  {
+   "name": "垣曲人民广播电",
+   "url": "https://lhttp.qingting.fm/live/20500090/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500090"
+  },
+  {
+   "name": "太原交通广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/4900/64k.mp3",
+   "name_truncated": true,
+   "qt": "4900"
+  },
+  {
+   "name": "山西广播电视台",
+   "url": "http://lhttp.qingting.fm/live/5022511/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022511"
+  },
+  {
+   "name": "左云县摩天102",
+   "url": "https://lhttp.qtfm.cn/live/20212394/64k.mp3",
+   "name_truncated": true,
+   "qt": "20212394"
+  },
+  {
+   "name": "运城文艺广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/1191/64k.mp3",
+   "name_truncated": true,
+   "qt": "1191"
+  },
+  {
+   "name": "长治综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5021874/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021874"
+  },
+  {
+   "name": "乌海综合广播",
+   "url": "http://lhttp.qingting.fm/live/15318706/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318706"
+  },
+  {
+   "name": "内蒙古交通之声",
+   "url": "https://lhttp-hw.qtfm.cn/live/1884/64k.mp3",
+   "name_truncated": true,
+   "qt": "1884"
+  },
+  {
+   "name": "内蒙古农村牧区",
+   "url": "https://lhttp-hw.qtfm.cn/live/1888/64k.mp3",
+   "name_truncated": true,
+   "qt": "1888"
+  },
+  {
+   "name": "内蒙古文艺之声",
+   "url": "http://lhttp.qingting.fm/live/1886/64k.mp3",
+   "name_truncated": true,
+   "qt": "1886"
+  },
+  {
+   "name": "内蒙古蒙语广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/1882/64k.mp3",
+   "name_truncated": true,
+   "qt": "1882"
+  },
+  {
+   "name": "包头蒙语广播",
+   "url": "https://lhttp.qingting.fm/live/1891/64k.mp3",
+   "name_truncated": true,
+   "qt": "1891"
+  },
+  {
+   "name": "呼和浩特交通广",
+   "url": "https://lhttp-hw.qtfm.cn/live/5021545/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021545"
+  },
+  {
+   "name": "呼和浩特综合广",
+   "url": "https://lhttp.qingting.fm/live/5021543/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021543"
+  },
+  {
+   "name": "巴彦淖尔综合广",
+   "url": "https://lhttp.qtfm.cn/live/1893/64k.mp3",
+   "name_truncated": true,
+   "qt": "1893"
+  },
+  {
+   "name": "赤峰蒙语广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/1897/64k.mp3",
+   "name_truncated": true,
+   "qt": "1897"
+  },
+  {
+   "name": "鄂尔多斯蒙语综",
+   "url": "http://lhttp.qingting.fm/live/20348/64k.mp3",
+   "name_truncated": true,
+   "qt": "20348"
+  },
+  {
+   "name": "DLR-5 大连音乐广",
+   "url": "https://lhttp.qingting.fm/live/1084/64k.mp3",
+   "name_truncated": true,
+   "qt": "1084"
+  },
+  {
+   "name": "东港新东港广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022186/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022186"
+  },
+  {
+   "name": "凌源综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318298/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318298"
+  },
+  {
+   "name": "朝阳县人民广播",
+   "url": "http://lhttp.qingting.fm/live/20212211/64k.mp3",
+   "name_truncated": true,
+   "qt": "20212211"
+  },
+  {
+   "name": "桓仁电台",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022699/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022699"
+  },
+  {
+   "name": "绥中综合广播",
+   "url": "http://lhttp.qingting.fm/live/20211705/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211705"
+  },
+  {
+   "name": "辽宁之声",
+   "url": "https://lhttp.qingting.fm/live/1103/64k.mp3?app_id=web",
+   "name_truncated": true,
+   "qt": "1103"
+  },
+  {
+   "name": "辽宁广播电视台",
+   "url": "http://lhttp.qingting.fm/live/1102/64k.mp3",
+   "name_truncated": true,
+   "qt": "1102"
+  },
+  {
+   "name": "辽宁经典音乐广",
+   "url": "https://lhttp-hw.qtfm.cn/live/20021/64k.mp3",
+   "name_truncated": true,
+   "qt": "20021"
+  },
+  {
+   "name": "四平综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318197/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318197"
+  },
+  {
+   "name": "延吉交通之声",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318331/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318331"
+  },
+  {
+   "name": "松原交通文艺广",
+   "url": "https://lhttp-hw.qtfm.cn/live/20212256/64k.mp3",
+   "name_truncated": true,
+   "qt": "20212256"
+  },
+  {
+   "name": "松原大众生活",
+   "url": "https://lhttp.qtfm.cn/live/5082/64k.mp3",
+   "name_truncated": true,
+   "qt": "5082"
+  },
+  {
+   "name": "松原新闻综合广",
+   "url": "https://lhttp-hw.qtfm.cn/live/5079/64k.mp3",
+   "name_truncated": true,
+   "qt": "5079"
+  },
+  {
+   "name": "长春经济广播",
+   "url": "https://lhttp.qtfm.cn/live/4850/64k.mp3",
+   "name_truncated": true,
+   "qt": "4850"
+  },
+  {
+   "name": "大庆综合广播",
+   "url": "https://lhttp.qtfm.cn/live/20500060/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500060"
+  },
+  {
+   "name": "牡丹江交通广播",
+   "url": "https://lhttp.qtfm.cn/live/5022354/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022354"
+  },
+  {
+   "name": "黑龙江新闻广播",
+   "url": "https://lhttp.qtfm.cn/live/4974/64k.mp3",
+   "name_truncated": true,
+   "qt": "4974"
+  },
+  {
+   "name": "黑龙江音乐广播",
+   "url": "https://lhttp.qtfm.cn/live/4969/64k.mp3",
+   "name_truncated": true,
+   "qt": "4969"
+  },
+  {
+   "name": "FM102.4 靖江广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318120/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318120"
+  },
+  {
+   "name": "东海综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500220/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500220"
+  },
+  {
+   "name": "南通交通广播",
+   "url": "https://lhttp.qtfm.cn/live/5021533/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021533"
+  },
+  {
+   "name": "南通经济广播",
+   "url": "https://lhttp.qtfm.cn/live/21327/64k.mp3",
+   "name_truncated": true,
+   "qt": "21327"
+  },
+  {
+   "name": "吴江综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5022050/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022050"
+  },
+  {
+   "name": "太仓综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20207759/64k.mp3",
+   "name_truncated": true,
+   "qt": "20207759"
+  },
+  {
+   "name": "常州新闻综合广",
+   "url": "https://lhttp.qtfm.cn/live/2798/64k.mp3",
+   "name_truncated": true,
+   "qt": "2798"
+  },
+  {
+   "name": "常熟市融媒体中",
+   "url": "https://lhttp-hw.qtfm.cn/live/2791/64k.mp3",
+   "name_truncated": true,
+   "qt": "2791"
+  },
+  {
+   "name": "张家港综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5021877/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021877"
+  },
+  {
+   "name": "扬州江都广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022636/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022636"
+  },
+  {
+   "name": "江宁人民广播电",
+   "url": "http://lhttp.qingting.fm/live/20500075/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500075"
+  },
+  {
+   "name": "江苏经典流行音",
+   "url": "https://lhttp.qtfm.cn/live/4938/64k.mp3",
+   "name_truncated": true,
+   "qt": "4938"
+  },
+  {
+   "name": "沛县综合广播",
+   "url": "https://lhttp.qtfm.cn/live/20500173/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500173"
+  },
+  {
+   "name": "海门新闻综合广",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022640/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022640"
+  },
+  {
+   "name": "淮安经济广播",
+   "url": "https://lhttp.qtfm.cn/live/4587/64k.mp3",
+   "name_truncated": true,
+   "qt": "4587"
+  },
+  {
+   "name": "盐城农村广播经",
+   "url": "https://lhttp.qtfm.cn/live/20332/64k.mp3",
+   "name_truncated": true,
+   "qt": "20332"
+  },
+  {
+   "name": "盱眙综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500051/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500051"
+  },
+  {
+   "name": "苏州儿童广播",
+   "url": "http://lhttp.qingting.fm/live/2807/64k.mp3",
+   "name_truncated": true,
+   "qt": "2807"
+  },
+  {
+   "name": "赣榆综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500216/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500216"
+  },
+  {
+   "name": "邳州人民广播电",
+   "url": "http://lhttp.qingting.fm/live/2809/64k.mp3",
+   "name_truncated": true,
+   "qt": "2809"
+  },
+  {
+   "name": "镇江交通广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/3985/64k.mp3",
+   "name_truncated": true,
+   "qt": "3985"
+  },
+  {
+   "name": "镇江文艺广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/4605/64k.mp3",
+   "name_truncated": true,
+   "qt": "4605"
+  },
+  {
+   "name": "FM105平阳电台",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022624/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022624"
+  },
+  {
+   "name": "FM97 舟山交通音",
+   "url": "https://lhttp.qingting.fm/live/1161/64k.mp3",
+   "name_truncated": true,
+   "qt": "1161"
+  },
+  {
+   "name": "义乌新闻",
+   "url": "https://lhttp.qtfm.cn/live/20537/64k.mp3",
+   "name_truncated": true,
+   "qt": "20537"
+  },
+  {
+   "name": "台州交通广播",
+   "url": "https://lhttp.qingting.fm/live/1146/64k.mp3",
+   "name_truncated": true,
+   "qt": "1146"
+  },
+  {
+   "name": "嘉兴交通经济广",
+   "url": "https://lhttp-hw.qtfm.cn/live/1135/64k.mp3",
+   "name_truncated": true,
+   "qt": "1135"
+  },
+  {
+   "name": "嘉兴对农广播 FM8",
+   "url": "https://lhttp-hw.qtfm.cn/live/1136/64k.mp3",
+   "name_truncated": true,
+   "qt": "1136"
+  },
+  {
+   "name": "嘉兴综合广播 FN1",
+   "url": "https://lhttp-hw.qtfm.cn/live/1154/64k.mp3",
+   "name_truncated": true,
+   "qt": "1154"
+  },
+  {
+   "name": "天台人民广播电",
+   "url": "https://lhttp.qingting.fm/live/5022200/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022200"
+  },
+  {
+   "name": "宁波经济广播",
+   "url": "https://lhttp.qtfm.cn/live/1152/64k.mp3",
+   "name_truncated": true,
+   "qt": "1152"
+  },
+  {
+   "name": "宁海新闻综合广",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022406/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022406"
+  },
+  {
+   "name": "杭州交通经济广",
+   "url": "https://lhttp.qtfm.cn/live/1133/64k.mp3",
+   "name_truncated": true,
+   "qt": "1133"
+  },
+  {
+   "name": "杭州城市资讯广",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318146/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318146"
+  },
+  {
+   "name": "杭州市广播电视",
+   "url": "https://lhttp.qtfm.cn/live/1163/64k.mp3",
+   "name_truncated": true,
+   "qt": "1163"
+  },
+  {
+   "name": "浦江人民广播电",
+   "url": "https://lhttp-hw.qtfm.cn/live/5021924/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021924"
+  },
+  {
+   "name": "海宁大潮之声🌊",
+   "url": "https://lhttp.qtfm.cn/live/5022556/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022556"
+  },
+  {
+   "name": "温岭1036温岭人",
+   "url": "http://lhttp.qingting.fm/live/4567/64k.mp3",
+   "name_truncated": true,
+   "qt": "4567"
+  },
+  {
+   "name": "温州之声",
+   "url": "http://lhttp.qingting.fm/live/1155/64k.mp3",
+   "name_truncated": true,
+   "qt": "1155"
+  },
+  {
+   "name": "温州经济生活广",
+   "url": "http://lhttp.qingting.fm/live/1157/64k.mp3",
+   "name_truncated": true,
+   "qt": "1157"
+  },
+  {
+   "name": "湖州经济广播",
+   "url": "https://lhttp.qtfm.cn/live/2812/64k.mp3",
+   "name_truncated": true,
+   "qt": "2812"
+  },
+  {
+   "name": "玉环综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20212390/64k.mp3",
+   "name_truncated": true,
+   "qt": "20212390"
+  },
+  {
+   "name": "衢州交通广播",
+   "url": "http://lhttp.qingting.fm/live/20442/64k.mp3",
+   "name_truncated": true,
+   "qt": "20442"
+  },
+  {
+   "name": "镇海104.7 Nice FM",
+   "url": "https://lhttp-hw.qtfm.cn/live/20033/64k.mp3",
+   "name_truncated": true,
+   "qt": "20033"
+  },
+  {
+   "name": "合肥交通信息广",
+   "url": "https://lhttp-hw.qtfm.cn/live/1960/64k.mp3",
+   "name_truncated": true,
+   "qt": "1960"
+  },
+  {
+   "name": "天长综合频率",
+   "url": "https://lhttp-hw.qtfm.cn/live/4854/64k.mp3",
+   "name_truncated": true,
+   "qt": "4854"
+  },
+  {
+   "name": "太和广播电视台",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318579/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318579"
+  },
+  {
+   "name": "安庆综合广播",
+   "url": "https://lhttp.qingting.fm/live/1965/64k.mp3",
+   "name_truncated": true,
+   "qt": "1965"
+  },
+  {
+   "name": "安徽农村广播",
+   "url": "https://lhttp.qtfm.cn/live/1950/64k.mp3",
+   "name_truncated": true,
+   "qt": "1950"
+  },
+  {
+   "name": "安徽戏曲广播",
+   "url": "https://lhttp.qtfm.cn/live/1952/64k.mp3",
+   "name_truncated": true,
+   "qt": "1952"
+  },
+  {
+   "name": "安徽旅游广播",
+   "url": "https://lhttp.qtfm.cn/live/15318219/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318219"
+  },
+  {
+   "name": "安徽经济广播",
+   "url": "https://lhttp.qtfm.cn/live/4916/64k.mp3",
+   "name_truncated": true,
+   "qt": "4916"
+  },
+  {
+   "name": "宿州综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022399/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022399"
+  },
+  {
+   "name": "怀远人民广播电",
+   "url": "https://lhttp-hw.qtfm.cn/live/5021993/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021993"
+  },
+  {
+   "name": "阜阳交通广播",
+   "url": "https://lhttp.qtfm.cn/live/1971/64k.mp3",
+   "name_truncated": true,
+   "qt": "1971"
+  },
+  {
+   "name": "阜阳综合广播",
+   "url": "https://lhttp.qtfm.cn/live/1970/64k.mp3",
+   "name_truncated": true,
+   "qt": "1970"
+  },
+  {
+   "name": "三明综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5022100/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022100"
+  },
+  {
+   "name": "云霄综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500106/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500106"
+  },
+  {
+   "name": "南安市广播电视",
+   "url": "https://lhttp-hw.qtfm.cn/live/5021731/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021731"
+  },
+  {
+   "name": "南平综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022065/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022065"
+  },
+  {
+   "name": "厦门经济交通广",
+   "url": "http://lhttp.qingting.fm/live/1738/64k.mp3",
+   "name_truncated": true,
+   "qt": "1738"
+  },
+  {
+   "name": "尤溪综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022498/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022498"
+  },
+  {
+   "name": "福建新闻综合广",
+   "url": "https://lhttp.qtfm.cn/live/1731/64k.mp3",
+   "name_truncated": true,
+   "qt": "1731"
+  },
+  {
+   "name": "福建都市生活广",
+   "url": "https://lhttp.qtfm.cn/live/1736/64k.mp3",
+   "name_truncated": true,
+   "qt": "1736"
+  },
+  {
+   "name": "诏安广播电视台",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500186/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500186"
+  },
+  {
+   "name": "闽侯综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500236/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500236"
+  },
+  {
+   "name": "景德镇综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5022025/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022025"
+  },
+  {
+   "name": "江西广播电视台",
+   "url": "http://lhttp.qingting.fm/live/1802/64k.mp3",
+   "name_truncated": true,
+   "qt": "1802"
+  },
+  {
+   "name": "江西故事广播",
+   "url": "https://lhttp.qtfm.cn/live/20500092/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500092"
+  },
+  {
+   "name": "江西财经广播",
+   "url": "https://lhttp.qtfm.cn/live/5021665/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021665"
+  },
+  {
+   "name": "赣州综合广播",
+   "url": "https://lhttp.qingting.fm/live/20266/64k.mp3",
+   "name_truncated": true,
+   "qt": "20266"
+  },
+  {
+   "name": "长春少儿与老年",
+   "url": "https://lhttp.qtfm.cn/live/4984/64k.mp3",
+   "name_truncated": true,
+   "qt": "4984"
+  },
+  {
+   "name": "中文课程朗读",
+   "url": "https://stream.zeno.fm/rnxvrexlnajvv",
+   "name_truncated": true,
+   "qt": null
+  },
+  {
+   "name": "临沂文艺广播",
+   "url": "https://lhttp.qtfm.cn/live/3995/64k.mp3",
+   "name_truncated": true,
+   "qt": "3995"
+  },
+  {
+   "name": "城阳综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022537/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022537"
+  },
+  {
+   "name": "威海交通广播FM10",
+   "url": "https://lhttp-hw.qtfm.cn/live/20671/64k.mp3",
+   "name_truncated": true,
+   "qt": "20671"
+  },
+  {
+   "name": "威海音乐广播FM90",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318612/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318612"
+  },
+  {
+   "name": "寿光广播电视台",
+   "url": "https://lhttp.qtfm.cn/live/20500211/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500211"
+  },
+  {
+   "name": "山东文艺广播",
+   "url": "https://lhttp.qtfm.cn/live/20238/64k.mp3",
+   "name_truncated": true,
+   "qt": "20238"
+  },
+  {
+   "name": "山东经济广播",
+   "url": "https://lhttp.qtfm.cn/live/20236/64k.mp3",
+   "name_truncated": true,
+   "qt": "20236"
+  },
+  {
+   "name": "成武综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211637/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211637"
+  },
+  {
+   "name": "无棣广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022198/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022198"
+  },
+  {
+   "name": "枣庄交通文艺广",
+   "url": "https://lhttp.qtfm.cn/live/1688/64k.mp3",
+   "name_truncated": true,
+   "qt": "1688"
+  },
+  {
+   "name": "梁山广播电视台",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500235/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500235"
+  },
+  {
+   "name": "济南故事广播",
+   "url": "https://lhttp.qtfm.cn/live/1672/64k.mp3",
+   "name_truncated": true,
+   "qt": "1672"
+  },
+  {
+   "name": "济南文艺广播",
+   "url": "http://lhttp.qingting.fm/live/1670/64k.mp3",
+   "name_truncated": true,
+   "qt": "1670"
+  },
+  {
+   "name": "济南经济广播",
+   "url": "https://lhttp.qtfm.cn/live/1668/64k.mp3",
+   "name_truncated": true,
+   "qt": "1668"
+  },
+  {
+   "name": "济南音乐广播",
+   "url": "https://lhttp.qtfm.cn/live/1671/64k.mp3",
+   "name_truncated": true,
+   "qt": "1671"
+  },
+  {
+   "name": "济宁生活广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/4008/64k.mp3",
+   "name_truncated": true,
+   "qt": "4008"
+  },
+  {
+   "name": "滨城广播电视台",
+   "url": "https://lhttp.qtfm.cn/live/20500168/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500168"
+  },
+  {
+   "name": "潍坊交通广播",
+   "url": "https://lhttp.qtfm.cn/live/4014/64k.mp3",
+   "name_truncated": true,
+   "qt": "4014"
+  },
+  {
+   "name": "潍坊市潍城区 FM1",
+   "url": "https://lhttp.qtfm.cn/live/20211696/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211696"
+  },
+  {
+   "name": "潍坊新闻广播",
+   "url": "https://lhttp.qtfm.cn/live/20320/64k.mp3",
+   "name_truncated": true,
+   "qt": "20320"
+  },
+  {
+   "name": "潍坊新闻广播88.1",
+   "url": "https://lhttp.qtfm.cn/live/15318631/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318631"
+  },
+  {
+   "name": "烟台交通广播",
+   "url": "https://lhttp.qtfm.cn/live/1684/64k.mp3",
+   "name_truncated": true,
+   "qt": "1684"
+  },
+  {
+   "name": "牡丹之声",
+   "url": "https://lhttp.qtfm.cn/live/15318316/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318316"
+  },
+  {
+   "name": "章丘广播电视台",
+   "url": "https://lhttp.qtfm.cn/live/20212207/64k.mp3",
+   "name_truncated": true,
+   "qt": "20212207"
+  },
+  {
+   "name": "聊城交通广播",
+   "url": "https://lhttp.qtfm.cn/live/5022263/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022263"
+  },
+  {
+   "name": "聊城综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5022264/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022264"
+  },
+  {
+   "name": "蓬莱广播电视台",
+   "url": "https://lhttp.qtfm.cn/live/20500112/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500112"
+  },
+  {
+   "name": "阳信广播电视台",
+   "url": "https://lhttp.qtfm.cn/live/5021991/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021991"
+  },
+  {
+   "name": "青岛FM9.26",
+   "url": "https://lhttp.qtfm.cn/live/20176/64k.mp3",
+   "name_truncated": true,
+   "qt": "20176"
+  },
+  {
+   "name": "兰考综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500167/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500167"
+  },
+  {
+   "name": "南阳交通音乐广",
+   "url": "https://lhttp.qingting.fm/live/1212/64k.mp3",
+   "name_truncated": true,
+   "qt": "1212"
+  },
+  {
+   "name": "卧龙区台",
+   "url": "https://lhttp.qtfm.cn/live/20500113/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500113"
+  },
+  {
+   "name": "周口综合广播",
+   "url": "https://lhttp.qtfm.cn/live/20212215/64k.mp3",
+   "name_truncated": true,
+   "qt": "20212215"
+  },
+  {
+   "name": "安阳综合新闻广",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318224/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318224"
+  },
+  {
+   "name": "宛城都市音乐广",
+   "url": "https://lhttp.qingting.fm/live/5022725/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022725"
+  },
+  {
+   "name": "平顶山交通广播",
+   "url": "https://lhttp.qtfm.cn/live/5022421/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022421"
+  },
+  {
+   "name": "平顶山综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5022420/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022420"
+  },
+  {
+   "name": "开封综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022653/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022653"
+  },
+  {
+   "name": "新乡综合广播",
+   "url": "https://lhttp.qtfm.cn/live/1228/64k.mp3",
+   "name_truncated": true,
+   "qt": "1228"
+  },
+  {
+   "name": "河南星河音乐广",
+   "url": "http://lhttp.qingting.fm/live/20210755/64k.mp3",
+   "name_truncated": true,
+   "qt": "20210755"
+  },
+  {
+   "name": "洛阳交通广播",
+   "url": "http://lhttp.qingting.fm/live/1227/64k.mp3",
+   "name_truncated": true,
+   "qt": "1227"
+  },
+  {
+   "name": "洛阳综合广播",
+   "url": "http://lhttp.qingting.fm/live/1225/64k.mp3",
+   "name_truncated": true,
+   "qt": "1225"
+  },
+  {
+   "name": "漯河交通广播mp3",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022452/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022452"
+  },
+  {
+   "name": "焦作新闻综合广",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022557/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022557"
+  },
+  {
+   "name": "祥符广播919",
+   "url": "https://lhttp.qtfm.cn/live/20500156/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500156"
+  },
+  {
+   "name": "许昌交通广播",
+   "url": "http://lhttp.qingting.fm/live/5022095/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022095"
+  },
+  {
+   "name": "许昌综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5022092/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022092"
+  },
+  {
+   "name": "辉县人民广播电",
+   "url": "http://lhttp.qingting.fm/live/20207782/64k.mp3",
+   "name_truncated": true,
+   "qt": "20207782"
+  },
+  {
+   "name": "邓州综合广播",
+   "url": "https://lhttp.qtfm.cn/live/20500198/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500198"
+  },
+  {
+   "name": "郑州文体旅游广",
+   "url": "https://lhttp.qtfm.cn/live/1222/64k.mp3",
+   "name_truncated": true,
+   "qt": "1222"
+  },
+  {
+   "name": "郑州新闻综合广",
+   "url": "https://lhttp.qtfm.cn/live/1220/64k.mp3",
+   "name_truncated": true,
+   "qt": "1220"
+  },
+  {
+   "name": "郑州经济生活广",
+   "url": "https://lhttp.qtfm.cn/live/1221/64k.mp3",
+   "name_truncated": true,
+   "qt": "1221"
+  },
+  {
+   "name": "项城广播-国风",
+   "url": "https://lhttp-hw.qtfm.cn/live/20210757/64k.mp3",
+   "name_truncated": true,
+   "qt": "20210757"
+  },
+  {
+   "name": "鹤壁综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5022055/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022055"
+  },
+  {
+   "name": "云梦综合台",
+   "url": "https://lhttp.qtfm.cn/live/20500204/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500204"
+  },
+  {
+   "name": "咸宁交通音乐广",
+   "url": "https://lhttp-hw.qtfm.cn/live/5068/64k.mp3",
+   "name_truncated": true,
+   "qt": "5068"
+  },
+  {
+   "name": "咸宁综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5067/64k.mp3",
+   "name_truncated": true,
+   "qt": "5067"
+  },
+  {
+   "name": "团风县广播电视",
+   "url": "https://lhttp.qtfm.cn/live/20500189/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500189"
+  },
+  {
+   "name": "天门综合广播",
+   "url": "https://lhttp.qtfm.cn/live/20500199/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500199"
+  },
+  {
+   "name": "孝感综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022064/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022064"
+  },
+  {
+   "name": "应城市融媒体中",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500227/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500227"
+  },
+  {
+   "name": "湖北经典音乐广",
+   "url": "https://lhttp.qtfm.cn/live/1296/64k.mp3",
+   "name_truncated": true,
+   "qt": "1296"
+  },
+  {
+   "name": "荆州交通广播",
+   "url": "https://lhttp.qtfm.cn/live/1312/64k.mp3",
+   "name_truncated": true,
+   "qt": "1312"
+  },
+  {
+   "name": "荆门综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211577/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211577"
+  },
+  {
+   "name": "长江水上安全信",
+   "url": "https://lhttp-hw.qtfm.cn/live/5021868/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021868"
+  },
+  {
+   "name": "娄底综合广播",
+   "url": "https://lhttp.qtfm.cn/live/21213/64k.mp3",
+   "name_truncated": true,
+   "qt": "21213"
+  },
+  {
+   "name": "岳阳经济广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022391/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022391"
+  },
+  {
+   "name": "株洲交通广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/3971/64k.mp3",
+   "name_truncated": true,
+   "qt": "3971"
+  },
+  {
+   "name": "南方生活广播",
+   "url": "https://lhttp.qtfm.cn/live/468/64k.mp3",
+   "name_truncated": true,
+   "qt": "468"
+  },
+  {
+   "name": "广东交通之声",
+   "url": "https://lhttp.qtfm.cn/live/1262/64k.mp3",
+   "name_truncated": true,
+   "qt": "1262"
+  },
+  {
+   "name": "江门综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/1282/64k.mp3",
+   "name_truncated": true,
+   "qt": "1282"
+  },
+  {
+   "name": "深圳交通广播 FM1",
+   "url": "https://lhttp.qtfm.cn/live/1286/64k.mp3",
+   "name_truncated": true,
+   "qt": "1286"
+  },
+  {
+   "name": "深圳私家车广播",
+   "url": "https://lhttp.qtfm.cn/live/1273/64k.mp3",
+   "name_truncated": true,
+   "qt": "1273"
+  },
+  {
+   "name": "湛江廉江广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211578/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211578"
+  },
+  {
+   "name": "湾区音乐台_鹤",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500163/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500163"
+  },
+  {
+   "name": "澄海电台FM100.5",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022439/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022439"
+  },
+  {
+   "name": "阳江综合广播",
+   "url": "https://lhttp.qtfm.cn/live/15318429/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318429"
+  },
+  {
+   "name": "顺德音乐之声",
+   "url": "https://lhttp.qtfm.cn/live/20500150/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500150"
+  },
+  {
+   "name": "北部湾之声 The Vo",
+   "url": "https://lhttp-hw.qtfm.cn/live/1757/64k.mp3",
+   "name_truncated": true,
+   "qt": "1757"
+  },
+  {
+   "name": "广西文艺广播 FM9",
+   "url": "https://lhttp-hw.qtfm.cn/live/4875/64k.mp3",
+   "name_truncated": true,
+   "qt": "4875"
+  },
+  {
+   "name": "广西综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/1753/64k.mp3",
+   "name_truncated": true,
+   "qt": "1753"
+  },
+  {
+   "name": "桂林旅游音乐广",
+   "url": "https://lhttp-hw.qtfm.cn/live/1760/64k.mp3",
+   "name_truncated": true,
+   "qt": "1760"
+  },
+  {
+   "name": "桂林综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/1759/64k.mp3",
+   "name_truncated": true,
+   "qt": "1759"
+  },
+  {
+   "name": "贺州综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5043/64k.mp3",
+   "name_truncated": true,
+   "qt": "5043"
+  },
+  {
+   "name": "三亚旅游之声103.",
+   "url": "http://lhttp.qingting.fm/live/15318203/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318203"
+  },
+  {
+   "name": "海口音乐广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20010/64k.mp3",
+   "name_truncated": true,
+   "qt": "20010"
+  },
+  {
+   "name": "中江县年代音乐9",
+   "url": "https://lhttp.qtfm.cn/live/20500148/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500148"
+  },
+  {
+   "name": "仁寿人民广播电",
+   "url": "https://lhttp-hw.qtfm.cn/live/5021453/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021453"
+  },
+  {
+   "name": "德阳综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/4987/64k.mp3",
+   "name_truncated": true,
+   "qt": "4987"
+  },
+  {
+   "name": "成都文化休闲广",
+   "url": "https://lhttp-hw.qtfm.cn/live/4892/64k.mp3",
+   "name_truncated": true,
+   "qt": "4892"
+  },
+  {
+   "name": "成都经济广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/1121/64k.mp3",
+   "name_truncated": true,
+   "qt": "1121"
+  },
+  {
+   "name": "眉山交通音乐广",
+   "url": "https://lhttp.qtfm.cn/live/20207781/64k.mp3",
+   "name_truncated": true,
+   "qt": "20207781"
+  },
+  {
+   "name": "眉山综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/4027/64k.mp3",
+   "name_truncated": true,
+   "qt": "4027"
+  },
+  {
+   "name": "绵竹综合广播",
+   "url": "https://lhttp.qingting.fm/live/15318098/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318098"
+  },
+  {
+   "name": "绵阳综合广播",
+   "url": "https://lhttp.qtfm.cn/live/4024/64k.mp3",
+   "name_truncated": true,
+   "qt": "4024"
+  },
+  {
+   "name": "苍溪人民广播电",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500228/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500228"
+  },
+  {
+   "name": "遂宁交通旅游广",
+   "url": "http://lhttp.qingting.fm/live/20180/64k.mp3",
+   "name_truncated": true,
+   "qt": "20180"
+  },
+  {
+   "name": "阿坝安多藏语综",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500234/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500234"
+  },
+  {
+   "name": "六盘水综合广播",
+   "url": "https://lhttp.qingting.fm/live/20211616/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211616"
+  },
+  {
+   "name": "安顺综合广播",
+   "url": "http://lhttp.qingting.fm/live/5022203/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022203"
+  },
+  {
+   "name": "桐梓电台 综合",
+   "url": "https://lhttp-hw.qtfm.cn/live/20212410/64k.mp3",
+   "name_truncated": true,
+   "qt": "20212410"
+  },
+  {
+   "name": "贵州经济广播",
+   "url": "https://lhttp.qtfm.cn/live/20065/64k.mp3",
+   "name_truncated": true,
+   "qt": "20065"
+  },
+  {
+   "name": "贵阳综合广播",
+   "url": "https://lhttp.qtfm.cn/live/1773/64k.mp3",
+   "name_truncated": true,
+   "qt": "1773"
+  },
+  {
+   "name": "云南民族广播",
+   "url": "https://lhttp.qtfm.cn/live/1933/64k.mp3",
+   "name_truncated": true,
+   "qt": "1933"
+  },
+  {
+   "name": "云南经济广播",
+   "url": "https://lhttp.qtfm.cn/live/1927/64k.mp3",
+   "name_truncated": true,
+   "qt": "1927"
+  },
+  {
+   "name": "巧家新闻综合广",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211704/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211704"
+  },
+  {
+   "name": "弥勒人民广播电",
+   "url": "https://lhttp.qingting.fm/live/5022531/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022531"
+  },
+  {
+   "name": "德宏综合广播",
+   "url": "https://lhttp.qingting.fm/live/5021849/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021849"
+  },
+  {
+   "name": "昆明汽车广播",
+   "url": "https://lhttp.qtfm.cn/live/1936/64k.mp3",
+   "name_truncated": true,
+   "qt": "1936"
+  },
+  {
+   "name": "昆明综合广播",
+   "url": "https://lhttp.qtfm.cn/live/1934/64k.mp3",
+   "name_truncated": true,
+   "qt": "1934"
+  },
+  {
+   "name": "昆明老年广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/1937/64k.mp3",
+   "name_truncated": true,
+   "qt": "1937"
+  },
+  {
+   "name": "昭通交通旅游广",
+   "url": "http://lhttp.qingting.fm/live/21247/64k.mp3",
+   "name_truncated": true,
+   "qt": "21247"
+  },
+  {
+   "name": "普洱综合广播",
+   "url": "http://lhttp.qingting.fm/live/1938/64k.mp3",
+   "name_truncated": true,
+   "qt": "1938"
+  },
+  {
+   "name": "玉溪新闻综合广",
+   "url": "http://lhttp.qingting.fm/live/5022031/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022031"
+  },
+  {
+   "name": "红河综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/4033/64k.mp3",
+   "name_truncated": true,
+   "qt": "4033"
+  },
+  {
+   "name": "拉萨综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022138/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022138"
+  },
+  {
+   "name": "唐诗电台",
+   "url": "https://lhttp-hw.qtfm.cn/live/1603/64k.mp3",
+   "name_truncated": true,
+   "qt": "1603"
+  },
+  {
+   "name": "安康综合广播",
+   "url": "http://lhttp.qingting.fm/live/5021861/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021861"
+  },
+  {
+   "name": "渭南综合广播",
+   "url": "https://lhttp.qingting.fm/live/5022388/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022388"
+  },
+  {
+   "name": "陕西农村广播",
+   "url": "https://lhttp.qtfm.cn/live/1602/64k.mp3",
+   "name_truncated": true,
+   "qt": "1602"
+  },
+  {
+   "name": "陕西经济广播唐",
+   "url": "https://lhttp-hw.qtfm.cn/live/1603/64k.mp3",
+   "name_truncated": true,
+   "qt": "1603"
+  },
+  {
+   "name": "陕西青少广播好",
+   "url": "https://lhttp.qtfm.cn/live/4885/64k.mp3",
+   "name_truncated": true,
+   "qt": "4885"
+  },
+  {
+   "name": "陕西音乐广播",
+   "url": "https://lhttp.qtfm.cn/live/4873/64k.mp3",
+   "name_truncated": true,
+   "qt": "4873"
+  },
+  {
+   "name": "韩城综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318413/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318413"
+  },
+  {
+   "name": "天水交通广播频",
+   "url": "https://lhttp.qtfm.cn/live/20211613/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211613"
+  },
+  {
+   "name": "天水综合频道",
+   "url": "https://lhttp.qtfm.cn/live/20460/64k.mp3",
+   "name_truncated": true,
+   "qt": "20460"
+  },
+  {
+   "name": "张掖新闻综合广",
+   "url": "http://lhttp.qingting.fm/live/5022096/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022096"
+  },
+  {
+   "name": "肃州广播电视台F",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318602/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318602"
+  },
+  {
+   "name": "西宁交通文艺广",
+   "url": "http://lhttp.qingting.fm/live/5022283/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022283"
+  },
+  {
+   "name": "青海经济广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5008/64k.mp3",
+   "name_truncated": true,
+   "qt": "5008"
+  },
+  {
+   "name": "宁夏交通广播",
+   "url": "https://lhttp.qtfm.cn/live/1840/64k.mp3",
+   "name_truncated": true,
+   "qt": "1840"
+  },
+  {
+   "name": "宁夏音乐广播",
+   "url": "https://lhttp.qtfm.cn/live/15318294/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318294"
+  },
+  {
+   "name": "石嘴山综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022563/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022563"
+  },
+  {
+   "name": "五师人民广播电",
+   "url": "https://lhttp.qtfm.cn/live/20207772/64k.mp3",
+   "name_truncated": true,
+   "qt": "20207772"
+  },
+  {
+   "name": "兵团八师石河子",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500118/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500118"
+  },
+  {
+   "name": "兵团四师可克达",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500054/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500054"
+  },
+  {
+   "name": "巴音郭楞汉语综",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022108/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022108"
+  },
+  {
+   "name": "新疆交通广播",
+   "url": "https://lhttp.qtfm.cn/live/1910/64k.mp3",
+   "name_truncated": true,
+   "qt": "1910"
+  },
+  {
+   "name": "新疆维语文艺广",
+   "url": "https://lhttp.qtfm.cn/live/20639/64k.mp3",
+   "name_truncated": true,
+   "qt": "20639"
+  },
+  {
+   "name": "新疆蒙语广播",
+   "url": "https://lhttp.qtfm.cn/live/1903/64k.mp3",
+   "name_truncated": true,
+   "qt": "1903"
+  },
+  {
+   "name": "昌吉交通广播",
+   "url": "https://lhttp.qtfm.cn/live/20440/64k.mp3",
+   "name_truncated": true,
+   "qt": "20440"
+  },
+  {
+   "name": "昌吉综合广播",
+   "url": "https://lhttp.qtfm.cn/live/20440/64k.mp3",
+   "name_truncated": true,
+   "qt": "20440"
+  },
+  {
+   "name": "第三师图木舒克",
+   "url": "https://lhttp.qtfm.cn/live/20500135/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500135"
+  },
+  {
+   "name": "轮台之声",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500099/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500099"
+  },
+  {
+   "name": "阿克苏维语综合",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318551/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318551"
+  },
+  {
+   "name": "50首经典古典音",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022308/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022308"
+  },
+  {
+   "name": "891线上音乐台",
+   "url": "https://live.fm891.net/96k.aac",
+   "name_truncated": true,
+   "qt": null
+  },
+  {
+   "name": "AsiaFM 亚洲热歌",
+   "url": "http://hot.asiafm.net:8000/asiafm",
+   "name_truncated": true,
+   "qt": null
+  },
+  {
+   "name": "AsiaFM 亚洲粤语台",
+   "url": "https://lhttp.qtfm.cn/live/15318569/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318569"
+  },
+  {
+   "name": "Auto FM汽车联播网",
+   "url": "https://lhttp.qtfm.cn/live/15318569/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318569"
+  },
+  {
+   "name": "FM104.1北岳之声",
+   "url": "https://lhttp-hw.qtfm.cn/live/20212209/64k.mp3",
+   "name_truncated": true,
+   "qt": "20212209"
+  },
+  {
+   "name": "三门峡交通文艺",
+   "url": "https://stream.zeno.fm/cmbjv6tml6fuv",
+   "name_truncated": true,
+   "qt": null
+  },
+  {
+   "name": "主内真生命-英语",
+   "url": "https://stream.tligradio.org/listen/english/radio.mp3",
+   "name_truncated": true,
+   "qt": null
+  },
+  {
+   "name": "信仰广播一套",
+   "url": "https://lhttp.qtfm.cn/live/5021977/64k.mp3",
+   "name_truncated": true,
+   "qt": "5021977"
+  },
+  {
+   "name": "信阳广播二套",
+   "url": "https://lhttp.qtfm.cn/live/15318156/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318156"
+  },
+  {
+   "name": "动听音乐台",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022107/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022107"
+  },
+  {
+   "name": "动感调频FM94.3",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500064/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500064"
+  },
+  {
+   "name": "北海交通音乐广",
+   "url": "https://lhttp.qtfm.cn/live/20211621/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211621"
+  },
+  {
+   "name": "吕梁交通广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/4899/64k.mp3",
+   "name_truncated": true,
+   "qt": "4899"
+  },
+  {
+   "name": "固镇人民广播电",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500125/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500125"
+  },
+  {
+   "name": "国际新闻",
+   "url": "https://lhttp.qtfm.cn/live/20500172/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500172"
+  },
+  {
+   "name": "士兵突击FM",
+   "url": "https://stream.zeno.fm/vs4zinqldp2vv",
+   "name_truncated": true,
+   "qt": null
+  },
+  {
+   "name": "安阳市广播电视",
+   "url": "https://lhttp-hw.qtfm.cn/live/2138/64k.mp3",
+   "name_truncated": true,
+   "qt": "2138"
+  },
+  {
+   "name": "定州融媒体中心",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211638/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211638"
+  },
+  {
+   "name": "宝鸡交通旅游广",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318128/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318128"
+  },
+  {
+   "name": "宝鸡综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318125/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318125"
+  },
+  {
+   "name": "山亭声动970",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500047/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500047"
+  },
+  {
+   "name": "庆云县融媒体中",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022403/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022403"
+  },
+  {
+   "name": "开平电台 飞扬956",
+   "url": "https://lhttp-hw.qtfm.cn/live/5037/64k.mp3",
+   "name_truncated": true,
+   "qt": "5037"
+  },
+  {
+   "name": "张家口综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318285/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318285"
+  },
+  {
+   "name": "抚州交通音乐广",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500015/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500015"
+  },
+  {
+   "name": "故事广播-阿基",
+   "url": "https://lhttp.qtfm.cn/live/20500182/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500182"
+  },
+  {
+   "name": "新余经济交通广",
+   "url": "https://lhttp-hw.qtfm.cn/live/20093/64k.mp3",
+   "name_truncated": true,
+   "qt": "20093"
+  },
+  {
+   "name": "星空电台 STAR RADI",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022379/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022379"
+  },
+  {
+   "name": "昭通乌蒙之声新",
+   "url": "https://lhttp-hw.qtfm.cn/live/21249/64k.mp3",
+   "name_truncated": true,
+   "qt": "21249"
+  },
+  {
+   "name": "柳州综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/21043/64k.mp3",
+   "name_truncated": true,
+   "qt": "21043"
+  },
+  {
+   "name": "梁平融媒体中心",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211646/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211646"
+  },
+  {
+   "name": "江陵广播电视台",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500203/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500203"
+  },
+  {
+   "name": "海南旅游广播",
+   "url": "https://lhttp.qtfm.cn/live/1862/64k.mp3",
+   "name_truncated": true,
+   "qt": "1862"
+  },
+  {
+   "name": "涞水县流行音乐",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211620/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211620"
+  },
+  {
+   "name": "淮北交通广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211647/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211647"
+  },
+  {
+   "name": "湘乡广播电台龙",
+   "url": "https://lhttp-hw.qtfm.cn/live/15318180/64k.mp3",
+   "name_truncated": true,
+   "qt": "15318180"
+  },
+  {
+   "name": "滕州广播电视台",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022611/64k.mp3",
+   "name_truncated": true,
+   "qt": "5022611"
+  },
+  {
+   "name": "磁县融媒综合广",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500116/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500116"
+  },
+  {
+   "name": "襄州综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500108/64k.mp3",
+   "name_truncated": true,
+   "qt": "20500108"
+  },
+  {
+   "name": "霸州市融媒体中",
+   "url": "https://lhttp-hw.qtfm.cn/live/20211658/64k.mp3",
+   "name_truncated": true,
+   "qt": "20211658"
+  },
+  {
+   "name": "黑龙江老年少儿",
+   "url": "https://lhttp-hw.qtfm.cn/live/4972/64k.mp3",
+   "name_truncated": true,
+   "qt": "4972"
+  },
+  {
+   "name": "黔西南综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5045/64k.mp3",
+   "name_truncated": true,
+   "qt": "5045"
+  }
+ ]
+}

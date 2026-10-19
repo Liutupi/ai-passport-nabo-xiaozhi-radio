@@ -1,0 +1,122 @@
+{
+  "props": {
+    "mic": {
+      "file": "props/mic.png",
+      "export_px": [
+        104,
+        144
+      ],
+      "target_px": [
+        26,
+        36
+      ],
+      "export_scale": 4,
+      "native_file": "props/game/mic.png",
+      "mode": "RGBA",
+      "source": "props/source/mic_source.png",
+      "source_crop": [
+        176,
+        149,
+        913,
+        1330
+      ],
+      "alpha_bbox": [
+        8,
+        2,
+        95,
+        142
+      ],
+      "color_calibration": null
+    },
+    "mug": {
+      "file": "props/mug.png",
+      "export_px": [
+        96,
+        80
+      ],
+      "target_px": [
+        24,
+        20
+      ],
+      "export_scale": 4,
+      "native_file": "props/game/mug.png",
+      "mode": "RGBA",
+      "source": "props/source/mug_source.png",
+      "source_crop": [
+        194,
+        225,
+        1148,
+        1042
+      ],
+      "alpha_bbox": [
+        3,
+        2,
+        92,
+        78
+      ],
+      "color_calibration": null
+    },
+    "headphones": {
+      "file": "props/headphones.png",
+      "export_px": [
+        160,
+        140
+      ],
+      "target_px": [
+        40,
+        35
+      ],
+      "export_scale": 4,
+      "native_file": "props/game/headphones.png",
+      "mode": "RGBA",
+      "source": "props/source/headphones_source.png",
+      "source_crop": [
+        160,
+        20,
+        1339,
+        1003
+      ],
+      "alpha_bbox": [
+        2,
+        5,
+        158,
+        135
+      ],
+      "color_calibration": {
+        "selected_B_median_hex": "#F3735E",
+        "generated_before_median_hex": "#FA735B",
+        "method": "HSV shell-only color calibration; no geometric change"
+      }
+    },
+    "nabo_head_24": {
+      "file": "props/nabo_head_24.png",
+      "export_px": [
+        24,
+        24
+      ],
+      "target_px": [
+        24,
+        24
+      ],
+      "export_scale": 1,
+      "hi_res_file": "props/nabo_head_96.png",
+      "hi_res_px": [
+        96,
+        96
+      ],
+      "hi_res_scale": 4,
+      "nearest_check_file": "props/nabo_head_24_4x_nearest.png",
+      "mode": "RGBA",
+      "source": "design/S2_on_air_cutout.png",
+      "source_crop": [
+        150,
+        55,
+        872,
+        666
+      ],
+      "identity": "crop of approved S2; no redraw"
+    }
+  },
+  "manifest": "manifest.json",
+  "preview": "preview/props_radio.png"
+}

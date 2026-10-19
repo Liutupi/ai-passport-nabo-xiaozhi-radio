@@ -1,0 +1,580 @@
+<title>NABO FM 原型</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* 布局：左边一台等比放大的工牌（240×320 屏 + 右侧三键），右边是试玩说明和调参 */
+:root{
+  --bg:#EEF0F4; --panel:#FFFFFF; --ink:#151A26; --muted:#5B6476; --line:#D7DBE3;
+  --amber:#C98512; --amber-soft:#F6E7C8; --red:#D93A2F; --shell:#1A1F2C; --shell-hi:#2B3245;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1018; --panel:#151A25; --ink:#E9ECF2; --muted:#98A1B3; --line:#262D3C;
+  --amber:#FFB547; --amber-soft:#3A2B12; --red:#FF5A4E; --shell:#06080D; --shell-hi:#1C2230; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1018; --panel:#151A25; --ink:#E9ECF2; --muted:#98A1B3; --line:#262D3C;
+  --amber:#FFB547; --amber-soft:#3A2B12; --red:#FF5A4E; --shell:#06080D; --shell-hi:#1C2230; color-scheme:dark}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
+body{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:auto minmax(0,1fr);gap:32px;align-items:start}
+@media (max-width:820px){.wrap{grid-template-columns:minmax(0,1fr)}}
+header{max-width:1040px;margin:0 auto 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+header h1{font-size:22px;margin:0;font-weight:900;letter-spacing:.02em}
+header p{margin:0;color:var(--muted);font-size:13px}
+.device{justify-self:center;display:flex;gap:10px;align-items:center;padding:22px 16px 22px 22px;background:var(--shell);border-radius:34px;box-shadow:0 20px 40px -18px rgba(0,0,0,.45),inset 0 0 0 2px var(--shell-hi)}
+.screen{position:relative;width:480px;height:640px;max-width:calc(100vw - 120px);aspect-ratio:3/4;height:auto;border-radius:10px;overflow:hidden;background:#000;box-shadow:0 0 0 3px #000}
+canvas{width:100%;height:100%;image-rendering:pixelated;display:block}
+.keys{display:flex;flex-direction:column;gap:14px}
+.key{width:46px;height:46px;border-radius:12px;border:0;background:var(--shell-hi);color:#cfd5e2;font:700 16px var(--sans);cursor:pointer;box-shadow:0 3px 0 #000;touch-action:none;user-select:none;-webkit-user-select:none}
+.key:active,.key.down{transform:translateY(2px);box-shadow:0 1px 0 #000;background:#3a4258}
+.key.ok{height:62px;background:#3a2b12;color:#FFB547}
+.key:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.card h2{font-size:14px;margin:0 0 10px;letter-spacing:.08em;color:var(--muted);font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td{padding:5px 6px;border-top:1px solid var(--line);vertical-align:top}
+td:first-child{white-space:nowrap;font-family:var(--mono);color:var(--amber);font-size:12px;padding-left:0}
+.row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:13px}
+label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--ink);font:500 12px var(--sans);padding:6px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--amber-soft);color:var(--amber);font-weight:700}
+.log{font-family:var(--mono);font-size:12px;color:var(--muted);height:96px;overflow:auto;white-space:pre-wrap;margin:0}
+.stat{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.stat b{color:var(--ink)}
+.note{font-size:12px;color:var(--muted);line-height:1.6;margin:8px 0 0}
+@font-face{font-family:"NaboSmiley";src:url(data:font/woff2;base64,__F_SMILEY__) format("woff2");font-display:block}
+@font-face{font-family:"NaboWenKai";src:url(data:font/woff2;base64,__F_WENKAI__) format("woff2");font-display:block}
+@font-face{font-family:"NaboPixel";src:url(data:font/woff2;base64,__F_PIXEL__) format("woff2");font-display:block}
+@font-face{font-family:"NaboSans";font-weight:700 900;src:url(data:font/woff2;base64,__F_SANSB__) format("woff2");font-display:block}
+@font-face{font-family:"NaboSans";font-weight:100 600;src:url(data:font/woff2;base64,__F_SANSM__) format("woff2");font-display:block}
+</style>
+
+<header>
+  <h1>NABO FM · 交互原型</h1>
+  <p>240×320 实际像素，放大 2 倍显示。点右侧三个键，或用键盘 ↑ ↓ 回车（按住＝长按）。</p>
+</header>
+
+<div class="wrap">
+  <div class="device">
+    <div class="screen"><canvas id="lcd" width="240" height="320" aria-label="工牌屏幕"></canvas></div>
+    <div class="keys">
+      <button class="key" id="kUp" aria-label="上键">▲</button>
+      <button class="key ok" id="kOk" aria-label="确定键">OK</button>
+      <button class="key" id="kDown" aria-label="下键">▼</button>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="card">
+      <h2>按键</h2>
+      <table>
+        <tr><td>▼ 单击</td><td>下一台（指针滑过去，停手 0.5 秒才连接）</td></tr>
+        <tr><td>▼ 按住</td><td>快速扫台，越扫越快，松手停下</td></tr>
+        <tr><td>▲ 单击</td><td>上一台</td></tr>
+        <tr><td>▲ 双击</td><td>返回上一级（原型里在播放页表示“回小智”）</td></tr>
+        <tr><td>OK 单击</td><td>播放 / 暂停</td></tr>
+        <tr><td>OK 双击</td><td>收藏当前台（NABO 比心）</td></tr>
+        <tr><td>OK 长按</td><td>菜单：电台列表、搜台、定时关闭、音效、设置</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2>外观</h2>
+      <div class="seg" id="themePick" role="group" aria-label="主题"></div>
+      <p class="note" id="themeNote"></p>
+    </div>
+    <div class="card">
+      <h2>试手感</h2>
+      <div class="row">
+        <span>▲ 单击：</span>
+        <span class="seg" id="upMode">
+          <button data-v="A" aria-pressed="true">A 先动，双击再撤回</button>
+          <button data-v="B" aria-pressed="false">B 等双击判定后再动</button>
+        </span>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <label><input type="checkbox" id="optNoise" checked> 换台沙沙声</label>
+        <label><input type="checkbox" id="opt565" checked> RGB565 色彩模拟</label>
+        <label><input type="checkbox" id="optDebug"> 显示 NABO 状态</label>
+      </div>
+      <p class="note">原型不能在这个页面里真的播放电台（页面安全策略不允许加载外部音频），连接过程和电平是模拟的；沙沙声是本机合成的。NABO 用的是 Codex 定稿的 S1 / S2 静态起始图和话筒、马克杯道具，动作只表示状态切换的时机，正式动画等 Grok 视频。</p>
+    </div>
+    <div class="card">
+      <h2>电台表</h2>
+      <p class="stat" id="dataStat"></p>
+      <p class="note">数据来自蜻蜓FM公开电台页（按省份和类型）、魏宝辉 / 小海马两款开源电台和我们旧版的 47 台，已去重。热度是蜻蜓页面上的数字，用来排序。10 月 19 日在你家网络逐台实测：1,073 台通过帧头校验，37 台已下线并移除，香港电台和马来西亚 AAC 台要等上机再测。</p>
+    </div>
+    <div class="card">
+      <h2>按键记录</h2>
+      <pre class="log" id="log"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+const SPR={off:"data:image/png;base64,__SPR_OFF__",on:"data:image/png;base64,__SPR_ON__",mic:"data:image/png;base64,__SPR_MIC__",mug:"data:image/png;base64,__SPR_MUG__",head:"data:image/png;base64,__SPR_HEAD__"};
+const DATA=__DATA__;
+</script>
+<script>
+(()=>{
+"use strict";
+// ---------- 调色板（与 ART_BRIEF 第 8 节一致） ----------
+// ---------- 主题：字体 + 配色（ART_BRIEF 第 8 节的候选） ----------
+const SANS='"NaboSans","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif';
+const THEMES={
+  final:{label:"定稿",name:'"NaboWenKai",'+SANS,ui:SANS,pixel:false,nameWeight:400,P:{accent:"#F7B955",
+    bg:"#080B12",stage:"#111725",stageLine:"#161E2F",stageDot:"#1A2335",desk:"#1D2433",deskHi:"#2C3549",
+    dialBg:"#171107",dial:"#F7B955",dialDim:"#6E5025",onAir:"#FF3B30",onAirOff:"#341C1F",onAirOffText:"#6B3A3E",
+    level:"#62E3C6",meterOff:"#161D2B",text:"#F5EFE4",muted:"#8B93A5",dimmer:"#4C5568",phones:"#E97967",heart:"#FF6F91",
+    page:"#0B0F18",panel:"#131A28",panelLine:"#273149",row:"#1F2738",chip:"#1A2131",rowText:"#C8CFDC",chipTextOn:"#171107",
+    knob:"#171107",mic:"#353C4D",micLine:"#0A0D14",micGrill:"#525A6E",micArm:"#556079",glow:"rgba(255,59,48,.20)",
+    clockBg:"#04060A",clock:"#F2C46D",clockSub:"#7F889B",clockMeter:"#2C6A63",shade:"rgba(4,6,10,.82)"}},
+  amber:{label:"午夜琥珀",name:'"NaboSmiley",'+SANS,ui:SANS,pixel:true,nameWeight:400,P:{accent:"#F7B955",
+    bg:"#080B12",stage:"#111725",stageLine:"#161E2F",stageDot:"#1A2335",desk:"#1D2433",deskHi:"#2C3549",
+    dialBg:"#171107",dial:"#F7B955",dialDim:"#6E5025",onAir:"#FF5A4F",onAirOff:"#341C1F",onAirOffText:"#6B3A3E",
+    level:"#62E3C6",meterOff:"#161D2B",text:"#F5EFE4",muted:"#8B93A5",dimmer:"#4C5568",phones:"#FF8A3D",heart:"#FF6F91",
+    page:"#0B0F18",panel:"#131A28",panelLine:"#273149",row:"#1F2738",chip:"#1A2131",rowText:"#C8CFDC",chipTextOn:"#171107",
+    knob:"#171107",mic:"#353C4D",micLine:"#0A0D14",micGrill:"#525A6E",micArm:"#556079",glow:"rgba(255,90,79,.20)",
+    clockBg:"#04060A",clock:"#F2C46D",clockSub:"#7F889B",clockMeter:"#2C6A63",shade:"rgba(4,6,10,.82)"}},
+  bakelite:{label:"胶木收音机",name:'"NaboWenKai",'+SANS,ui:SANS,pixel:false,nameWeight:400,P:{accent:"#D9AE5B",
+    bg:"#16100C",stage:"#2A1C14",stageLine:"#33241A",stageDot:"#3A2A1F",desk:"#4A3022",deskHi:"#6B4631",
+    dialBg:"#EFE3C8",dial:"#3A2416",dialDim:"#B39A78",onAir:"#D4432F",onAirOff:"#3B241C",onAirOffText:"#7A5040",
+    level:"#E7B75B",meterOff:"#2F2018",text:"#F4E9D3",muted:"#B7A386",dimmer:"#7C6A54",phones:"#C9A24A",heart:"#E2614F",
+    page:"#1C140F",panel:"#2A1D15",panelLine:"#4A3426",row:"#3A2A1F",chip:"#33241A",rowText:"#E3D4B8",chipTextOn:"#24160C",
+    knob:"#C9A24A",mic:"#4B3A2E",micLine:"#140D09",micGrill:"#7A6450",micArm:"#8A6E4A",glow:"rgba(212,67,47,.22)",
+    clockBg:"#120C08",clock:"#EAD9B5",clockSub:"#9B876B",clockMeter:"#8A6B35",shade:"rgba(18,12,8,.84)"}},
+  shift:{label:"夜班",name:SANS,ui:SANS,pixel:true,nameWeight:700,P:{accent:"#7FF0D4",
+    bg:"#061416",stage:"#0B1F22",stageLine:"#0F272B",stageDot:"#123034",desk:"#12302F",deskHi:"#1D4644",
+    dialBg:"#071A1C",dial:"#7FF0D4",dialDim:"#2C6B62",onAir:"#FF6B5B",onAirOff:"#2A1E1D",onAirOffText:"#6E4440",
+    level:"#7FF0D4",meterOff:"#0F2628",text:"#E9F6F3",muted:"#86A6A2",dimmer:"#476663",phones:"#FF9A62",heart:"#FF7E8E",
+    page:"#081A1C",panel:"#0D2326",panelLine:"#1D4044",row:"#143236",chip:"#11292C",rowText:"#C3DCD8",chipTextOn:"#06201D",
+    knob:"#071A1C",mic:"#2B4446",micLine:"#041011",micGrill:"#4C6C6C",micArm:"#4E7270",glow:"rgba(255,107,91,.20)",
+    clockBg:"#030B0C",clock:"#7FF0D4",clockSub:"#5E8A85",clockMeter:"#1F5D55",shade:"rgba(3,11,12,.84)"}},
+  citypop:{label:"城市流行",name:'"NaboSmiley",'+SANS,ui:SANS,pixel:false,nameWeight:400,P:{accent:"#FF8FC4",
+    bg:"#0E0B1F",stage:"#191433",stageLine:"#1F1940",stageDot:"#251E4A",desk:"#241D47",deskHi:"#3A2F6E",
+    dialBg:"#120E26",dial:"#FF8FC4",dialDim:"#6B3F74",onAir:"#FF4F8B",onAirOff:"#2E1830",onAirOffText:"#6E3F62",
+    level:"#6FE7FF",meterOff:"#1C1738",text:"#FFF3FA",muted:"#A69CC8",dimmer:"#5E5588",phones:"#6FE7FF",heart:"#FF8FC4",
+    page:"#120E26",panel:"#1A1535",panelLine:"#352C66",row:"#28205A",chip:"#211A45",rowText:"#DCD3F2",chipTextOn:"#1A0E26",
+    knob:"#120E26",mic:"#3A3166",micLine:"#0B0918",micGrill:"#5E5594",micArm:"#6D62A8",glow:"rgba(255,79,139,.22)",
+    clockBg:"#08061A",clock:"#FF9ACB",clockSub:"#8A80B8",clockMeter:"#3B6E8A",shade:"rgba(8,6,20,.84)"}}
+};
+let themeKey="final"; try{const k=JSON.parse(localStorage.getItem("nabofm")||"{}").theme2; if(THEMES[k]) themeKey=k}catch(e){}
+let T=THEMES[themeKey], P=T.P;
+// 像素主题里，13 px 及以下的界面小字一律用 12 px 像素字，保持一格一像素的清晰
+function fontStr(size,weight,role){
+  if(role==="name") return `${T.nameWeight>=700?Math.max(weight,700):400} ${size}px ${T.name}`;
+  if(T.pixel&&size<=13) return `400 12px "NaboPixel",${SANS}`;
+  return `${weight} ${size}px ${T.ui}`;
+}
+const cv=document.getElementById("lcd"), g=cv.getContext("2d");
+g.imageSmoothingEnabled=false;
+const img={}; for(const k in SPR){img[k]=new Image(); img[k].src=SPR[k];}
+const $=id=>document.getElementById(id);
+const logEl=$("log"); const log=s=>{const t=new Date().toTimeString().slice(0,8);logEl.textContent=(t+"  "+s+"\n"+logEl.textContent).slice(0,3000)};
+let store={}; try{store=JSON.parse(localStorage.getItem("nabofm")||"{}")}catch(e){}
+const save=()=>{try{localStorage.setItem("nabofm",JSON.stringify({fav:[...fav],recent,cur,theme2:themeKey}))}catch(e){}};
+
+// ---------- 数据 ----------
+const ST=DATA.st;               // [name, prov, types, heat, codec, py]
+const fav=new Set(store.fav||[]);
+let recent=store.recent||[];
+// 刻度上的条目序列：波段依次拼接；“收藏”“最近”是动态波段
+function buildDial(){
+  const bands=[];
+  const add=(name,ids)=>{if(ids.length)bands.push({name,ids})};
+  add("本地·"+DATA.local, DATA.bands.find(b=>b.name===DATA.local)?.ids||[]);
+  add("收藏",[...fav]);
+  add("最近",recent.slice(0,10));
+  for(const b of DATA.bands) if(b.kind==="type") add(b.name,b.ids);
+  for(const b of DATA.bands) if(b.kind==="region"&&b.name!==DATA.local) add(b.name,b.ids);
+  const entries=[]; bands.forEach((b,bi)=>{b.start=entries.length;b.ids.forEach(id=>entries.push({id,bi}));b.end=entries.length});
+  return {bands,entries};
+}
+let dial=buildDial();
+let cur=Math.min(store.cur||0,dial.entries.length-1);  // 刻度位置（条目序号）
+const curSt=()=>ST[dial.entries[cur].id];
+const curId=()=>dial.entries[cur].id;
+$("dataStat").innerHTML=`共 <b>${ST.length}</b> 台 · 波段 <b>${dial.bands.length}</b> 个 · 本地示例：<b>${DATA.local}</b>`;
+
+// ---------- 状态 ----------
+const S={page:"player",want:false,radio:"stopped",radioAt:0,connectAt:0,tuneUntil:0,nabo:"idle_off",naboAt:0,
+  dialPos:cur,dialFrom:cur,dialTo:cur,dialT0:0,toast:"",toastUntil:0,menuSel:0,listBand:0,listSel:0,listTop:0,
+  sleepMin:0,sleepEnd:0,lastKey:performance.now(),clock:false,search:"",searchSel:0,level:0,hearts:[],failed:new Set()};
+const STATE_TEXT={stopped:"已停止",paused:"已暂停",connecting:"连接中…",buffering:"缓冲中…",playing:"播放中",failed:"这个台暂时连不上",retry:"信号不好，重连中"};
+function setNabo(n){if(S.nabo!==n){S.nabo=n;S.naboAt=performance.now()}}
+function toast(t,ms=1600){S.toast=t;S.toastUntil=performance.now()+ms}
+function isMusic(st){return /音乐|文艺|都市|旅游/.test(st[2])}
+
+// ---------- 换台 ----------
+function moveDial(to,anim=180){
+  const n=dial.entries.length; to=((to%n)+n)%n;
+  const oldBand=dial.entries[cur].bi;
+  S.dialFrom=S.dialPos; S.dialTo=to; S.dialT0=performance.now(); S.dialAnim=anim;
+  // 环绕时直接跳
+  if(Math.abs(to-cur)>n/2){S.dialFrom=to+(to>cur?1:-1);}
+  cur=to; S.connectAt=performance.now()+500; S.tuneUntil=S.connectAt;
+  if(S.want){S.radio="connecting";setNabo("tune");noise(true)}
+  if(dial.entries[cur].bi!==oldBand) toast(dial.bands[dial.entries[cur].bi].name+" 波段",900);
+  save();
+}
+function startConnect(){
+  const id=curId(); S.radio="connecting"; S.radioAt=performance.now();
+  // 模拟：连接 0.5–1.4 秒，缓冲 0.5 秒；按台号确定约 6% 失败
+  const fail=((id*2654435761)>>>0)%100<6;
+  S.plan={fail,connectMs:500+((id*97)%900),bufMs:500};
+  recent=[id,...recent.filter(x=>x!==id)].slice(0,10); save();
+}
+function play(){S.want=true;setNabo("phones_on");S.connectAt=performance.now()+600;S.radio="connecting";noise(true);log("播放 "+curSt()[0])}
+function pause(){S.want=false;S.radio="paused";setNabo("phones_off");noise(false);log("暂停")}
+function toggleFav(){
+  const id=curId();
+  if(fav.has(id)){fav.delete(id);toast("已取消收藏")}else{fav.add(id);toast("已收藏 ♥");setNabo("love");
+    for(let i=0;i<6;i++)S.hearts.push({x:120+(Math.random()*60-30),y:96,vx:Math.random()*1.2-.6,vy:-.6-Math.random(),t:performance.now()})}
+  const keepId=id; dial=buildDial(); cur=Math.max(0,dial.entries.findIndex(e=>e.id===keepId&&dial.bands[e.bi].name!=="收藏"));
+  S.dialPos=S.dialTo=S.dialFrom=cur; save();
+}
+
+// ---------- 沙沙声（Web Audio 合成） ----------
+let ac,noiseGain;
+function noise(on){
+  if(!$("optNoise").checked) on=false;
+  try{
+    if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();const len=ac.sampleRate*2,buf=ac.createBuffer(1,len,ac.sampleRate),d=buf.getChannelData(0);
+      let b=0;for(let i=0;i<len;i++){b=.97*b+.03*(Math.random()*2-1);d[i]=(Math.random()*2-1)*.35+b*2}
+      const src=ac.createBufferSource();src.buffer=buf;src.loop=true;const bp=ac.createBiquadFilter();bp.type="bandpass";bp.frequency.value=2200;bp.Q.value=.6;
+      noiseGain=ac.createGain();noiseGain.gain.value=0;src.connect(bp).connect(noiseGain).connect(ac.destination);src.start()}
+    ac.resume(); noiseGain.gain.setTargetAtTime(on?0.06:0,ac.currentTime,on?.02:.12);
+  }catch(e){}
+}
+
+// ---------- 按键识别：单击 / 双击 / 长按 / 按住连发 ----------
+const DBL=250,LONG=550;
+const K={};
+function keyDown(k){
+  S.lastKey=performance.now();
+  if(S.clock){S.clock=false;K[k]={swallow:true};return}   // 熄屏时任意键只唤醒
+  const st=K[k]||(K[k]={});
+  if(st.down) return;
+  st.down=true; st.t0=performance.now(); st.long=false; st.repeat=0;
+  clearTimeout(st.lt);
+  st.lt=setTimeout(()=>{st.long=true; onLong(k)},LONG);
+  btn(k,true);
+}
+function keyUp(k){
+  const st=K[k]; if(!st) return; btn(k,false);
+  if(st.swallow){K[k]={};return}
+  if(!st.down) return; st.down=false; clearTimeout(st.lt); clearInterval(st.rep);
+  if(st.long) return;
+  if(st.pending){clearTimeout(st.pending);st.pending=null;onDouble(k);return}
+  // 第一下：根据按键和模式决定先动还是等待
+  const immediate = k==="down" || (k==="up" && upMode==="A");
+  if(immediate){onClick(k,true)}
+  st.pending=setTimeout(()=>{st.pending=null; if(!immediate) onClick(k,false); else onClickConfirmed(k)},DBL);
+}
+function btn(k,on){({up:$("kUp"),ok:$("kOk"),down:$("kDown")})[k].classList.toggle("down",on)}
+let upMode="A";
+document.querySelectorAll("#upMode button").forEach(b=>b.onclick=()=>{upMode=b.dataset.v;document.querySelectorAll("#upMode button").forEach(x=>x.setAttribute("aria-pressed",x===b));log("▲ 模式 "+upMode)});
+
+let undo=null; // 模式 A：▲ 单击先动，若构成双击则撤回
+function onClick(k,early){
+  log((k==="up"?"▲":k==="down"?"▼":"OK")+" 单击"+(early?"（立即）":""));
+  const pg=S.page;
+  if(k==="ok"){ if(pg==="player"){S.want?pause():play()} else okSelect(); return }
+  const dir=k==="up"?-1:1;
+  if(pg==="player"){ if(k==="up") undo={page:"player",pos:cur}; moveDial(cur+dir) }
+  else { if(k==="up") undo={page:pg,sel:snapshotSel()}; moveSel(dir) }
+}
+function onClickConfirmed(k){ if(k==="up") undo=null }
+function onDouble(k){
+  log((k==="up"?"▲":k==="down"?"▼":"OK")+" 双击");
+  if(k==="up"){
+    if(undo){ if(undo.page==="player"){cur=undo.pos;S.dialPos=S.dialTo=S.dialFrom=cur;S.connectAt=0;if(S.want){S.radio="playing";setNabo(grooveFor())}} else restoreSel(undo.sel); undo=null }
+    goBack(); return }
+  if(k==="ok"){ if(S.page==="player") toggleFav(); else if(S.page==="list"){const id=listIds()[S.listSel];if(id!=null){fav.has(id)?fav.delete(id):fav.add(id);dial=buildDial();save()}} return }
+  if(k==="down"){ onClick("down",false) }
+}
+function onLong(k){
+  log((k==="up"?"▲":k==="down"?"▼":"OK")+" 长按");
+  if(k==="up"){ toast("长按 ▲：回到小智（原型不跳转）"); return }
+  if(k==="ok"){ if(S.page==="player"){S.page="menu";S.menuSel=0} else if(S.page==="list"){S.listBand=(S.listBand+1)%dial.bands.length;S.listSel=0;S.listTop=0} else goBack(); return }
+  if(k==="down"&&S.page==="player"){ // 按住扫台，越来越快
+    const st=K.down; let n=0;
+    const step=()=>{ if(!st.down) return; n++; moveDial(cur+1,90); st.rep=setTimeout(step,Math.max(55,220-n*14)) };
+    step();
+  } else if(k==="down"){ const st=K.down; const step=()=>{if(!st.down)return;moveSel(1);st.rep=setTimeout(step,90)};step() }
+}
+function goBack(){
+  if(S.page==="player"){toast("双击 ▲：回到小智（原型不跳转）");return}
+  if(S.page==="search"){S.page="list";return}
+  S.page=S.page==="menu"||S.page==="list"||S.page==="sleep"||S.page==="settings"?"player":"player";
+}
+
+// ---------- 菜单 / 列表 / 搜索 ----------
+const MENU=["电台列表","拼音搜台","定时关闭","换台沙沙声","设置","返回"];
+const SLEEP=[0,15,30,60,90];
+const SETTINGS=["音量  ▮▮▮▮▮▮▯▯","亮度  ▮▮▮▮▮▯▯▯","Wi-Fi  已连接 Home-2.4G","自动熄屏  1 分钟","本地城市  自动（广东）","电台表  今天 06:00 已更新","关于 NABO FM"];
+function snapshotSel(){return {menuSel:S.menuSel,listSel:S.listSel,listTop:S.listTop,searchSel:S.searchSel,sleepSel:S.sleepSel,setSel:S.setSel}}
+function restoreSel(o){Object.assign(S,o)}
+function listIds(){return dial.bands[S.listBand]?.ids||[]}
+const LETTERS="ABCDEFGHJKLMNOPQRSTWXYZ".split("").concat(["⌫","完成"]);
+function moveSel(d){
+  if(S.page==="menu") S.menuSel=(S.menuSel+d+MENU.length)%MENU.length;
+  else if(S.page==="list"){const n=listIds().length;S.listSel=Math.max(0,Math.min(n-1,S.listSel+d))}
+  else if(S.page==="sleep") S.sleepSel=((S.sleepSel||0)+d+SLEEP.length)%SLEEP.length;
+  else if(S.page==="settings") S.setSel=((S.setSel||0)+d+SETTINGS.length)%SETTINGS.length;
+  else if(S.page==="search"){const n=LETTERS.length+searchHits().length;S.searchSel=((S.searchSel||0)+d+n)%n}
+}
+function okSelect(){
+  if(S.page==="menu"){const m=MENU[S.menuSel];
+    if(m==="电台列表"){S.page="list";S.listBand=dial.entries[cur].bi;const ids=listIds();S.listSel=Math.max(0,ids.indexOf(curId()));S.listTop=Math.max(0,S.listSel-2)}
+    else if(m==="拼音搜台"){S.page="search";S.search="";S.searchSel=0}
+    else if(m==="定时关闭"){S.page="sleep";S.sleepSel=SLEEP.indexOf(S.sleepMin)}
+    else if(m==="换台沙沙声"){$("optNoise").checked=!$("optNoise").checked;toast("沙沙声 "+($("optNoise").checked?"开":"关"))}
+    else if(m==="设置"){S.page="settings";S.setSel=0}
+    else S.page="player"; return}
+  if(S.page==="list"){const id=listIds()[S.listSel]; if(id==null)return; const at=dial.entries.findIndex(e=>e.id===id&&e.bi===S.listBand); S.page="player"; moveDial(at,0); if(!S.want)play(); return}
+  if(S.page==="sleep"){S.sleepMin=SLEEP[S.sleepSel];S.sleepEnd=S.sleepMin?performance.now()+S.sleepMin*60000:0;toast(S.sleepMin?S.sleepMin+" 分钟后关闭":"已取消定时");S.page="player";return}
+  if(S.page==="settings"){toast("设置项在固件里实现");return}
+  if(S.page==="search"){const i=S.searchSel;
+    if(i<LETTERS.length){const L=LETTERS[i]; if(L==="⌫")S.search=S.search.slice(0,-1); else if(L==="完成")S.page="list"; else if(S.search.length<6)S.search+=L; return}
+    const id=searchHits()[i-LETTERS.length]; const at=dial.entries.findIndex(e=>e.id===id); S.page="player"; moveDial(at,0); if(!S.want)play(); return}
+}
+function searchHits(){ if(!S.search)return[]; const q=S.search.toLowerCase(); const r=[]; for(let i=0;i<ST.length&&r.length<30;i++){if(ST[i][5].startsWith(q)||ST[i][5].includes(q))r.push(i)} return r.sort((a,b)=>ST[b][3]-ST[a][3]).slice(0,12) }
+
+// ---------- 输入绑定 ----------
+const map={ArrowUp:"up",ArrowDown:"down",Enter:"ok"," ":"ok"};
+addEventListener("keydown",e=>{const k=map[e.key];if(!k)return;e.preventDefault();if(!e.repeat)keyDown(k)});
+addEventListener("keyup",e=>{const k=map[e.key];if(!k)return;e.preventDefault();keyUp(k)});
+for(const [id,k] of [["kUp","up"],["kOk","ok"],["kDown","down"]]){const b=$(id);
+  b.addEventListener("pointerdown",e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keyDown(k)});
+  b.addEventListener("pointerup",e=>{e.preventDefault();keyUp(k)});
+  b.addEventListener("pointercancel",()=>keyUp(k));
+  b.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.stopPropagation();}})}
+
+// ---------- 模拟电台进度 ----------
+function grooveFor(){return isMusic(curSt())?"groove":"listen"}
+function tick(now){
+  if(S.want){
+    if(S.connectAt&&now>=S.connectAt){S.connectAt=0;startConnect()}
+    if(S.plan&&S.radio==="connecting"&&now-S.radioAt>S.plan.connectMs){
+      if(S.plan.fail){S.radio="failed";S.failed.add(curId());setNabo("oops");noise(false);S.plan=null;log("连接失败（模拟）")}
+      else{S.radio="buffering";S.radioAt=now}}
+    if(S.plan&&S.radio==="buffering"&&now-S.radioAt>S.plan.bufMs){S.radio="playing";S.plan=null;noise(false);setNabo(grooveFor())}
+    if(S.radio==="playing"){
+      const n=S.nabo, el=now-S.naboAt;
+      if((n==="love"||n==="sip")&&el>(n==="sip"?2600:1400)) setNabo(grooveFor());
+      if((n==="groove"||n==="listen"||n==="sing")&&el>9000+((curId()*31)%6000)) setNabo(Math.random()<.35?"sip":(n==="groove"&&Math.random()<.5?"sing":grooveFor()));
+      if(S.sleepEnd&&S.sleepEnd-now<60000&&n!=="doze") setNabo("doze");
+    }
+    if(S.radio==="failed"&&now-S.naboAt>1500&&S.nabo==="oops") setNabo("idle_off");
+  } else {
+    if(S.nabo==="phones_off"&&now-S.naboAt>600) setNabo("idle_off");
+  }
+  if(S.nabo==="phones_on"&&now-S.naboAt>600&&S.want&&S.radio!=="playing") setNabo("tune");
+  if(S.sleepEnd&&now>=S.sleepEnd){S.sleepEnd=0;S.sleepMin=0;pause();toast("定时到，已停止")}
+  // 闲置 60 秒进入夜间时钟（播放中）
+  if(S.want&&S.radio==="playing"&&S.page==="player"&&now-S.lastKey>60000) S.clock=true;
+  // 电平（模拟）
+  const target=S.radio==="playing"?(isMusic(curSt())?.55+.4*Math.abs(Math.sin(now/233)*Math.sin(now/71)):.25+.5*Math.random()*Math.abs(Math.sin(now/410))):0;
+  S.level+= (target-S.level)*.25;
+  // 指针动画
+  const t=Math.min(1,(now-S.dialT0)/(S.dialAnim||180)); const e=1-Math.pow(1-t,3);
+  S.dialPos=S.dialFrom+(S.dialTo-S.dialFrom)*e;
+}
+
+// ---------- 绘制 ----------
+function txt(s,x,y,size,color,align="left",weight=400,role="ui"){g.font=fontStr(size,weight,role);g.fillStyle=color;g.textAlign=align;g.textBaseline="alphabetic";g.fillText(s,x,y)}
+function fit(s,size,maxW,weight=400,role="ui"){g.font=fontStr(size,weight,role);if(g.measureText(s).width<=maxW)return s;while(s.length>1&&g.measureText(s+"…").width>maxW)s=s.slice(0,-1);return s+"…"}
+function rect(x,y,w,h,c){g.fillStyle=c;g.fillRect(x|0,y|0,w|0,h|0)}
+function rrect(x,y,w,h,r,c,stroke){g.beginPath();g.roundRect(x,y,w,h,r);if(c){g.fillStyle=c;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=1;g.stroke()}}
+
+function drawStatus(now){
+  rect(0,0,240,18,P.bg);
+  txt("NABO FM",6,14,14,P.accent,"left",900,"name");
+  let x=234;
+  // 电量
+  rrect(x-18,5,16,8,2,null,P.muted); rect(x-2,7,2,4,P.muted); rect(x-16,7,10,4,P.level); x-=24;
+  // Wi-Fi
+  g.strokeStyle=P.muted;g.lineWidth=1.4;for(let i=1;i<=3;i++){g.beginPath();g.arc(x-6,13,i*3,Math.PI*1.25,Math.PI*1.75);g.stroke()} x-=18;
+  if(S.sleepEnd){const m=Math.ceil((S.sleepEnd-now)/60000);txt("☾"+m+"′",x,13,10,P.muted,"right",700);x-=30}
+  const on=S.radio==="playing";
+  rrect(x-38,4,38,11,3,on?P.onAir:P.onAirOff); g.font=`900 8px ${SANS}`;g.fillStyle=on?"#fff":P.onAirOffText;g.textAlign="center";g.fillText("ON AIR",x-19,13);
+}
+
+function drawStage(now){
+  rect(0,18,240,132,P.stage);
+  for(let x=8;x<240;x+=24) rect(x,18,1,132,P.stageLine);
+  // 墙上的吸音棉点阵
+  g.fillStyle=P.stageDot; for(let y=26;y<146;y+=10)for(let x=4+((y/10)%2)*5;x<240;x+=10)g.fillRect(x,y,2,2);
+  // NABO
+  const n=S.nabo,t=(now-S.naboAt)/1000;
+  let dy=0,rot=0,eyes="open"; // eyes：视频帧到位后改为按帧播放
+  const bpm=isMusic(curSt())?2.0:1.0;
+  if(n==="idle_off"){dy=Math.sin(now/900)*1.2; if((now%4200)<140)eyes="closed"}
+  if(n==="groove"||n==="sing"){dy=Math.abs(Math.sin(now/1000*Math.PI*bpm))*4*(0.4+S.level); eyes="closed"}
+  if(n==="listen"){dy=Math.sin(now/700)*1.3; if((now%3800)<140)eyes="closed"}
+  if(n==="tune"){rot=Math.sin(now/260)*.05; eyes="open"}
+  if(n==="doze"){dy=Math.max(0,Math.sin(now/1100))*7; eyes=dy>3?"closed":"half"}
+  if(n==="oops"){rot=Math.sin(now/40)*.04*Math.max(0,1-t); eyes="half"}
+  if(n==="love"){dy=-Math.max(0,Math.sin(t*Math.PI*1.5))*5; eyes=t<1.2?"half":"open"}
+  if(n==="phones_on"||n==="phones_off"){dy=Math.sin(Math.min(1,t/.6)*Math.PI)*-3}
+  if(n==="sip"){eyes=t>.8&&t<1.8?"closed":"open"}
+  // Codex 定稿的 S1（停播）/ S2（戴耳机）静态起始图，158×139，桌沿线在第 139 行（帽顶到桌沿 124 px，耳机头梁刚好不出舞台）。
+  // 正式动画等 Grok 视频抽帧；这里只用上下位移和轻微摇摆表示状态。
+  const wearing=["tune","groove","listen","sing","love","oops","doze","sip"].includes(n)||(n==="phones_on"&&t>.35)||(n==="phones_off"&&t<.3);
+  const spr=wearing?img.on:img.off;
+  g.save(); g.translate(120,150); g.rotate(rot); g.translate(-120,-150);
+  g.imageSmoothingEnabled=true;
+  if(spr.complete) g.drawImage(spr,41,11+dy);
+  g.restore(); g.imageSmoothingEnabled=false;
+  // 咖啡杯（Codex 道具，24×20）
+  if(n==="sip"&&t<2.6&&img.mug.complete){const up=Math.sin(Math.min(1,t/2.6)*Math.PI);g.drawImage(img.mug,136,Math.round(150-up*44))}
+  // 比心粒子
+  S.hearts=S.hearts.filter(h=>now-h.t<1400); for(const h of S.hearts){const a=(now-h.t)/1400; h.x+=h.vx; h.y+=h.vy; txt("♥",h.x,h.y,12,P.heart,"center",900)}
+  // Zzz
+  if(n==="doze"){const k=(now/700)%3;txt("z",162+k*6,84-k*10,9+k*3,P.muted,"left",700)}
+  // 话筒（程序画）
+  g.strokeStyle=P.micArm;g.lineWidth=3;g.beginPath();g.moveTo(236,28);g.lineTo(203,100);g.stroke();
+  if(img.mic.complete) g.drawImage(img.mic,190,92);
+  // 控制台
+  rect(0,150,240,28,P.desk); rect(0,150,240,2,P.deskHi);
+  // 电平灯 12 列
+  for(let i=0;i<12;i++){const v=S.level*(0.55+0.45*Math.abs(Math.sin(now/180+i*1.7)));const h=Math.round(v*5);
+    for(let j=0;j<5;j++){rect(10+i*7,172-j*4,5,3,j<h?(j>=4?P.onAir:j>=3?P.accent:P.level):P.meterOff)}}
+  // 旋钮：换台时转
+  const ang=S.dialPos*0.9; g.beginPath();g.arc(214,164,9,0,7);g.fillStyle=P.knob;g.fill();g.strokeStyle=P.accent;g.lineWidth=2;g.stroke();
+  g.beginPath();g.moveTo(214,164);g.lineTo(214+Math.cos(ang)*7,164+Math.sin(ang)*7);g.stroke();
+  // 收藏小灯
+  txt(fav.has(curId())?"♥":"♡",186,169,11,fav.has(curId())?P.heart:P.dimmer,"center",900);
+  if($("optDebug").checked){rrect(4,22,74,13,3,"rgba(0,0,0,.6)");txt(S.nabo,8,32,9,"#fff","left",700)}
+}
+
+function drawInfo(now){
+  rect(0,178,240,44,P.bg);
+  const st=curSt();
+  txt(fit(st[0],23,224,700,"name"),120,203,23,P.text,"center",700,"name");
+  let state=S.want?STATE_TEXT[S.radio]:(S.radio==="paused"?"已暂停":"按 OK 收听");
+  const sub=[st[1],st[2].split("/")[0],state].filter(Boolean).join(" · ");
+  txt(fit(sub,11,224),120,217,11,S.radio==="failed"?P.onAir:P.muted,"center");
+}
+
+function drawDial(now){
+  rect(0,222,240,60,P.bg);
+  rrect(6,224,228,56,6,P.dialBg,P.dialDim);
+  g.save(); g.beginPath(); g.rect(8,225,224,54); g.clip();
+  const SP=18, cx=120;
+  const pos=S.dialPos, first=Math.floor(pos-8), last=Math.ceil(pos+8);
+  const N=dial.entries.length;
+  // 波段底色段 + 名称
+  for(let i=first;i<=last;i++){const e=dial.entries[((i%N)+N)%N];const x=cx+(i-pos)*SP;
+    const prev=dial.entries[(((i-1)%N)+N)%N];
+    if(prev.bi!==e.bi||i===first){const name=dial.bands[e.bi].name; txt(name,Math.max(12,x-4),236,9,P.dialDim,"left",700); if(prev.bi!==e.bi) rect(x-9,228,1,48,P.dialDim)}}
+  // 细刻度
+  for(let i=first*3;i<=last*3;i++){const x=cx+(i/3-pos)*SP; const major=i%3===0; rect(x,major?246:252,1,major?14:8,major?P.dial:P.dialDim)}
+  // 电台点 + 编号
+  for(let i=first;i<=last;i++){const idx=((i%N)+N)%N;const e=dial.entries[idx];const x=cx+(i-pos)*SP;
+    const dead=S.failed.has(e.id); g.beginPath();g.arc(x,265,2.2,0,7);g.fillStyle=dead?P.dialDim:P.dial;g.fill();
+    if(fav.has(e.id)) txt("♥",x,244,8,P.heart,"center",900);
+    if(((idx-dial.bands[e.bi].start)%5)===0) txt(String(idx-dial.bands[e.bi].start+1),x,277,8,P.dialDim,"center",700)}
+  g.restore();
+  // 指针 + 辉光
+  g.fillStyle=P.glow;g.fillRect(cx-3,226,7,52); rect(cx-1,226,2,52,P.onAir);
+  // 位置
+  const e=dial.entries[cur], b=dial.bands[e.bi];
+  txt(`${cur-b.start+1}/${b.end-b.start}`,228,238,9,P.dial,"right",700);
+}
+
+function drawHint(now){
+  rect(0,282,240,38,P.bg);
+  if(now<S.toastUntil){rrect(16,288,208,24,12,P.row);txt(fit(S.toast,12,196,700),120,305,12,P.text,"center",700);return}
+  const h={player:["▲▼ 换台   OK 播放/暂停","双击OK 收藏   长按OK 菜单"],menu:["▲▼ 选择   OK 进入","双击▲ 返回"],list:["▲▼ 选台   OK 播放","双击OK 收藏   长按OK 换波段"],sleep:["▲▼ 选择   OK 确定","双击▲ 返回"],settings:["▲▼ 选择   OK 修改","双击▲ 返回"],search:["▲▼ 选字母   OK 输入","选“完成”看列表"]}[S.page]||["",""];
+  txt(h[0],120,298,11,P.muted,"center"); txt(h[1],120,313,10,P.dimmer,"center");
+}
+
+function sheet(title,items,sel,top=0,rows=7,y0=40){
+  g.fillStyle=P.shade;g.fillRect(0,18,240,264);
+  rrect(10,y0-18,220,rows*26+30,10,P.panel,P.panelLine);
+  txt(title,22,y0-1,12,P.accent,"left",900);
+  for(let i=0;i<rows&&top+i<items.length;i++){const it=items[top+i];const y=y0+8+i*26;const on=top+i===sel;
+    if(on) rrect(16,y,208,24,6,P.row); const left=typeof it==="string"?it:it[0];
+    txt(fit(left,13,typeof it==="string"?190:150,on?700:400),26,y+17,13,on?P.text:P.rowText,"left",on?700:400);
+    if(typeof it!=="string") txt(it[1],218,y+17,10,on?P.accent:P.muted,"right",700)}
+}
+
+function drawPage(now){
+  if(S.page==="menu") sheet("菜单",MENU.map(m=>m==="定时关闭"?[m,S.sleepMin?S.sleepMin+"′":"关"]:m==="换台沙沙声"?[m,$("optNoise").checked?"开":"关"]:m),S.menuSel,0,6,46);
+  if(S.page==="sleep") sheet("定时关闭",SLEEP.map(m=>[m?m+" 分钟":"不定时",m===S.sleepMin?"当前":""]),S.sleepSel||0,0,5,46);
+  if(S.page==="settings") sheet("设置",SETTINGS.map(s=>{const [a,...b]=s.split("  ");return [a,b.join(" ")]}),S.setSel||0,Math.max(0,(S.setSel||0)-6),7,46);
+  if(S.page==="list"){
+    const ids=listIds(); if(S.listSel<S.listTop)S.listTop=S.listSel; if(S.listSel>S.listTop+6)S.listTop=S.listSel-6;
+    rect(0,18,240,264,P.page);
+    // 波段标签条
+    let x=8; const b0=Math.max(0,S.listBand-1);
+    for(let i=b0;i<dial.bands.length&&x<236;i++){const name=dial.bands[i].name;g.font=fontStr(11,700,"ui");const w=g.measureText(name).width+14;
+      rrect(x,24,w,18,9,i===S.listBand?P.accent:P.chip); txt(name,x+7,37,11,i===S.listBand?P.chipTextOn:P.muted,"left",700); x+=w+5}
+    for(let i=0;i<7&&S.listTop+i<ids.length;i++){const id=ids[S.listTop+i],st=ST[id],y=50+i*32,on=S.listTop+i===S.listSel;
+      if(on) rrect(6,y,228,30,6,P.row);
+      const playing=id===curId()&&S.want; if(playing) txt("♪",16,y+20,12,P.level,"center",900);
+      txt(fit(st[0],13,150,on?700:400),26,y+14,13,S.failed.has(id)?P.dimmer:(on?P.text:P.rowText),"left",on?700:400);
+      txt(fit([st[1],st[2].split("/")[0]].filter(Boolean).join(" · "),10,150),26,y+26,10,P.muted);
+      if(fav.has(id)) txt("♥",222,y+19,11,P.heart,"right",900);
+      const hx=fav.has(id)?206:222, lv=st[3]>=8000?3:st[3]>=3000?2:st[3]>=1000?1:0;
+      for(let k=0;k<3;k++) rect(hx-14+k*5,y+19-(k+1)*3,3,(k+1)*3,k<lv?P.accent:P.chip);
+      txt(fmtHeat(st[3]),hx-18,y+19,9,P.dimmer,"right")}
+    txt(`${S.listSel+1}/${ids.length}`,232,278,9,P.muted,"right",700);
+  }
+  if(S.page==="search"){
+    rect(0,18,240,264,P.page);
+    txt("拼音首字母搜台",12,36,12,P.accent,"left",900);
+    rrect(12,42,216,22,5,P.chip); txt(S.search||"例如 GZJT → 广州交通",20,58,12,S.search?P.text:P.dimmer,"left",S.search?700:400);
+    LETTERS.forEach((L,i)=>{const col=i%9,row=Math.floor(i/9),x=14+col*24,y=72+row*24,on=S.searchSel===i;
+      rrect(x,y,L.length>1?44:20,20,4,on?P.accent:P.chip); txt(L,x+(L.length>1?22:10),y+15,11,on?P.chipTextOn:P.text,"center",700)});
+    const hits=searchHits();
+    hits.slice(0,5).forEach((id,i)=>{const on=S.searchSel===LETTERS.length+i,y=152+i*25; if(on)rrect(8,y,224,23,5,P.row);
+      txt(fit(ST[id][0],12,150,on?700:400),16,y+16,12,on?P.text:P.rowText,"left",on?700:400); txt(ST[id][1]||"",226,y+16,10,P.muted,"right")});
+    if(S.search&&!hits.length) txt("没有匹配的电台",120,180,12,P.muted,"center");
+  }
+}
+const fmtHeat=h=>h>=10000?(h/10000).toFixed(1)+"万":String(h||"");
+
+function drawClock(now){
+  rect(0,0,240,320,P.clockBg);
+  const d=new Date(); const hm=d.toTimeString().slice(0,5);
+  txt(hm,120,150,68,P.clock,"center",900,"name");
+  txt(d.toLocaleDateString("zh-CN",{month:"long",day:"numeric",weekday:"long"}),120,178,12,P.muted,"center");
+  txt("♪ "+curSt()[0],120,230,13,P.clockSub,"center",700);
+  for(let i=0;i<14;i++){const v=S.level*(0.5+0.5*Math.abs(Math.sin(now/160+i)));rect(64+i*8,262-v*16,5,Math.max(1,v*16),P.clockMeter)}
+  txt("按任意键唤醒",120,300,10,P.dimmer,"center");
+}
+
+function quantize(){
+  if(!$("opt565").checked) return;
+  const id=g.getImageData(0,0,240,320),d=id.data;
+  for(let i=0;i<d.length;i+=4){d[i]=(d[i]>>3)<<3|d[i]>>5;d[i+1]=(d[i+1]>>2)<<2|d[i+1]>>6;d[i+2]=(d[i+2]>>3)<<3|d[i+2]>>5}
+  g.putImageData(id,0,0);
+}
+
+function frame(now){
+  tick(now);
+  if(S.clock) drawClock(now);
+  else{ drawStatus(now); drawStage(now); drawInfo(now); drawDial(now); drawHint(now); drawPage(now); }
+  quantize();
+  requestAnimationFrame(frame);
+}
+(document.fonts?Promise.all(["NaboSmiley","NaboWenKai","NaboPixel","NaboSans"].map(f=>document.fonts.load(`400 12px "${f}"`,"电台"))):Promise.resolve()).finally(()=>{requestAnimationFrame(frame);setNabo("wave");setTimeout(()=>setNabo("idle_off"),900)});
+const NOTES={final:"定稿（10 月 19 日）：午夜琥珀的配色，台名用霞鹜文楷，界面小字用思源黑体。",
+  amber:"台名用得意黑（斜体无衬线），界面小字用 12 px 像素字，在 240×320 的小屏上最清楚。配色是深墨蓝加琥珀刻度。",
+  bakelite:"台名用霞鹜文楷，温和像老收音机的面板字；小字用思源黑体。胡桃木色底，奶白刻度盘配深色刻线，黄铜点缀。",
+  shift:"台名用思源黑体粗体，小字用像素字。深青绿底、薄荷色刻度，像病房监护仪的屏幕，呼应 NABO 的医生身份和帽子上的心电线。",
+  citypop:"台名用得意黑，小字用思源黑体。靛紫底，粉色刻度、青色电平，偏城市流行和夜生活。"};
+function setTheme(k){themeKey=k;T=THEMES[k];P=T.P;save();
+  document.querySelectorAll("#themePick button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===k));
+  $("themeNote").textContent=NOTES[k];}
+for(const k in THEMES){const b=document.createElement("button");b.dataset.v=k;b.textContent=THEMES[k].label;b.onclick=()=>{setTheme(k);log("主题："+THEMES[k].label)};$("themePick").appendChild(b)}
+setTheme(themeKey);
+log("就绪：共 "+ST.length+" 台。按 OK 开始收听。");
+})();
+</script>

@@ -1,0 +1,48 @@
+{
+  "generated_assets": [
+    {
+      "asset": "mic",
+      "input_reference": "design/S2_on_air.png",
+      "route": "built-in imagegen",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Asset type: one transparent 2D game prop, NABO FM broadcast microphone WITHOUT stand. The most recently displayed approved NABO S2 image is a style reference ONLY; do not include any character or its headphones. Create a compact broadcast microphone capsule seen from front, turned very slightly to viewer-left, dark gray metal mesh grille with simplified readable slots, a warm amber orange windscreen/shock ring #FFB547, dark local-color outlines. Clean 2D cartoon flat fills and two-step cel shadows matching the approved character, not photorealistic or a soft 3D render. Tall compact capsule proportions, width to height about26:36. No boom arm, no pedestal, no cable, no extra props, no hands, no lettering, no logo, no white sticker outline, no cast shadow, no floor. It must be recognizable at a final26x36 pixels, with clean large color shapes, not dense tiny grille details. Single object centered with a small clear margin; actual transparent background with alpha everywhere outside silhouette. No green on object. Deliver one isolated microphone prop, not a layout or sheet."
+    },
+    {
+      "asset": "mug",
+      "input_reference": "design/S2_on_air.png",
+      "route": "built-in imagegen",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Asset type: one transparent 2D game prop, NABO FM coffee mug for future sip animation. The most recently displayed approved NABO S2 image is a style reference ONLY; do not include any character or headphones. Create one plain warm amber ceramic coffee mug, calm warm orange #FFB547 main body with a subtle darker side cel shadow, one practical open handle on viewer-right, dark local-color outline, a small dark coffee surface visible at top. Clean 2D cartoon flat fills and two-step cel shadows matching the approved character, not photorealistic or soft3D. Simple compact shape that remains clear at about24px wide20px high including handle. No text, no letters, no logo, no heartbeat graphic, no face, no steam, no saucer, no hands, no extra objects, no floor or cast shadow, no white sticker border. Single mug centered with a small clear margin; actual transparent alpha background. No green pixels on mug. This exact mug will be used as the future sip animation prop reference. Deliver one isolated object, not a layout or sheet."
+    },
+    {
+      "asset": "headphones",
+      "input_reference": "design/S2_on_air.png",
+      "route": "built-in imagegen",
+      "transparent_background": true,
+      "prompt": "Use case: identity-preserve / precise-object-edit. Asset type: one transparent 2D game prop, the EXACT approved coral B headphones extracted as a standalone flat resting view. The most recently displayed approved S2 NABO image is the design reference for ONLY its headphones. Preserve the selected muted coral shell color #E97967 (salmon coral, not amber, not bright pure red), dark charcoal brown ear cushions and inner band, thick simple rounded headband, short matching side sliders and rounded oval cups. Render the same single pair laid flat on an implied tabletop, mild top/front perspective so both cushions and the curved band read naturally as a U. Keep matching coherent connections: exactly one headband linking exactly two ear cups, no doubled band or extra ear cup. No character, no cap, no hair, no glasses, no medical clothing, no hands, no visible cable, no text/logos, no table or floor, no cast shadow, no white sticker border. Clean 2D cartoon flat colors and two-step cel shadows, dark local-color outlines, same style as approved reference. Compact width:height about40:28. Clear at40px wide. Single isolated object centered with small empty margins; actual transparent alpha background. No green on object. Deliver one prop only, not a sheet or a new headphone color option."
+    },
+    {
+      "asset": "headphones_flatlay_refinement",
+      "input_reference": "initial standalone headphone candidate; selected design fixed by S2 B",
+      "route": "built-in imagegen edit",
+      "transparent_background": true,
+      "prompt": "Use case: precise-object-edit. Edit ONLY the most recent standalone coral headphones image. Preserve this exact single pair of coral B headphones, coral shell target #E97967, charcoal pads, same rounded headband, side sliders, same two oval cups and clean 2D cel-cartoon outlines. Change the OBJECT POSE AND CAMERA to a strict TOP-DOWN FLAT-LAY: headphones laid FLAT on a horizontal invisible tabletop, viewed directly from above, ear cushions OPEN FACES facing UP toward the viewer, two large charcoal cushion oval rings with visible dark hollow central ear openings. Both ear cups rest on the same horizontal plane and connect naturally to the two ends of one curved headband extending away at the top of the composition. This is a flattened U silhouette seen overhead, not an upright headset standing in front view and not side profiles of cushions. No table is visible. Keep width:height about40:28 with enough margin, as a simple game inventory prop for40px width. Warm muted salmon coral, not bright red or orange. Flat solid fills, two discrete cel-shadow tones per material, no broad gradients, no realistic/3D shading, no white outline. No character, hands, cap, letters, logos, extra ear cups, duplicated bands, cables, floor or cast shadow. Actual transparent alpha background. One isolated object only."
+    }
+  ],
+  "head_icon": {
+    "source": "design/S2_on_air_cutout.png",
+    "crop": [
+      150,
+      55,
+      872,
+      666
+    ],
+    "method": "specification crop/resize only, no character generation"
+  },
+  "postprocess": {
+    "resize": "premultiplied-alpha Lanczos",
+    "rgb_palette_max": 64,
+    "alpha_cleanup": "alpha <4 =>0; alpha >=250 =>255; preserve AA edges",
+    "headphone_color": "shell-only HSV calibration to selected B median"
+  }
+}

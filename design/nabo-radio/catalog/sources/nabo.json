@@ -1,0 +1,288 @@
+{
+ "source": "NABO 早期电台版（用户 Tab5 SD 卡）",
+ "repo": null,
+ "stations": [
+  {
+   "name": "中央广播电台中国之声",
+   "url": "https://lhttp.qtfm.cn/live/15318317/64k.mp3",
+   "group": "全国综合",
+   "qt": "15318317"
+  },
+  {
+   "name": "安徽综合广播",
+   "url": "https://lhttp.qtfm.cn/live/4919/64k.mp3",
+   "group": "全国综合",
+   "qt": "4919"
+  },
+  {
+   "name": "包头综合广播",
+   "url": "https://lhttp.qingting.fm/live/1889/64k.mp3",
+   "group": "全国综合",
+   "qt": "1889"
+  },
+  {
+   "name": "澄海电台FM100.5",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022439/64k.mp3",
+   "group": "广东电台",
+   "qt": "5022439"
+  },
+  {
+   "name": "大同交通广播",
+   "url": "http://lhttp.qingting.fm/live/5022396/64k.mp3",
+   "group": "交通出行",
+   "qt": "5022396"
+  },
+  {
+   "name": "鼎城人民广播电台",
+   "url": "https://lhttp.qingting.fm/live/5021860/64k.mp3",
+   "group": "其他地区",
+   "qt": "5021860"
+  },
+  {
+   "name": "福州新闻广播",
+   "url": "http://lhttp.qingting.fm/live/5025/64k.mp3",
+   "group": "全国综合",
+   "qt": "5025"
+  },
+  {
+   "name": "巩义综合广播",
+   "url": "https://lhttp.qingting.fm/live/5022551/64k.mp3",
+   "group": "其他地区",
+   "qt": "5022551"
+  },
+  {
+   "name": "海口综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5022015/64k.mp3",
+   "group": "全国综合",
+   "qt": "5022015"
+  },
+  {
+   "name": "呼和浩特综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5021543/64k.mp3",
+   "group": "全国综合",
+   "qt": "5021543"
+  },
+  {
+   "name": "花都人民广播电台",
+   "url": "https://lhttp.qingting.fm/live/1263/64k.mp3",
+   "group": "广东电台",
+   "qt": "1263"
+  },
+  {
+   "name": "淮安农村广播",
+   "url": "https://lhttp.qingting.fm/live/4588/64k.mp3",
+   "group": "其他地区",
+   "qt": "4588"
+  },
+  {
+   "name": "黄岛综合广播",
+   "url": "https://lhttp.qingting.fm/live/20176/64k.mp3",
+   "group": "其他地区",
+   "qt": "20176"
+  },
+  {
+   "name": "黄山旅游广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/1969/64k.mp3",
+   "group": "音乐生活",
+   "qt": "1969"
+  },
+  {
+   "name": "济宁综合广播",
+   "url": "http://lhttp.qingting.fm/live/4901/64k.mp3",
+   "group": "全国综合",
+   "qt": "4901"
+  },
+  {
+   "name": "江陵综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500203/64k.mp3",
+   "group": "全国综合",
+   "qt": "20500203"
+  },
+  {
+   "name": "江门旅游之声",
+   "url": "https://lhttp-hw.qtfm.cn/live/1283/64k.mp3",
+   "group": "广东电台",
+   "qt": "1283"
+  },
+  {
+   "name": "金山人民广播电台",
+   "url": "https://lhttp.qingting.fm/live/4022/64k.mp3",
+   "group": "其他地区",
+   "qt": "4022"
+  },
+  {
+   "name": "历城综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500194/64k.mp3",
+   "group": "其他地区",
+   "qt": "20500194"
+  },
+  {
+   "name": "辽宁交通广播",
+   "url": "https://lhttp.qtfm.cn/live/20025/64k.mp3",
+   "group": "交通出行",
+   "qt": "20025"
+  },
+  {
+   "name": "临沂文艺广播",
+   "url": "https://lhttp.qtfm.cn/live/3995/64k.mp3",
+   "group": "音乐生活",
+   "qt": "3995"
+  },
+  {
+   "name": "洛阳音乐广播",
+   "url": "http://lhttp.qingting.fm/live/1226/64k.mp3",
+   "group": "音乐生活",
+   "qt": "1226"
+  },
+  {
+   "name": "牡丹江综合广播",
+   "url": "https://lhttp.qtfm.cn/live/5022434/64k.mp3",
+   "group": "全国综合",
+   "qt": "5022434"
+  },
+  {
+   "name": "宁海新闻广播FM98.9",
+   "url": "https://lhttp-hw.qtfm.cn/live/5022406/64k.mp3",
+   "group": "音乐生活",
+   "qt": "5022406"
+  },
+  {
+   "name": "青岛经济广播",
+   "url": "http://lhttp.qingting.fm/live/1674/64k.mp3",
+   "group": "全国综合",
+   "qt": "1674"
+  },
+  {
+   "name": "厦门音乐广播",
+   "url": "https://lhttp.qtfm.cn/live/1739/64k.mp3",
+   "group": "音乐生活",
+   "qt": "1739"
+  },
+  {
+   "name": "顺德音乐之声",
+   "url": "https://lhttp.qtfm.cn/live/20500150/64k.mp3",
+   "group": "广东电台",
+   "qt": "20500150"
+  },
+  {
+   "name": "天津静海广播",
+   "url": "http://lhttp.qingting.fm/live/20212227/64k.mp3",
+   "group": "音乐生活",
+   "qt": "20212227"
+  },
+  {
+   "name": "桐乡人民广播电台",
+   "url": "http://lhttp.qingting.fm/live/5021791/64k.mp3",
+   "group": "其他地区",
+   "qt": "5021791"
+  },
+  {
+   "name": "威远综合广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/20500102/64k.mp3",
+   "group": "其他地区",
+   "qt": "20500102"
+  },
+  {
+   "name": "无锡新闻广播FM93.7",
+   "url": "https://lhttp.qtfm.cn/live/2777/64k.mp3",
+   "group": "全国综合",
+   "qt": "2777"
+  },
+  {
+   "name": "咸阳综合广播",
+   "url": "https://lhttp.qingting.fm/live/5022397/64k.mp3",
+   "group": "全国综合",
+   "qt": "5022397"
+  },
+  {
+   "name": "宣城交通广播",
+   "url": "https://lhttp-hw.qtfm.cn/live/5023/64k.mp3",
+   "group": "交通出行",
+   "qt": "5023"
+  },
+  {
+   "name": "阳泉综合广播",
+   "url": "http://lhttp.qingting.fm/live/15318568/64k.mp3",
+   "group": "全国综合",
+   "qt": "15318568"
+  },
+  {
+   "name": "宜昌都市生活广播",
+   "url": "https://lhttp.qingting.fm/live/20567/64k.mp3",
+   "group": "音乐生活",
+   "qt": "20567"
+  },
+  {
+   "name": "益阳综合广播",
+   "url": "https://lhttp.qingting.fm/live/20314/64k.mp3",
+   "group": "全国综合",
+   "qt": "20314"
+  },
+  {
+   "name": "枣庄交通文艺广播",
+   "url": "https://lhttp.qtfm.cn/live/1688/64k.mp3",
+   "group": "交通出行",
+   "qt": "1688"
+  },
+  {
+   "name": "长春经济广播FM88.0",
+   "url": "http://lhttp.qingting.fm/live/4850/64k.mp3",
+   "group": "音乐生活",
+   "qt": "4850"
+  },
+  {
+   "name": "长沙望城人民广播",
+   "url": "http://lhttp.qingting.fm/live/5022076/64k.mp3",
+   "group": "其他地区",
+   "qt": "5022076"
+  },
+  {
+   "name": "珠海交通广播FM87.5",
+   "url": "http://lhttp.qingting.fm/live/1275/64k.mp3",
+   "group": "交通出行",
+   "qt": "1275"
+  },
+  {
+   "name": "广东南方生活广播",
+   "url": "https://lhttp.qtfm.cn/live/468/64k.mp3",
+   "group": "广东电台",
+   "qt": "468"
+  },
+  {
+   "name": "广东城市之声",
+   "url": "https://lhttp.qtfm.cn/live/469/64k.mp3",
+   "group": "广东电台",
+   "qt": "469"
+  },
+  {
+   "name": "广东珠江之声",
+   "url": "https://lhttp.qtfm.cn/live/470/64k.mp3",
+   "group": "广东电台",
+   "qt": "470"
+  },
+  {
+   "name": "广东文体广播",
+   "url": "https://lhttp.qtfm.cn/live/471/64k.mp3",
+   "group": "广东电台",
+   "qt": "471"
+  },
+  {
+   "name": "广东音乐之声",
+   "url": "https://lhttp.qtfm.cn/live/1260/64k.mp3",
+   "group": "广东电台",
+   "qt": "1260"
+  },
+  {
+   "name": "广东交通之声",
+   "url": "https://lhttp.qtfm.cn/live/1262/64k.mp3",
+   "group": "交通出行",
+   "qt": "1262"
+  },
+  {
+   "name": "两广之声音乐台",
+   "url": "https://lhttp.qtfm.cn/live/20500149/64k.mp3",
+   "group": "音乐生活",
+   "qt": "20500149"
+  }
+ ]
+}

@@ -1,0 +1,171 @@
+{
+ "name": "午夜琥珀（定稿 2026-10-19）",
+ "format": "RGB565 = ((R>>3)<<11)|((G>>2)<<5)|(B>>3)",
+ "fonts": {
+  "station_name": "霞鹜文楷 Medium（LXGW WenKai，OFL）",
+  "ui": "思源黑体 / Noto Sans CJK SC Medium、Bold（OFL）",
+  "logo": "NABO FM 字标用霞鹜文楷"
+ },
+ "colors": {
+  "accent": {
+   "hex": "#F7B955",
+   "rgb565": "0xF5CA",
+   "role": "强调色：标志、选中标签、旋钮、热度条"
+  },
+  "bg": {
+   "hex": "#080B12",
+   "rgb565": "0x0842",
+   "role": "屏幕底色、状态栏"
+  },
+  "stage": {
+   "hex": "#111725",
+   "rgb565": "0x10A4",
+   "role": "直播间舞台"
+  },
+  "stageLine": {
+   "hex": "#161E2F",
+   "rgb565": "0x10E5",
+   "role": "舞台竖线"
+  },
+  "stageDot": {
+   "hex": "#1A2335",
+   "rgb565": "0x1906",
+   "role": "吸音棉点阵"
+  },
+  "desk": {
+   "hex": "#1D2433",
+   "rgb565": "0x1926",
+   "role": "控制台"
+  },
+  "deskHi": {
+   "hex": "#2C3549",
+   "rgb565": "0x29A9",
+   "role": "控制台上沿"
+  },
+  "dialBg": {
+   "hex": "#171107",
+   "rgb565": "0x1080",
+   "role": "刻度盘底"
+  },
+  "dial": {
+   "hex": "#F7B955",
+   "rgb565": "0xF5CA",
+   "role": "刻度线、电台点"
+  },
+  "dialDim": {
+   "hex": "#6E5025",
+   "rgb565": "0x6A84",
+   "role": "次刻度、波段名"
+  },
+  "onAir": {
+   "hex": "#FF3B30",
+   "rgb565": "0xF9C6",
+   "role": "ON AIR 灯、指针（纯红，与珊瑚耳机区分）"
+  },
+  "onAirOff": {
+   "hex": "#341C1F",
+   "rgb565": "0x30E3",
+   "role": "ON AIR 熄灭"
+  },
+  "level": {
+   "hex": "#62E3C6",
+   "rgb565": "0x6718",
+   "role": "电平灯、正在播放"
+  },
+  "meterOff": {
+   "hex": "#161D2B",
+   "rgb565": "0x10E5",
+   "role": "电平灯熄灭"
+  },
+  "text": {
+   "hex": "#F5EFE4",
+   "rgb565": "0xF77C",
+   "role": "主文字"
+  },
+  "muted": {
+   "hex": "#8B93A5",
+   "rgb565": "0x8C94",
+   "role": "次要文字"
+  },
+  "dimmer": {
+   "hex": "#4C5568",
+   "rgb565": "0x4AAD",
+   "role": "提示文字"
+  },
+  "phones": {
+   "hex": "#E97967",
+   "rgb565": "0xEBCC",
+   "role": "耳机（Codex 方案 B 珊瑚红）"
+  },
+  "heart": {
+   "hex": "#FF6F91",
+   "rgb565": "0xFB72",
+   "role": "收藏心形"
+  },
+  "page": {
+   "hex": "#0B0F18",
+   "rgb565": "0x0863",
+   "role": "列表页底"
+  },
+  "panel": {
+   "hex": "#131A28",
+   "rgb565": "0x10C5",
+   "role": "菜单面板"
+  },
+  "panelLine": {
+   "hex": "#273149",
+   "rgb565": "0x2189",
+   "role": "菜单描边"
+  },
+  "row": {
+   "hex": "#1F2738",
+   "rgb565": "0x1927",
+   "role": "选中行"
+  },
+  "chip": {
+   "hex": "#1A2131",
+   "rgb565": "0x1906",
+   "role": "未选中标签"
+  },
+  "rowText": {
+   "hex": "#C8CFDC",
+   "rgb565": "0xCE7B",
+   "role": "列表文字"
+  },
+  "chipTextOn": {
+   "hex": "#171107",
+   "rgb565": "0x1080",
+   "role": "选中标签文字"
+  },
+  "knob": {
+   "hex": "#171107",
+   "rgb565": "0x1080",
+   "role": "旋钮底"
+  },
+  "micArm": {
+   "hex": "#556079",
+   "rgb565": "0x530F",
+   "role": "话筒支架"
+  },
+  "clockBg": {
+   "hex": "#04060A",
+   "rgb565": "0x0021",
+   "role": "夜间时钟底"
+  },
+  "clock": {
+   "hex": "#F2C46D",
+   "rgb565": "0xF62D",
+   "role": "夜间时钟数字"
+  },
+  "clockSub": {
+   "hex": "#7F889B",
+   "rgb565": "0x7C53",
+   "role": "夜间时钟副文字"
+  },
+  "clockMeter": {
+   "hex": "#2C6A63",
+   "rgb565": "0x2B4C",
+   "role": "夜间时钟电平"
+  }
+ }
+}

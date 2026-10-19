@@ -1,0 +1,98 @@
+{
+  "status": "passed",
+  "scope": "Round 1 static headphone color designs only",
+  "checks": {
+    "identical_alpha_silhouette_all_variants": true,
+    "pixel_differences_outside_headphone_mask": 0,
+    "cap_logo_region_differences": 0,
+    "face_region_differences": 0,
+    "background_hex": "#00FF00",
+    "desk_hex": "#2A2230",
+    "desk_y": 896,
+    "maximum_changed_pixels_in_headphones": 37870,
+    "not_mirrored": "visual inspection: NABO reads left to right",
+    "earphone_structure": "visual inspection: one arch, two connected cups at ears; same geometry in A/B/C",
+    "hands": "hidden behind desk; animation hand anatomy not assessed",
+    "animation_loop_anchor_fps": "not applicable: no animation produced in Round 1",
+    "palette_64_colors": "not applied: per-action packaging step deferred"
+  },
+  "variants": [
+    {
+      "id": "a",
+      "size_px": [
+        1024,
+        1024
+      ],
+      "cap_top_measured_y": 94,
+      "cap_to_desk_measured_px": 802,
+      "native_cap_top_y": 10,
+      "native_desk_y": 138,
+      "native_cap_to_desk_measured_px": 128,
+      "subject_bbox": [
+        158,
+        61,
+        864,
+        896
+      ],
+      "alpha_zero_pixels": 639886,
+      "alpha_partial_pixels": 8268,
+      "green_subject_pixels": 0,
+      "nearest_neighbor_4x_exact": true,
+      "sha256": "7b7704203f61895ff537d1ba5486e615cb8c42d87d0f5b126ff135c20c774bf0"
+    },
+    {
+      "id": "b",
+      "size_px": [
+        1024,
+        1024
+      ],
+      "cap_top_measured_y": 94,
+      "cap_to_desk_measured_px": 802,
+      "native_cap_top_y": 10,
+      "native_desk_y": 138,
+      "native_cap_to_desk_measured_px": 128,
+      "subject_bbox": [
+        158,
+        61,
+        864,
+        896
+      ],
+      "alpha_zero_pixels": 639886,
+      "alpha_partial_pixels": 8268,
+      "green_subject_pixels": 0,
+      "nearest_neighbor_4x_exact": true,
+      "sha256": "5032cb43ae26682c14b8bbd86f2f0a7e1bb7555e95785d66bdf484ce4af2edb0"
+    },
+    {
+      "id": "c",
+      "size_px": [
+        1024,
+        1024
+      ],
+      "cap_top_measured_y": 94,
+      "cap_to_desk_measured_px": 802,
+      "native_cap_top_y": 10,
+      "native_desk_y": 138,
+      "native_cap_to_desk_measured_px": 128,
+      "subject_bbox": [
+        158,
+        61,
+        864,
+        896
+      ],
+      "alpha_zero_pixels": 639886,
+      "alpha_partial_pixels": 8268,
+      "green_subject_pixels": 0,
+      "nearest_neighbor_4x_exact": true,
+      "sha256": "28256a0613108b3c07927cbd182a3194c67ade8fe8ad357ca7bf67ecb7c05af5"
+    }
+  ],
+  "compare": {
+    "filename": "phones_compare.png",
+    "size_px": [
+      2160,
+      1000
+    ],
+    "sha256": "23ace9d0a31e6a48b4a25002fedeb8bf9e33f1b4cee9fe12690dba6be88670dd"
+  }
+}

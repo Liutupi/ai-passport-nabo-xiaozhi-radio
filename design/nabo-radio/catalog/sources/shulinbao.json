@@ -1,0 +1,398 @@
+{
+ "source": "小海马 · 港·新·马 网络电台（MIT）",
+ "repo": "https://github.com/shulinbao/ai-passport-radio",
+ "stations": [
+  {
+   "name": "RTHK Radio 1",
+   "url": "http://stm1.rthk.hk/radio1",
+   "region": "香港",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Cantonese news/talk"
+  },
+  {
+   "name": "RTHK Radio 2",
+   "url": "http://stm2.rthk.hk/radio2",
+   "region": "香港",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Cantonese lifestyle"
+  },
+  {
+   "name": "RTHK Radio 3",
+   "url": "http://stm3.rthk.hk/radio3",
+   "region": "香港",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "English news/talk"
+  },
+  {
+   "name": "RTHK Radio 4",
+   "url": "http://stm1.rthk.hk/radio4",
+   "region": "香港",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Classical music"
+  },
+  {
+   "name": "RTHK Radio 5",
+   "url": "http://stm1.rthk.hk/radio5",
+   "region": "香港",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Cantonese opera"
+  },
+  {
+   "name": "RTHK PTH",
+   "url": "http://stm1.rthk.hk/radiopth",
+   "region": "香港",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Mandarin general"
+  },
+  {
+   "name": "Class 95",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CLASS95.mp3",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 95.0,
+   "tagline": "English adult hits"
+  },
+  {
+   "name": "Gold 905",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/GOLD905_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 90.5,
+   "tagline": "English classics"
+  },
+  {
+   "name": "YES 933",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/YES933.mp3",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 93.3,
+   "tagline": "Mandarin pop"
+  },
+  {
+   "name": "Capital 958",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MP3_CAPITAL958FM_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 95.8,
+   "tagline": "Mandarin lifestyle"
+  },
+  {
+   "name": "987FM",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MP3_987FM_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 98.7,
+   "tagline": "English hits"
+  },
+  {
+   "name": "CNA 938",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MP3_938NOW_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "English news/talk"
+  },
+  {
+   "name": "Symphony 924",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SYMPHONY924.mp3",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 92.4,
+   "tagline": "Classical music"
+  },
+  {
+   "name": "Warna 942",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/WARNA942FM_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 94.2,
+   "tagline": "Malay general"
+  },
+  {
+   "name": "Oli 968",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/OLI968FM_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 96.8,
+   "tagline": "Tamil general"
+  },
+  {
+   "name": "LOVE 972",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOVE972FM_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 97.2,
+   "tagline": "Mandarin classics"
+  },
+  {
+   "name": "Kiss92",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KISS_92_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 92.0,
+   "tagline": "English hits"
+  },
+  {
+   "name": "88.3JIA",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/883JIA_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 88.3,
+   "tagline": "Mandarin/Cantonese"
+  },
+  {
+   "name": "UFM 100.3",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/UFM_1003_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 100.3,
+   "tagline": "Mandarin pop"
+  },
+  {
+   "name": "Money FM 89.3",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MONEY_893_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 89.3,
+   "tagline": "Business and talk"
+  },
+  {
+   "name": "RIA 897",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RIA897FM.mp3",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 89.7,
+   "tagline": "Malay pop"
+  },
+  {
+   "name": "ONE FM 91.3",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/ONE_FM_913_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 91.3,
+   "tagline": "English hits"
+  },
+  {
+   "name": "Hao 96.3",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/HAO_963_SC",
+   "region": "新加坡",
+   "codec": "mp3",
+   "freq": 96.3,
+   "tagline": "Mandarin pop"
+  },
+  {
+   "name": "Mix FM",
+   "url": "http://stream.rcs.revma.com/v5pq3htbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": 94.5,
+   "tagline": "English adult hits"
+  },
+  {
+   "name": "Lite FM",
+   "url": "http://stream.rcs.revma.com/bn4ex8sbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": 105.7,
+   "tagline": "English easy listening"
+  },
+  {
+   "name": "Hitz FM",
+   "url": "http://stream.rcs.revma.com/488kt4sbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "English hits"
+  },
+  {
+   "name": "MY FM",
+   "url": "http://stream.rcs.revma.com/hc3unrtbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "Mandarin pop"
+  },
+  {
+   "name": "Melody FM",
+   "url": "http://stream.rcs.revma.com/2u1n6dtbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "Mandarin classics"
+  },
+  {
+   "name": "ERA FM",
+   "url": "http://stream.rcs.revma.com/crec9cmbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "Malay pop"
+  },
+  {
+   "name": "Sinar FM",
+   "url": "http://stream.rcs.revma.com/azatk0tbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "Malay classics"
+  },
+  {
+   "name": "THR Raaga",
+   "url": "http://stream.rcs.revma.com/1ut6qwtbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "Tamil general"
+  },
+  {
+   "name": "Fly FM",
+   "url": "http://stream.rcs.revma.com/q17aka9mtd3vv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "English hits"
+  },
+  {
+   "name": "Hot FM",
+   "url": "http://stream.rcs.revma.com/drakdf8mtd3vv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "Malay pop"
+  },
+  {
+   "name": "Zayan",
+   "url": "http://stream.rcs.revma.com/7ww2a4tbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "Malay contemporary"
+  },
+  {
+   "name": "GoXuan",
+   "url": "http://stream.rcs.revma.com/xt9nhzsbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "Mandarin youth"
+  },
+  {
+   "name": "Eight FM",
+   "url": "http://stream.rcs.revma.com/qp0xrd9mtd3vv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "Mandarin general"
+  },
+  {
+   "name": "BFM 89.9",
+   "url": "http://stream.rcs.revma.com/s91qy9p0zs3vv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": 89.9,
+   "tagline": "Business and talk"
+  },
+  {
+   "name": "CITYPlus FM",
+   "url": "http://stream.rcs.revma.com/9ykdmcawe1bwv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "City info"
+  },
+  {
+   "name": "Cats FM",
+   "url": "http://stream.rcs.revma.com/51qe53rv0y3vv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "Sarawak local"
+  },
+  {
+   "name": "THR Gegar",
+   "url": "http://stream.rcs.revma.com/cn0zcqsbv4uvv",
+   "region": "马来西亚",
+   "codec": "aac",
+   "freq": null,
+   "tagline": "East coast local"
+  },
+  {
+   "name": "988 FM",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/988_FM_SC",
+   "region": "马来西亚",
+   "codec": "mp3",
+   "freq": 98.8,
+   "tagline": "Mandarin pop"
+  },
+  {
+   "name": "Traxx FM",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/TRAXX_FM.mp3",
+   "region": "马来西亚",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "English adult hits"
+  },
+  {
+   "name": "Ai FM",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/AI_FM.mp3",
+   "region": "马来西亚",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Mandarin general"
+  },
+  {
+   "name": "Nasional FM",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/NASIONAL_FM.mp3",
+   "region": "马来西亚",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Malay general"
+  },
+  {
+   "name": "Radio Klasik",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_KLASIK.mp3",
+   "region": "马来西亚",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Malay classics"
+  },
+  {
+   "name": "Asyik FM",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/ASYIK_FM.mp3",
+   "region": "马来西亚",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Malay rural"
+  },
+  {
+   "name": "Minnal FM",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MINNAL_FM.mp3",
+   "region": "马来西亚",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Tamil general"
+  },
+  {
+   "name": "Langkawi FM",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LANGKAWI_FM.mp3",
+   "region": "马来西亚",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Northern local"
+  },
+  {
+   "name": "Suria FM",
+   "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SURIA_FM_SC",
+   "region": "马来西亚",
+   "codec": "mp3",
+   "freq": null,
+   "tagline": "Malay pop"
+  }
+ ]
+}

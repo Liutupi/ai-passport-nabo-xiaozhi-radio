@@ -1,0 +1,128 @@
+{
+  "status": "passed",
+  "scope": "Round 3 static art, props, palette, previews; no video/animation validation",
+  "props": {
+    "mic": {
+      "file": "props/mic.png",
+      "export_px": [
+        104,
+        144
+      ],
+      "target_px": [
+        26,
+        36
+      ],
+      "alpha_zero": 5611,
+      "alpha_partial": 569,
+      "visible_rgb_colors": 64,
+      "green_foreground_pixels": 0,
+      "clear_outer_border": true,
+      "outer_edge_max_alpha": 0,
+      "no_opaque_clipping": true,
+      "alpha_bbox": [
+        8,
+        2,
+        95,
+        142
+      ],
+      "sha256": "7e8084f379a335c80c653beccf9d5820e692ec693ae4f018e8c0908d50f6db14"
+    },
+    "mug": {
+      "file": "props/mug.png",
+      "export_px": [
+        96,
+        80
+      ],
+      "target_px": [
+        24,
+        20
+      ],
+      "alpha_zero": 2338,
+      "alpha_partial": 495,
+      "visible_rgb_colors": 64,
+      "green_foreground_pixels": 0,
+      "clear_outer_border": true,
+      "outer_edge_max_alpha": 0,
+      "no_opaque_clipping": true,
+      "alpha_bbox": [
+        3,
+        2,
+        92,
+        78
+      ],
+      "sha256": "b190b4e7056324f841fa11871672fdf5a3d6b2f53b4a6ff7cd73ada509605fc7"
+    },
+    "headphones": {
+      "file": "props/headphones.png",
+      "export_px": [
+        160,
+        140
+      ],
+      "target_px": [
+        40,
+        35
+      ],
+      "alpha_zero": 10260,
+      "alpha_partial": 1338,
+      "visible_rgb_colors": 64,
+      "green_foreground_pixels": 0,
+      "clear_outer_border": true,
+      "outer_edge_max_alpha": 0,
+      "no_opaque_clipping": true,
+      "alpha_bbox": [
+        2,
+        5,
+        158,
+        135
+      ],
+      "sha256": "c23e27a09594ba034c4aec0f453a8e4523330161bd513feda9798384d2637cfe"
+    },
+    "nabo_head_24": {
+      "file": "props/nabo_head_24.png",
+      "export_px": [
+        24,
+        24
+      ],
+      "target_px": [
+        24,
+        24
+      ],
+      "alpha_zero": 207,
+      "alpha_partial": 97,
+      "visible_rgb_colors": 59,
+      "green_foreground_pixels": 0,
+      "clear_outer_border": false,
+      "outer_edge_max_alpha": 56,
+      "no_opaque_clipping": true,
+      "alpha_bbox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "sha256": "676cbd455aba0f010cfe7201b3ffeee87dccaffdb3919ad3993510113138f411"
+    }
+  },
+  "checks": {
+    "manifest_paths_exist": true,
+    "palette_RGB565_all_roles_exact": true,
+    "original_ten_palette_colors_unchanged": true,
+    "preview_px": [
+      240,
+      320
+    ],
+    "preview_2x_nearest_exact": true,
+    "mic_face_overlap_pixels": 0,
+    "mic_face_horizontal_gap_px": 34,
+    "B_S1_S2_hashes_unchanged": true,
+    "head_icon_source": "approved S2 crop; no redraw",
+    "headphones_geometry": "visual QA: one band, two upward-facing cushion openings, both links natural",
+    "mic": "visual QA: dark mesh + amber ring, no stand or letters",
+    "mug": "visual QA: warm plain body, open right handle, no text/steam/saucer",
+    "visible_white_sticker_border": "none added",
+    "mirroring": "no source or prop mirrored",
+    "animations_generated": 0,
+    "source_video_count": 0,
+    "animation_loops_hands_fps": "not tested; no source video"
+  }
+}

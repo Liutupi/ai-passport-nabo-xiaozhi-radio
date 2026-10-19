@@ -4,3 +4,14 @@
 *.gif binary
 *.pdf binary
 *.blend binary
+# Handoff inventories hash the original bytes on every OS.
+design/nabo-radio/** -text
+checkpoints/** -text
+game-art/** -text
+docs/images/** -text
+xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/** -text
+*.elf binary
+*.mp4 binary
+*.woff2 binary
+*.ttf binary
+*.otf binary

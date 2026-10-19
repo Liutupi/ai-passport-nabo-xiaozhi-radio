@@ -1,6 +1,6 @@
 # 刷写与恢复
 
-**当前为 NABO FM 0.2.0 开发候选，尚未实机验收。** 本地包名 `ai-passport-nabo-xiaozhi-radio-v0.2.0.zip`，升级写应用和资源。下文旧 Release 的已验收记录仅适用于历史镜像。当前候选未提供网页刷写整片镜像，也未在 GitHub 发布。
+**当前为 NABO FM 0.2.6 开发检查点，已经上机调试，音质尚未验收。** 精确镜像在 `checkpoints/radio-dev-0.2.6/`，详细交接在根目录 `HANDOFF.md`。当前工牌保留的兼容 bootloader 与构建包字节不同，通用 upgrade 工具会保护性拒绝；不要绕过检查或整片擦除。下文旧 Release 的安装与已验收记录仅适用于历史镜像。
 
 ## 镜像与分区
 

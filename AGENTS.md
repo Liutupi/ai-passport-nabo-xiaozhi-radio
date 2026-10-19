@@ -1,6 +1,6 @@
 # 项目维护约定
 
-先读 docs/HANDOFF.md 和 xiaozhi-esp32/AGENTS.md。固件职责保持在 ai-passport-nabo 板型；核心仅依赖 Board 接口。不要覆盖当前实现重新运行早期移植生成器。
+先读根目录 HANDOFF.md（跨电脑检查点）、docs/HANDOFF.md 和 xiaozhi-esp32/AGENTS.md。固件职责保持在 ai-passport-nabo 板型；核心仅依赖 Board 接口。不要覆盖当前实现重新运行早期移植生成器。
 
 保持分区、NVS 和板型身份兼容。音频/任务生命周期改动要验证实际对话；游戏输入改动要验证实体按键；BLE 改动要验证已配对连接退出。构建成功不等于设备验证。
 

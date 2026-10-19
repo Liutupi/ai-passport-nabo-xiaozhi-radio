@@ -1,0 +1,319 @@
+{
+  "schema_version": 1,
+  "project": "NABO FM",
+  "selected_headphones": "B coral",
+  "screen_px": [
+    240,
+    320
+  ],
+  "props": {
+    "mic": {
+      "file": "props/mic.png",
+      "export_px": [
+        104,
+        144
+      ],
+      "target_px": [
+        26,
+        36
+      ],
+      "export_scale": 4,
+      "native_file": "props/game/mic.png",
+      "mode": "RGBA",
+      "source": "props/source/mic_source.png",
+      "source_crop": [
+        176,
+        149,
+        913,
+        1330
+      ],
+      "alpha_bbox": [
+        8,
+        2,
+        95,
+        142
+      ],
+      "color_calibration": null
+    },
+    "mug": {
+      "file": "props/mug.png",
+      "export_px": [
+        96,
+        80
+      ],
+      "target_px": [
+        24,
+        20
+      ],
+      "export_scale": 4,
+      "native_file": "props/game/mug.png",
+      "mode": "RGBA",
+      "source": "props/source/mug_source.png",
+      "source_crop": [
+        194,
+        225,
+        1148,
+        1042
+      ],
+      "alpha_bbox": [
+        3,
+        2,
+        92,
+        78
+      ],
+      "color_calibration": null
+    },
+    "headphones": {
+      "file": "props/headphones.png",
+      "export_px": [
+        160,
+        140
+      ],
+      "target_px": [
+        40,
+        35
+      ],
+      "export_scale": 4,
+      "native_file": "props/game/headphones.png",
+      "mode": "RGBA",
+      "source": "props/source/headphones_source.png",
+      "source_crop": [
+        160,
+        20,
+        1339,
+        1003
+      ],
+      "alpha_bbox": [
+        2,
+        5,
+        158,
+        135
+      ],
+      "color_calibration": {
+        "selected_B_median_hex": "#F3735E",
+        "generated_before_median_hex": "#FA735B",
+        "method": "HSV shell-only color calibration; no geometric change"
+      }
+    },
+    "nabo_head_24": {
+      "file": "props/nabo_head_24.png",
+      "export_px": [
+        24,
+        24
+      ],
+      "target_px": [
+        24,
+        24
+      ],
+      "export_scale": 1,
+      "hi_res_file": "props/nabo_head_96.png",
+      "hi_res_px": [
+        96,
+        96
+      ],
+      "hi_res_scale": 4,
+      "nearest_check_file": "props/nabo_head_24_4x_nearest.png",
+      "mode": "RGBA",
+      "source": "design/S2_on_air_cutout.png",
+      "source_crop": [
+        150,
+        55,
+        872,
+        666
+      ],
+      "identity": "crop of approved S2; no redraw"
+    }
+  },
+  "palette_file": "palette/radio.json",
+  "previews": [
+    "preview/props_radio.png",
+    "preview/props_radio_2x.png",
+    "preview/props_radio_rgb565.png",
+    "preview/props_sheet.png"
+  ],
+  "sources": {
+    "S1": {
+      "file": "design/S1_off_air.png",
+      "sha256": "a7219b908d6885924f19912b56fd1e5d8ccd3f0a888ee06e02851747041fae3a"
+    },
+    "S2": {
+      "file": "design/S2_on_air.png",
+      "sha256": "5032cb43ae26682c14b8bbd86f2f0a7e1bb7555e95785d66bdf484ce4af2edb0"
+    }
+  },
+  "preview_layout": {
+    "hero_image_px": [
+      164,
+      164
+    ],
+    "hero_origin": [
+      38,
+      7
+    ],
+    "hero_hat_to_desk_nominal_px": 128,
+    "desk_y": 150,
+    "mic_rect": [
+      184,
+      92,
+      26,
+      36
+    ],
+    "avatar_rect": [
+      5,
+      22,
+      24,
+      24
+    ],
+    "character_face_rect": [
+      89,
+      76,
+      61,
+      33
+    ],
+    "controls_y": [
+      150,
+      178
+    ],
+    "station_y": [
+      178,
+      222
+    ],
+    "dial_y": [
+      222,
+      282
+    ],
+    "hints_y": [
+      282,
+      320
+    ]
+  },
+  "animation_spec": {
+    "fps": 12,
+    "frame_px": [
+      256,
+      256
+    ],
+    "anchor": [
+      128,
+      224
+    ],
+    "palette_colors_per_action": 64,
+    "required_actions": 10,
+    "required_target_frames": 68,
+    "all_actions": 13,
+    "all_target_frames": 88,
+    "status": "not_produced_no_source_video",
+    "sip_mug_reference": "props/mug.png",
+    "same_first_pose": [
+      "S2",
+      "listen frame0",
+      "groove frame0"
+    ],
+    "actions": [
+      {
+        "name": "idle_off",
+        "target_frames": 8,
+        "loop": true,
+        "priority": "required",
+        "start": "S1",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "phones_on",
+        "target_frames": 6,
+        "loop": false,
+        "priority": "required",
+        "start": "S1->S2",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "phones_off",
+        "target_frames": 6,
+        "loop": false,
+        "priority": "required",
+        "start": "S2->S1",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "tune",
+        "target_frames": 6,
+        "loop": true,
+        "priority": "required",
+        "start": "S2",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "groove",
+        "target_frames": 8,
+        "loop": true,
+        "priority": "required",
+        "start": "S2",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "listen",
+        "target_frames": 8,
+        "loop": true,
+        "priority": "required",
+        "start": "S2",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "sip",
+        "target_frames": 8,
+        "loop": false,
+        "priority": "required",
+        "start": "S2",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "love",
+        "target_frames": 5,
+        "loop": false,
+        "priority": "required",
+        "start": "S2",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "oops",
+        "target_frames": 5,
+        "loop": false,
+        "priority": "required",
+        "start": "S2",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "doze",
+        "target_frames": 8,
+        "loop": true,
+        "priority": "required",
+        "start": "S2",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "wave",
+        "target_frames": 6,
+        "loop": false,
+        "priority": "recommended",
+        "start": "S1",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "search",
+        "target_frames": 6,
+        "loop": true,
+        "priority": "recommended",
+        "start": "S1",
+        "status": "awaiting_source_video"
+      },
+      {
+        "name": "sing",
+        "target_frames": 8,
+        "loop": true,
+        "priority": "optional",
+        "start": "S2",
+        "status": "awaiting_source_video"
+      }
+    ]
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "format": "RGB565",
+  "conversion": "((R >> 3) << 11) | ((G >> 2) << 5) | (B >> 3)",
+  "colors": {
+    "bg": {
+      "hex": "#0B0F1A",
+      "rgb565": 2147,
+      "rgb565_hex": "0x0863"
+    },
+    "stage": {
+      "hex": "#161C2B",
+      "rgb565": 4325,
+      "rgb565_hex": "0x10E5"
+    },
+    "desk": {
+      "hex": "#262C3A",
+      "rgb565": 8551,
+      "rgb565_hex": "0x2167"
+    },
+    "dial_bg": {
+      "hex": "#1C140A",
+      "rgb565": 6305,
+      "rgb565_hex": "0x18A1"
+    },
+    "dial": {
+      "hex": "#FFB547",
+      "rgb565": 64936,
+      "rgb565_hex": "0xFDA8"
+    },
+    "dial_dim": {
+      "hex": "#784E18",
+      "rgb565": 31331,
+      "rgb565_hex": "0x7A63"
+    },
+    "on_air": {
+      "hex": "#FF3B30",
+      "rgb565": 63942,
+      "rgb565_hex": "0xF9C6"
+    },
+    "level": {
+      "hex": "#4FD1C5",
+      "rgb565": 20120,
+      "rgb565_hex": "0x4E98"
+    },
+    "text": {
+      "hex": "#F2EDE4",
+      "rgb565": 63356,
+      "rgb565_hex": "0xF77C"
+    },
+    "muted": {
+      "hex": "#7C8597",
+      "rgb565": 31794,
+      "rgb565_hex": "0x7C32"
+    },
+    "headphones_B": {
+      "hex": "#E97967",
+      "rgb565": 60364,
+      "rgb565_hex": "0xEBCC"
+    },
+    "ear_cushion": {
+      "hex": "#2B2930",
+      "rgb565": 10566,
+      "rgb565_hex": "0x2946"
+    },
+    "video_desk": {
+      "hex": "#2A2230",
+      "rgb565": 10502,
+      "rgb565_hex": "0x2906"
+    }
+  },
+  "changes_from_ART_BRIEF": "Original ten colors unchanged. Added selected B coral, ear cushion and video-desk roles; no starting colors adjusted."
+}
