@@ -1,0 +1,239 @@
+{
+  "schema": "nabo-fm-device-validation-v1",
+  "date": "2026-10-30",
+  "candidate": "06",
+  "status": "flash-boot-and-wifi-pass-sustained-playback-fail",
+  "task_complete": false,
+  "application_sha256": "9b9975dd55494c8383c436de9ed49356cb51e62c82ae949a431f11615c8a36ce",
+  "elf_sha256": "f7d12f9023ac4f80d7e12c6d8cccc2162c20930b1750e999151789afb200c62f",
+  "build_and_host_tests": {
+    "build": "PASS, inherited from the exact frozen candidate; not rerun for this install",
+    "host_tests": "PASS, inherited from the exact frozen candidate; not rerun for this install",
+    "record": "validation/radio-candidate06-2026-10-30.json",
+    "rebuilt_for_install": false
+  },
+  "preflight": {
+    "live_device_identity_rechecked": true,
+    "observed_previous_firmware": "NABO Adventure 0.1.0",
+    "previous_factory_offset": "0x10000",
+    "previous_factory_size": "0x1f0000",
+    "previous_record_offset": "0x200000",
+    "previous_assets_offset": "0x210000",
+    "previous_layout_compatible_with_app_only_upgrade": false,
+    "initial_upgrade_stopped_before_any_write": true,
+    "fresh_full_device_backup_verified": true,
+    "explicit_user_authorization_for_layout_migration": true
+  },
+  "flash": {
+    "status": "PASS_FOUR_IMAGES_AND_ALL_UNCHANGED_BYTES_VERIFIED",
+    "mode": "explicitly authorized four-image layout migration, not app-only upgrade",
+    "frozen_candidate_images_used": true,
+    "write_offsets": [
+      "0x0",
+      "0x8000",
+      "0x10000",
+      "0x400000"
+    ],
+    "full_chip_erase_performed": false,
+    "full_device_backup_and_readback_bytes": 8388608,
+    "full_readback_byte_exact_against_expected": true,
+    "all_four_written_images_verified": true,
+    "all_unwritten_bytes_preserved": true,
+    "preserved_regions": [
+      "NVS",
+      "PHY",
+      "files"
+    ],
+    "adventure_record_and_previous_assets_replaced": true,
+    "private_verification_receipt": "private/device-upgrades/20261030T132524Z-candidate06-install/verification.json"
+  },
+  "boot_and_diagnostics": {
+    "status": "PASS for the bounded observation so far",
+    "normal_startup_observed": true,
+    "observed_elf_prefix": "f7d12f902",
+    "elf_prefix_matches_candidate": true,
+    "apps_status_responding": true,
+    "startup_observation_seconds": 117.859,
+    "apps_status_response_count": 24,
+    "normal_reset_count": 1,
+    "unexpected_reset_observed": false,
+    "fault_count": 0,
+    "panic_observed_at_checkpoint": false,
+    "nvs_erase_observed": false,
+    "observation_is_not_playback_acceptance": true
+  },
+  "startup_monitor": {
+    "status": "STOPPED",
+    "exit_reason": "stop_file",
+    "serial_closed": true,
+    "stop_marker_created": true,
+    "continuation_requirement": "Check/remove the previous STOP marker before reusing its monitor directory, or use a new directory. This closed startup observation is not an active monitor."
+  },
+  "network": {
+    "status": "CONNECTED_VERIFIED",
+    "wifi_connected_at_startup_checkpoint": false,
+    "device_state_at_startup_checkpoint": "wifi_configuring",
+    "usable_saved_wifi_record_available_at_startup": false,
+    "provisioning_access_point_started_during_startup": true,
+    "user_asked_to_provision_from_phone": true,
+    "user_now_reports_provisioning_complete": true,
+    "connected_wifi_verified_after_user_report": true,
+    "nvs_preserved_does_not_imply_a_usable_saved_wifi_record": true,
+    "wifi_connected_at_final_observation": true
+  },
+  "playback_validation": {
+    "status": "FAIL_SUSTAINED_PLAYBACK",
+    "fm_audio_windows_observed_at_checkpoint": 12,
+    "fixed_station_plan": [
+      {
+        "index": 7,
+        "name": "清晨音乐台",
+        "minimum_minutes": 10,
+        "status": "NOT_COMPLETED"
+      },
+      {
+        "index": 1,
+        "name": "怀集音乐之声",
+        "minimum_minutes": 10,
+        "status": "NOT_COMPLETED"
+      },
+      {
+        "index": 26,
+        "name": "湖北之声",
+        "minimum_minutes": 10,
+        "status": "NOT_COMPLETED"
+      }
+    ],
+    "twenty_station_switches": "NOT_COMPLETED",
+    "user_listening_acceptance": "FAIL: user reports no sound",
+    "physical_controls_acceptance": "NOT_COMPLETED",
+    "continuous_voice_after_exit": "NOT_RUN",
+    "actual_smoothness_or_audio_quality_improvement_claimed": false,
+    "user_feedback": "没有声音",
+    "three_fixed_station_ten_minute_sessions": "NOT_COMPLETED",
+    "observed_short_decoded_formats": [
+      {
+        "input_rate": 44100,
+        "channels": 2,
+        "output_rate": 22050
+      },
+      {
+        "input_rate": 48000,
+        "channels": 2,
+        "output_rate": 24000
+      }
+    ],
+    "first_frame_or_output_counter_is_not_sustained_playback_acceptance": true
+  },
+  "private_diagnostics_directory": "private/diagnostics/candidate06-device-20261030",
+  "privacy": "Device identifiers, access-point name, network addresses, credentials, raw logs, NVS contents and device-backup hashes are omitted.",
+  "next_step": "This flashing/validation round completed with sustained playback failure. Preserve exact candidate06; a future candidate should first isolate memory recovery and reconnect timing, then repeat the authorized build/host/device validation process. No further flash or release was performed.",
+  "git_commit_push_or_publish_performed": false,
+  "validation_round_complete": true,
+  "task_complete_scope": "Further playback optimization remains unfinished; this authorized flashing/validation round has completed with playback failure.",
+  "network_observation": {
+    "started_utc": "2026-10-30T13:29:58.181+00:00",
+    "finished_utc": "2026-10-30T13:33:27.525+00:00",
+    "elapsed_seconds": 209.343,
+    "apps_status_response_count": 42,
+    "fm_audio_window_count": 12,
+    "error_event_counts": {
+      "http_open": 6,
+      "compressed_buffer_memory_guard_rejection": 30
+    },
+    "monitor_stopped": true,
+    "serial_closed": true,
+    "control_queue_cleared": true,
+    "stop_marker_created": true,
+    "panic_assert_watchdog_observed": false,
+    "absence_of_crash_signatures_is_not_absence_of_runtime_failure": true,
+    "final_status": {
+      "station": 3,
+      "radio_state": "已暂停",
+      "wifi": 1,
+      "volume": 100,
+      "brightness": 80,
+      "standby": 60
+    },
+    "current_firmware": "exact frozen candidate06; no further flashing after validation",
+    "attribution_limits": [
+      "Initial USB backlog gave identical host reception times to events separated in device uptime.",
+      "Some FM lines were interleaved or truncated; missing fields are not fabricated.",
+      "Manual station changes prevent fixed-station attribution; a queued play command is not station confirmation.",
+      "No fixed ten-minute station session or twenty-switch acceptance completed."
+    ]
+  },
+  "failure_analysis": {
+    "confirmed_sequence": [
+      {
+        "uptime_ms": 127234,
+        "event": "Pipeline ready with a 16 KiB compressed ring."
+      },
+      {
+        "uptime_ms": 127794,
+        "event": "HTTP status 200."
+      },
+      {
+        "uptime_ms": 131044,
+        "event": "FM snapshot open_ms=1036, decoded=0. First-body absolute timestamp is not directly logged."
+      },
+      {
+        "uptime_ms": 136064,
+        "event": "EAGAIN reconnect recorded; subsequent TLS select timeout at 137024 ms."
+      },
+      {
+        "uptime_ms": 170974,
+        "event": "44.1 kHz short decoding after an 8 KiB pipeline/reconnect."
+      },
+      {
+        "uptime_ms": 181274,
+        "event": "48 kHz short decoding, followed by EAGAIN and TLS select timeouts."
+      },
+      {
+        "uptime_ms": 191114,
+        "event": "Compressed-buffer creation rejected: free=19628 B, largest=3328 B."
+      },
+      {
+        "uptime_ms": 222184,
+        "event": "Repeated compressed-buffer creation rejection after further reconnect/open failures."
+      }
+    ],
+    "memory_guard": {
+      "minimum_ring_bytes": 8192,
+      "network_reserve_bytes": 16384,
+      "minimum_free_before_smallest_ring_bytes": 24576,
+      "network_largest_block_requirement_bytes": 4096,
+      "observed_largest_block_at_rejection_bytes": 3328,
+      "observed_free_at_rejection": "approximately 19-20 KiB",
+      "interpretation": "Guard rejected ring creation; this does not prove an attempted malloc failed or a TLS memory leak."
+    },
+    "illustrative_station7_tagged_windows": {
+      "windows": 5,
+      "output_rate": 24000,
+      "summed_window_ms": 25069,
+      "output_samples": 592644,
+      "decoded_samples": 48960,
+      "decoded_to_output_ratio": 0.08261283333670805,
+      "output_clock_ratio_within_logged_windows": 0.985021341098568,
+      "limitation": "Non-contiguous windows, attributed only by latest status. Silent output slots and inactive intervals prevent sustained fixed-station acceptance."
+    },
+    "hypothesis_only": "The two-second EAGAIN floor may increase reconnect frequency and memory pressure; no comparison establishes causation.",
+    "root_cause": "NOT_ESTABLISHED",
+    "audio_task_hang": "NOT_ESTABLISHED; active=false itself suppresses FM-Audio logging while status can still respond."
+  },
+  "desktop_auxiliary_sample": {
+    "environment": "Desktop HTTPS via the configured system proxy; not direct and not MCU validation",
+    "station_index": 7,
+    "body_observation_seconds": 18.031,
+    "http_status": 200,
+    "certificate_chain_and_hostname_verified": true,
+    "direct_connection_verified": false,
+    "open_seconds": 0.422,
+    "total_body_bytes": 206811,
+    "chunks": 269,
+    "maximum_body_gap_seconds": 0.781,
+    "complete_audio_saved": false,
+    "limitation": "Different network route; cannot establish MCU network health or exclude device TLS/network faults.",
+    "private_record": "private/diagnostics/candidate06-device-20261030/desktop-station7-arrival-sample.json"
+  }
+}

@@ -1,0 +1,580 @@
+{
+  "date": "2026-10-30",
+  "candidate": "06r2",
+  "status": "build-and-host-pass-awaiting-exact-image-confirmation",
+  "source": {
+    "base_commit": "f66616ac4ae889b52561f9d94ef6395f3c4600b3",
+    "branch": "work/fm-smooth-06",
+    "worktree_uncommitted": true,
+    "parent_candidate": "06r1",
+    "parent_application_sha256": "0a80d6f6fd0ad4b01ac2efbd85707bd1a1b3b47db4cf56ff7db42094bb63c82c"
+  },
+  "trigger": {
+    "device_record": "validation/radio-candidate06r1-device-2026-10-30.json",
+    "short_listening": "PASS: user reported continuous clear sound",
+    "reentry_after_home_and_settings": "FAIL at codec workspace",
+    "failed_attempts": 12,
+    "observed_free_heap_range_bytes": [
+      53576,
+      53732
+    ],
+    "observed_largest_free_block_bytes": 7680,
+    "helix_subband_allocation_bytes": 8708,
+    "total_free_heap_does_not_satisfy_a_larger_contiguous_allocation": true
+  },
+  "repair": {
+    "target_c3_decode_state_bytes_before": 11232,
+    "target_c3_decode_state_bytes_after": 232,
+    "allocation_order": [
+      "small decode state",
+      "8192-byte network task stack",
+      "Helix or AAC workspace",
+      "4608-byte PCM",
+      "4096-byte compressed input",
+      "2306-byte DSP output",
+      "segmented compressed ring"
+    ],
+    "all_partial_allocations_reclaimed": true,
+    "network_publish_only_after_pipeline_complete": true,
+    "aac_output_capacity_bytes": 4608,
+    "capacity_and_priority_reduced": false,
+    "total_ram_reduction_claimed": false,
+    "retained_06r1_network_recovery_policy": true,
+    "voice_core_or_third_party_decoder_changed": false
+  },
+  "build": {
+    "status": "PASS",
+    "command": "python tools/build.py",
+    "idf": "6.0.2",
+    "chip": "esp32c3",
+    "board": "ai-passport-nabo",
+    "application_bytes": 3484464,
+    "application_partition_free_bytes": 644304,
+    "configuration_matches_tracked_defaults": true,
+    "configuration_differences": {},
+    "bootloader_partition_assets_equal_frozen06r1": true,
+    "sdkconfig_equal_frozen06r1": true,
+    "internal_project_version": "2.5.0",
+    "app_descriptor_time_not_candidate_identity": true,
+    "artifacts": {
+      "xiaozhi.bin": {
+        "bytes": 3484464,
+        "sha256": "5422649287ccc601e873d2768ad59dd8942818420501a1eb5b33eb5816b99888"
+      },
+      "xiaozhi.elf": {
+        "bytes": 35418280,
+        "sha256": "92bff1550b29843b91c6af4b8faa29b3632dfb547d698ef1c604aaddc3c4d53b"
+      },
+      "xiaozhi.map": {
+        "bytes": 17475049,
+        "sha256": "8fa3c5110308f8b61cef3464255cf59b23eae412b1b9ab80f0fe66ae54ce3066"
+      },
+      "generated_assets.bin": {
+        "bytes": 3019577,
+        "sha256": "0de5c9d3b8f824730b169549463b06d00bbce27814daf1d633ac3b6a068dbb3f"
+      },
+      "bootloader/bootloader.bin": {
+        "bytes": 14976,
+        "sha256": "886f5ef7541c3e6c93914cf932f211b34f1693a793952bf0b46a392b99cecf0a"
+      },
+      "partition_table/partition-table.bin": {
+        "bytes": 3072,
+        "sha256": "feb7ea496adb63179bf197f87431e6c8ddade47ce0228c1e671ef01421effc0c"
+      },
+      "full-build.bin": {
+        "bytes": 7213881,
+        "sha256": "22a2d185d16bec11c140f6afbfcf23e84fb72578423a5a865d562319fcd3ee1a"
+      },
+      "sdkconfig": {
+        "bytes": 120305,
+        "sha256": "707dfbd58c2790d04b602022b69751f2e089e918c9fded85492c0ac9fc5e1b21"
+      },
+      "flasher_args.json": {
+        "bytes": 1074,
+        "sha256": "2fbb5bf5a2f0269f9649f02e47079d8b3ccc0186d7460b1d97e3c83799e842c2"
+      }
+    }
+  },
+  "host_tests": {
+    "status": "PASS",
+    "suite": "python tools/run_tests.py",
+    "suite_script_count": 15,
+    "resource_verification": {
+      "files": 242,
+      "bytes": 160260981,
+      "status": "PASS"
+    },
+    "memory_model": {
+      "result": "PASS",
+      "evidence": "bounded_first_fit_production_pipeline",
+      "device_acceptance": false,
+      "hardware_heap_dump": false,
+      "allocator_header_bytes": 16,
+      "alignment_bytes": 16,
+      "persistent_separators": "32-byte live payload between initially free holes",
+      "task_stack_bytes": 8192,
+      "tcb_and_network_allocations_not_simulated": true,
+      "samples_per_cycle": 54720,
+      "cycles": 50,
+      "exact_pcm": true,
+      "peak_pipeline_reserved_bytes": 52192,
+      "profiles": [
+        {
+          "profile": 0,
+          "free_holes": [
+            18432,
+            16384,
+            7680,
+            7680,
+            7680,
+            7680,
+            6144,
+            4352
+          ],
+          "free_bytes": 23840,
+          "largest_free_block": 7680,
+          "pipeline_live_reserved_bytes": 52192,
+          "pipeline_peak_reserved_bytes": 52192,
+          "live_allocations": 22,
+          "allocation_attempts": 22,
+          "max_requested_allocation": 8708,
+          "ring_bytes": 8192,
+          "decode_state_bytes": 272,
+          "subband_bytes": 8708,
+          "minimum_free_during_begin": 23840,
+          "host_pointer_bits": 64
+        },
+        {
+          "profile": 1,
+          "free_holes": [
+            18432,
+            15872,
+            7936,
+            7680,
+            7680,
+            7680,
+            6144,
+            4608
+          ],
+          "free_bytes": 23840,
+          "largest_free_block": 7680,
+          "pipeline_live_reserved_bytes": 52192,
+          "pipeline_peak_reserved_bytes": 52192,
+          "live_allocations": 22,
+          "allocation_attempts": 22,
+          "max_requested_allocation": 8708,
+          "ring_bytes": 8192,
+          "decode_state_bytes": 272,
+          "subband_bytes": 8708,
+          "minimum_free_during_begin": 23840,
+          "host_pointer_bits": 64
+        },
+        {
+          "profile": 2,
+          "free_holes": [
+            18432,
+            16384,
+            8192,
+            8192,
+            7680,
+            7680,
+            6144,
+            4096
+          ],
+          "free_bytes": 24608,
+          "largest_free_block": 7680,
+          "pipeline_live_reserved_bytes": 52192,
+          "pipeline_peak_reserved_bytes": 60512,
+          "live_allocations": 22,
+          "allocation_attempts": 39,
+          "max_requested_allocation": 8708,
+          "ring_bytes": 8192,
+          "decode_state_bytes": 272,
+          "subband_bytes": 8708,
+          "minimum_free_during_begin": 16288,
+          "host_pointer_bits": 64
+        },
+        {
+          "profile": 4,
+          "free_holes": [
+            16384,
+            18432,
+            7680,
+            7680,
+            7680,
+            7680,
+            6144,
+            4352
+          ],
+          "free_bytes": 23840,
+          "largest_free_block": 7680,
+          "pipeline_live_reserved_bytes": 52208,
+          "pipeline_peak_reserved_bytes": 52208,
+          "live_allocations": 22,
+          "allocation_attempts": 22,
+          "max_requested_allocation": 8708,
+          "ring_bytes": 8192,
+          "decode_state_bytes": 272,
+          "subband_bytes": 8708,
+          "minimum_free_during_begin": 23840,
+          "host_pointer_bits": 64
+        }
+      ],
+      "healthy": {
+        "free_bytes": 53920,
+        "largest_free_block": 53920,
+        "pipeline_live_reserved_bytes": 77152,
+        "pipeline_peak_reserved_bytes": 77152,
+        "live_allocations": 46,
+        "allocation_attempts": 46,
+        "max_requested_allocation": 8708,
+        "ring_bytes": 32768,
+        "decode_state_bytes": 272,
+        "subband_bytes": 8708,
+        "minimum_free_during_begin": 53920,
+        "host_pointer_bits": 64
+      },
+      "failure_injections": [
+        {
+          "allocation": 1,
+          "requested": 272,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 2,
+          "requested": 8192,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 3,
+          "requested": 2064,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 4,
+          "requested": 8708,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 5,
+          "requested": 6944,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 6,
+          "requested": 4624,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 7,
+          "requested": 840,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 8,
+          "requested": 328,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 9,
+          "requested": 284,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 10,
+          "requested": 64,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 11,
+          "requested": 4608,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 12,
+          "requested": 4096,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 13,
+          "requested": 2306,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 14,
+          "requested": 272,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 15,
+          "requested": 1024,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 16,
+          "requested": 1024,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 17,
+          "requested": 1024,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 18,
+          "requested": 1024,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 19,
+          "requested": 1024,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 20,
+          "requested": 1024,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 21,
+          "requested": 1024,
+          "begin_succeeded_via_fallback": false
+        },
+        {
+          "allocation": 22,
+          "requested": 1024,
+          "begin_succeeded_via_fallback": false
+        }
+      ],
+      "aac_capacity_stub": {
+        "capacity_bytes": 4608,
+        "decoded_4608_accepted": true,
+        "decoded_4609_rejected": true,
+        "real_aac_test": false
+      },
+      "before_control": {
+        "source_sha256": "3b1a2c2fad44eeff8a4a7da6e5b23465b392c43e8cdeca964e7838343600b48f",
+        "source_bytes_unchanged": true,
+        "profiles": [
+          {
+            "profile": 0,
+            "free_holes": [
+              18432,
+              16384,
+              7680,
+              7680,
+              7680,
+              7680,
+              6144,
+              4352
+            ],
+            "initial_free_bytes": 76032,
+            "initial_largest": 18432,
+            "decode_state_bytes": 11264,
+            "failed_subband": {
+              "requested": 8708,
+              "success": 0,
+              "free_before": 54464,
+              "largest_before": 8176,
+              "live_after": 21568,
+              "injected": 0
+            },
+            "cleanup_restored_heap": true
+          },
+          {
+            "profile": 1,
+            "free_holes": [
+              18432,
+              15872,
+              7936,
+              7680,
+              7680,
+              7680,
+              6144,
+              4608
+            ],
+            "initial_free_bytes": 76032,
+            "initial_largest": 18432,
+            "decode_state_bytes": 11264,
+            "failed_subband": {
+              "requested": 8708,
+              "success": 0,
+              "free_before": 54464,
+              "largest_before": 7936,
+              "live_after": 21568,
+              "injected": 0
+            },
+            "cleanup_restored_heap": true
+          },
+          {
+            "profile": 2,
+            "free_holes": [
+              18432,
+              16384,
+              8192,
+              8192,
+              7680,
+              7680,
+              6144,
+              4096
+            ],
+            "initial_free_bytes": 76800,
+            "initial_largest": 18432,
+            "decode_state_bytes": 11264,
+            "failed_subband": {
+              "requested": 8708,
+              "success": 0,
+              "free_before": 55232,
+              "largest_before": 8192,
+              "live_after": 21568,
+              "injected": 0
+            },
+            "cleanup_restored_heap": true
+          }
+        ],
+        "healthy_heap_exact_pcm": true
+      }
+    },
+    "network_model": {
+      "result": "PASS",
+      "evidence": "host_scripted_real_network_worker",
+      "hardware_or_live_network_test": false,
+      "eagain_gap_same_connection_ms": [
+        3000,
+        7000
+      ],
+      "eagain_stall_floor_ms": 8000,
+      "retry_backoff_ms": [
+        1000,
+        2000,
+        4000,
+        8000
+      ],
+      "closures": [
+        {
+          "read_result": 0,
+          "complete": false
+        },
+        {
+          "read_result": 0,
+          "complete": true
+        },
+        {
+          "read_result": -1,
+          "complete": false
+        }
+      ],
+      "http_attempts_cleaned_once": true,
+      "queued_bytes_decoder_task_preserved": true,
+      "wifi_wait_and_cancel": true,
+      "heap_wait_and_cancel": true,
+      "memory_wait_bound_ms": 10000,
+      "owner_memory_release_once": true,
+      "first_allocation_retry_ms": 3000,
+      "memory_release_drain_inputs": [
+        "empty",
+        "partial_header",
+        "ready_pcm"
+      ],
+      "scenario_count": 17,
+      "before_control": {
+        "short_gap": {
+          "result": "FAIL_REPRODUCED",
+          "gap_script_ms": 3000,
+          "read_calls_before_reconnect": 4,
+          "reconnects": 1
+        },
+        "empty_ring_open_failure": {
+          "result": "FAIL_REPRODUCED",
+          "attempts_started": 1,
+          "future_script_attempts_not_reached": 1,
+          "worker_done": true,
+          "state": "FAILED"
+        },
+        "source_sha256": "fbbee2ebde13c8d7cfedea780c3d81be9a221969adf9de31bf8443ecac9fe891",
+        "only_test_enable_macro_changed": true
+      }
+    },
+    "recovery_model": {
+      "environment": "host-only deterministic offline MP3; no device/network QA",
+      "candidate_under_test": "06r2",
+      "baseline_source": "f66616a",
+      "max_synthetic_tail_step": 137,
+      "allocation_retry": {
+        "initial_allocation_retry_delays_ms": [
+          3000,
+          6000,
+          12000,
+          24000,
+          30000,
+          30000
+        ],
+        "low_heap_guard_retained": true,
+        "cancel_resume_selection_reset": true,
+        "no_pcm_rebuild_keeps_backoff": true,
+        "real_pcm_resets_backoff": true,
+        "restored_heap_ring_bytes": 8192
+      },
+      "late_old_generation_retry_isolated": true,
+      "metric_definition": "silent_ms counts output-clock slots without real decoded PCM, including short-block padding; a 30 ms synthetic tail is not music. This is not final-PCM threshold detection or a device acoustic measurement.",
+      "holes": [
+        {
+          "candidate03": {
+            "hole_ms": 1000,
+            "silent_ms": 1024.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592
+          },
+          "candidate_under_test": {
+            "hole_ms": 1000,
+            "silent_ms": 504.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592,
+            "rebuffers": 1,
+            "rebuffer_ms": 520
+          }
+        },
+        {
+          "candidate03": {
+            "hole_ms": 3000,
+            "silent_ms": 3024.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592
+          },
+          "candidate_under_test": {
+            "hole_ms": 3000,
+            "silent_ms": 2504.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592,
+            "rebuffers": 1,
+            "rebuffer_ms": 2520
+          }
+        }
+      ]
+    },
+    "format_and_diff_checks": "PASS",
+    "limits": [
+      "First-fit free-hole profiles approximate the observed envelope; they are not device heap dumps.",
+      "Native host pointer sizes and allocator headers differ from C3.",
+      "TCP/TLS/TCB resource behavior is not modeled by the memory arena.",
+      "AAC output capacity is tested with a substitute decoder; real AAC is unaccepted."
+    ]
+  },
+  "device_tests": {
+    "candidate06r2": "NOT_RUN",
+    "new_candidate_flashed": false,
+    "last_verified_device_firmware": "06r1",
+    "last_verified_state": "HOME, Wi-Fi connected, volume 50",
+    "serial_monitor_closed_after_06r1_observation": true,
+    "parent_short_listening_pass_does_not_override_parent_reentry_failure": true
+  },
+  "unverified": [
+    "Actual 06r2 voice/home/radio reentry and audible playback",
+    "Three fixed stations for at least 10 minutes and 20 controlled switches",
+    "Voice conversation after exit, physical controls, AAC/HE-AAC, long-run behavior"
+  ],
+  "archive": "private/candidates/fm-audio-20261030-06r2",
+  "next_step": "Stop after Build/Host. Wait for explicit confirmation of the exact 06r2 app, then fresh live-device/layout/backup checks, app-only write at 0x10000 and all protected-region readback.",
+  "new_features_from_screenshot_implemented": false,
+  "committed_pushed_or_published": false
+}

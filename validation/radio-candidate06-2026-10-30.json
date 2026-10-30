@@ -1,0 +1,154 @@
+{
+  "date": "2026-10-30",
+  "candidate": "06",
+  "status": "build-and-host-pass-awaiting-user-flash-confirmation",
+  "source": {
+    "base_commit": "f66616ac4ae889b52561f9d94ef6395f3c4600b3",
+    "branch": "work/fm-smooth-06",
+    "working_tree_uncommitted": true,
+    "candidate04_05_merged": false
+  },
+  "scope": [
+    "P0-A playback telemetry",
+    "P0-B starvation recovery and PCM transitions"
+  ],
+  "build": {
+    "status": "PASS",
+    "command": "python tools/build.py",
+    "idf": "6.0.2",
+    "chip": "esp32c3",
+    "board": "ai-passport-nabo",
+    "frozen_defaults": "configs/release-v1.0.0.sdkconfig",
+    "tracked_configuration_differences": {},
+    "internal_project_version": "2.5.0",
+    "app_descriptor_compile_time_is_not_candidate_identity": true,
+    "application_partition_bytes": 4128768,
+    "application_free_bytes": 645216,
+    "artifacts": {
+      "xiaozhi.bin": {
+        "bytes": 3483552,
+        "sha256": "9b9975dd55494c8383c436de9ed49356cb51e62c82ae949a431f11615c8a36ce"
+      },
+      "xiaozhi.elf": {
+        "bytes": 35412820,
+        "sha256": "f7d12f9023ac4f80d7e12c6d8cccc2162c20930b1750e999151789afb200c62f"
+      },
+      "xiaozhi.map": {
+        "bytes": 17474388,
+        "sha256": "5752614cd7062ebaf7224ffb10386fe14c0d99a5813b6a5ca8d4516d2de8edde"
+      },
+      "generated_assets.bin": {
+        "bytes": 3019577,
+        "sha256": "0de5c9d3b8f824730b169549463b06d00bbce27814daf1d633ac3b6a068dbb3f"
+      },
+      "bootloader/bootloader.bin": {
+        "bytes": 14976,
+        "sha256": "886f5ef7541c3e6c93914cf932f211b34f1693a793952bf0b46a392b99cecf0a"
+      },
+      "partition_table/partition-table.bin": {
+        "bytes": 3072,
+        "sha256": "feb7ea496adb63179bf197f87431e6c8ddade47ce0228c1e671ef01421effc0c"
+      },
+      "full-build.bin": {
+        "bytes": 7213881,
+        "sha256": "cefba59547e14c8274d13b87db7fb68978743f95bc8b83b14322d43caf8da750"
+      },
+      "sdkconfig": {
+        "bytes": 120305,
+        "sha256": "707dfbd58c2790d04b602022b69751f2e089e918c9fded85492c0ac9fc5e1b21"
+      },
+      "flasher_args.json": {
+        "bytes": 1074,
+        "sha256": "2fbb5bf5a2f0269f9649f02e47079d8b3ccc0186d7460b1d97e3c83799e842c2"
+      }
+    }
+  },
+  "host_tests": {
+    "status": "PASS",
+    "command": "python tools/run_tests.py",
+    "scripts": 13,
+    "resource_check": {
+      "command": "python tools/verify_handoff.py",
+      "status": "PASS",
+      "files": 242,
+      "bytes": 160260981
+    },
+    "coverage": [
+      "initial/recovery watermark boundaries at 8/16/32 KiB",
+      "ongoing and completed rebuffer timing, repeated gaps",
+      "stop, selection reset, EOF drain",
+      "same-generation rebuild and allocation-failure retry",
+      "cancel during inactive retry gap",
+      "5 ms short-block fade and quick-resume crossfade, 30 ms empty-block tail",
+      "network telemetry helper counters and dynamic stall threshold",
+      "unstarved exact PCM, recovery sample conservation, ring wrap/concurrency/cleanup, 50 lifecycle cycles"
+    ],
+    "recovery_comparison": {
+      "environment": "host-only deterministic offline MP3; no device/network QA",
+      "baseline_source": "f66616a",
+      "max_synthetic_tail_step": 137,
+      "metric_definition": "silent_ms counts output-clock slots without real decoded PCM, including short-block padding; a 30 ms synthetic tail is not music. This is not final-PCM threshold detection or a device acoustic measurement.",
+      "holes": [
+        {
+          "candidate03": {
+            "hole_ms": 1000,
+            "silent_ms": 1024.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592
+          },
+          "candidate06": {
+            "hole_ms": 1000,
+            "silent_ms": 504.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592,
+            "rebuffers": 1,
+            "rebuffer_ms": 520
+          }
+        },
+        {
+          "candidate03": {
+            "hole_ms": 3000,
+            "silent_ms": 3024.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592
+          },
+          "candidate06": {
+            "hole_ms": 3000,
+            "silent_ms": 2504.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592,
+            "rebuffers": 1,
+            "rebuffer_ms": 2520
+          }
+        }
+      ]
+    },
+    "real_http_worker_executed": false,
+    "format_and_diff_checks": "PASS for changed production lines and new audio header"
+  },
+  "telemetry_semantics": {
+    "counters": "Per selection/play generation, survive automatic rebuilds; reconnects counts disconnect/open-failure retry events.",
+    "rebuffer_ms": "Owner monotonic wait duration, includes an ongoing wait and retry gaps; not acoustic silence.",
+    "open_ms": "HTTP initialization through first positive response-body read; zero means no first body packet in current attempt.",
+    "stall_reason": "Most recent event: none/eagain_timeout/read_le_zero/wifi_down/open_failed/invalid_stream."
+  },
+  "device_tests": {
+    "status": "NOT_RUN",
+    "serial_opened": false,
+    "flashed": false,
+    "rebooted": false,
+    "current_device_identity_rechecked": false
+  },
+  "unverified": [
+    "real network and TLS behavior, memory and scheduling",
+    "three fixed stations for at least ten minutes each and twenty station switches",
+    "user listening acceptance and continuous voice after exit",
+    "AAC/HE-AAC, all stations, long-run stability",
+    "two-second timeout floor can exceed small-ring playback cushion"
+  ],
+  "next_step": "Wait for explicit confirmation of this exact app; then bind live device, back up, write only app at 0x10000, verify all protected regions.",
+  "private_archive": "private/candidates/fm-audio-20261030-06",
+  "merged_image": "Offline build-only integrity artifact; NVS/PHY gaps are FF. Not the authorized device upgrade image.",
+  "git_residual_cleanup": "Automatic approval rejected deletion; files left in place, no effect on completed sync/build/tests.",
+  "git_commit_push_or_publish_performed": false
+}

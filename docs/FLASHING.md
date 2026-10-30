@@ -1,70 +1,67 @@
-# 刷写与恢复
+# 刷写与恢复 · NABO FM v1.0.1 体验版
 
-**NABO FM v1.0.0 是首版体验固件，应用对应已实测的候选 03。** 当前作者工牌仅更新应用并读回验证保留区；以下完整安装包没有在空白设备执行本次全套首装验证。已知限制见 [首版说明](RELEASE_FM_v1.0.0.md)。
+本版使用封存 06r5 精确镜像，已在已配置设备上完成应用区升级与保护区核对；台 26 短测及 2 轮主页往返通过，剩余完整验收由用户主动提前结束。**完整组合未在空白设备重新执行全套首装验收。** 具体范围见 [发行说明](RELEASE_FM_v1.0.1.md)。
 
-社区/网页使用的 `ai-passport-nabo-xiaozhi-radio-v1.0.0-full.bin` 从 `0x0` 写入，**会清空配网、激活和 NVS 用户设置**，需重新配网/激活。它由构建镜像合并，空隙为 `0xFF`，不含任何人的设备备份或凭据。
+社区 / 网页使用的 `ai-passport-nabo-xiaozhi-radio-v1.0.1-full.bin` 从 `0x0` 写入，**会清空 Wi-Fi 配网、激活和 NVS 设置**，需重新配网 / 激活。它只由构建输出合并，间隙为 `0xFF`，不含设备备份或个人凭据。
 
-希望保留配网和用户数据时，下载 ZIP 使用受保护的分区升级方式。当前作者工牌保留的兼容 bootloader 与包中字节不同，普通 upgrade 会保护性拒绝；不要为此改用网页完整固件或擦除 Flash，应先核对自己的设备、兼容性和写入范围。
+希望保留数据时，先核对本机型号、旧布局与目标镜像，再使用 ZIP 中的受保护分区工具。版本名称不能证明镜像兼容。
 
-## 镜像与分区
+## 镜像与保护区
 
-仅支持 ESP32-C3、8 MB Flash 的 AI Passport。串口可能是 COM8，也可能是其他名称；必须使用自己的端口和 MAC。
+仅支持 ESP32-C3 / 8 MB 的 FoloToy AI Passport。使用自己的端口和设备 MAC；下方 `YOUR_PORT` / `YOUR_DEVICE_MAC` 都是待替换占位符。
 
 | 内容 | 偏移 | 分区上限 |
 |---|---|---|
 | bootloader.bin | `0x0` | `0x8000` |
 | partition-table.bin | `0x8000` | `0x1000` |
-| NVS（不附带、不覆盖） | `0x9000` | `0x6000` |
-| PHY（不附带、不覆盖） | `0xf000` | `0x1000` |
+| NVS（分区工具保留） | `0x9000` | `0x6000` |
+| PHY（分区工具保留） | `0xf000` | `0x1000` |
 | xiaozhi.bin | `0x10000` | `0x3f0000` |
 | assets.bin | `0x400000` | `0x300000` |
-| 原 files（不附带、不覆盖） | `0x700000` | `0x100000` |
+| files（分区工具保留） | `0x700000` | `0x100000` |
 
-Release ZIP 是独立镜像集合，不是可直接写到 `0x0` 的单个文件。另附的 `…-full.bin` 是给网页刷机工具用的 `0x0` 完整固件，它会把 NVS 写成空白（清空配网、激活和成绩），只适合新装或愿意重新激活的工牌。不要使用 `erase-flash`，不要把已有设备的 8 MB 整片备份传播给别人。
+ZIP 是独立镜像集合，不能直接写到 `0x0`。另附 full BIN 与下述四镜像 install 模式的数据保留行为不同：full BIN 会覆盖空白 NVS；分区 install 写四个构建镜像，并保留上述 NVS、PHY、files 范围。不要使用 `erase-flash`，也不要传播已配置设备的整片备份。
 
-## 准备
+## 检查包与设备
 
-下载并解压 `ai-passport-nabo-xiaozhi-radio-v1.0.0.zip`。在解压目录执行：
+下载并解压 v1.0.1 ZIP，在解压目录执行：
 
 ```powershell
 python -m pip install -r requirements-flash.txt
-python -m esptool --chip esp32c3 --port COM8 chip-id
 python tools/flash_release.py --package . --mode inspect
+python -m esptool --chip esp32c3 --port YOUR_PORT chip-id
 ```
 
-第一条 esptool 命令用于读取设备 MAC；将后续命令中的 `YOUR_DEVICE_MAC` 替换为它。关闭串口监视器再刷写。工具默认只检查包，只有明确指定 upgrade/install 和设备身份才会写入。
+`inspect` 默认只检查本地包；`chip-id` 用于读取自己的设备身份。写入前关闭串口监视器。工具只有明确指定 upgrade / install、端口和 MAC 才会写入；它核对 ESP32-C3、8 MB、未启用安全启动 / Flash 加密，每条设备命令核对 MAC，并先备份、校验完整 8 MB。
 
-## 已安装本定制版（任一版本）：升级
+## 升级：应用和资源
 
 ```powershell
-python tools/flash_release.py --package . --mode upgrade --port COM8 --expected-mac YOUR_DEVICE_MAC
+python tools/flash_release.py --package . --mode upgrade --port YOUR_PORT --expected-mac YOUR_DEVICE_MAC
 ```
 
-工具核对包内 SHA256、ESP32-C3、8 MB、未启用安全启动/Flash 加密，备份并校验整片 Flash，再比对当前 bootloader 和分区表。匹配时写入 `xiaozhi.bin` 和 `assets.bin`（牌桌的 NABO 动画在资源分区里），写后校验这两个镜像和全部未修改区域，再重启。配网、激活、最高分等 NVS 数据和末尾 files 区保留。
+包内 `upgrade` 要求当前 bootloader 和分区表与包内镜像精确匹配，随后写 `xiaozhi.bin` 与 `assets.bin`，校验已写镜像及列明的保护区，保留 NVS、PHY 和 files。NABO 动画、字体和台表使用资源分区。工具完成后重启，再核对画面、按键、联网和语音。
 
-若 bootloader 或分区表不同，工具会在写入前停止。先阅读失败原因，不要绕过检查继续用裸 esptool 写入。
+若 bootloader / 分区不同，upgrade 在写入前停止。历史 v1.0.0 设备曾保留兼容但字节不同的 bootloader，不能因同为 NABO FM 就推定适合本次 upgrade 或仅应用写入。先核对旧布局和兼容性，再决定受保护的安装方式；不绕过检查直接裸写。
 
-### 在各版本之间切换
+### 仅应用更新的前提
 
-牌桌版 v1.4.0–v1.5.0 与电台版 v1.0.0–v1.2.0、深潜版 v1.3.0–v1.3.1 的 bootloader 和分区表相同，NVS 互相兼容。
+只有当前 bootloader、分区表和资源均已确认与目标匹配，且已有完整新备份和写后保护区校验方案时，才具备仅写 `0x10000` 应用的前提。此次 06r3 → 06r4 → 06r5 的专门校验流程符合该条件，并核对了应用尾部及全部未写字节；这个设备上的结果不泛化为所有 v1.0.0 或其他固件设备。
 
-- **切到牌桌版**：用本包的 upgrade 模式（写应用和资源）。
-- **从牌桌版切回其他版本**：旧版本的 upgrade 模式要求资源与它的包完全一致，会拒绝写入；请用对应版本包的 install 模式（写四个镜像，仍保留 NVS 和 files 区）。电台版见 [ai-passport-nabo-xiaozhi](https://github.com/Liutupi/ai-passport-nabo-xiaozhi/releases)，深潜版见 [ai-passport-nabo-xiaozhi-dive](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-dive/releases)。
+公开包内工具提供 `inspect / upgrade / install` 三种模式，**没有 app-only 模式**；不要自行删减命令参数来模拟本次私有设备流程。
 
-各版本的数据（跳一跳最高分、节奏回声成绩、牌桌的抢局设置等）都留在 NVS，切回来仍在。
-
-## 原始工牌或首次安装
+## 受保护的四镜像安装
 
 ```powershell
-python tools/flash_release.py --package . --mode install --port COM8 --expected-mac YOUR_DEVICE_MAC
+python tools/flash_release.py --package . --mode install --port YOUR_PORT --expected-mac YOUR_DEVICE_MAC
 ```
 
-安装模式会写 bootloader、分区表、应用和资源，仍保留 NVS、PHY 和末尾 files 区。工具会先生成本机私有的整片备份。NVS 字节保留不表示旧 Muse/其他固件的账号能迁移到小智；首次使用小智仍按屏幕配网、激活。
+分区 install 写 bootloader、分区表、应用和资源，保留固定地址的 NVS、PHY、files，并产生本机私有整片备份。它会覆盖这些目标镜像范围内原固件的内容；旧布局中的其他资源或记录可能位于被覆盖范围，必须先核对布局。
 
-首版四镜像安装来自此前已验证的分区和资源组合；最终应用已实机验证。发布时没有对另一块空白设备重新执行全套首次安装，适配范围与验证边界见 [VALIDATION.md](VALIDATION.md)。
+NVS 字节保留不代表其他固件的账户或设置与本版兼容。首次使用小智仍按屏幕完成配网 / 激活；完整首装尚未实机验收，不能把本轮应用区升级当作首装证据。
 
 ## 备份与恢复
 
-工具把备份、过程日志和校验记录保存到当前目录的 `private/`；该目录可能含凭据，只能留在本机。恢复应使用**同一块设备自己的备份**，先读取 MAC、检查备份 SHA256 和 Flash 大小，再按备份时记录的布局恢复。
+工具将备份、过程日志和校验记录放在本机 `private/`，其中可能含配网和账户信息，不随 Release 发布。恢复使用**同一块设备自己的备份**，重新核对设备 MAC、备份 SHA256、容量与备份时布局。
 
-刷写只处理普通未加密设备，不修改 eFuse。自定义分区没有 OTA 槽，后续继续使用本项目的 USB 刷写包。
+工具只处理未加密的普通设备，不修改 eFuse。自定义分区没有 OTA 槽，后续仍使用 USB 分区刷写包。失败时先保留记录并核对原因；自动复位成功不代表功能验收完成。

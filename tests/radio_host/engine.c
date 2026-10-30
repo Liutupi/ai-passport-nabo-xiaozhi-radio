@@ -1,5 +1,8 @@
 #define NRF_ENGINE_HOST
 #include "nabo_radio.c"
+#ifndef NRF_BASELINE
+#include "nabo_radio_audio.h"
+#endif
 int64_t host_engine_us = 1000000;
 size_t host_ring_limit = 32768;
 int host_ring_fail_after = -1, host_ring_allocated;
@@ -41,3 +44,23 @@ void host_advance(unsigned ms) {
   host_engine_us += (int64_t)ms * 1000;
   nabo_radio_idle_tick();
 }
+#ifndef NRF_BASELINE
+int64_t host_open_begin(void) { return telemetry_open_begin(); }
+void host_open_end(int64_t started) { telemetry_open_end(started); }
+void host_reconnect(unsigned reason) { telemetry_reconnect(reason); }
+unsigned host_stall_ms(unsigned buffered, unsigned bitrate_kbps) {
+  return network_stall_ms(buffered, bitrate_kbps);
+}
+void host_schedule_retry(unsigned delay_ms) { schedule_retry(delay_ms); }
+void host_allocation_backoff(void) { allocation_backoff(); }
+unsigned host_retry_deadline(void) { return atomic_load(&s_retry_at); }
+void host_memory_release(void) {
+  atomic_store(&s_release_for_memory, true);
+  atomic_store(&s_done, true);
+}
+static nrf_audio_tail_t host_audio_tail;
+void host_audio_reset(void) { memset(&host_audio_tail, 0, sizeof(host_audio_tail)); }
+void host_audio_smooth(int16_t *pcm, unsigned decoded, unsigned count, unsigned rate) {
+  nrf_audio_smooth(&host_audio_tail, pcm, decoded, count, rate);
+}
+#endif

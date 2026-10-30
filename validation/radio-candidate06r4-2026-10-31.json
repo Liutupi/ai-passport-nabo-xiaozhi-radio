@@ -1,0 +1,38 @@
+{
+  "candidate": "NABO FM 06r4",
+  "date": "2026-10-31",
+  "build": "PASS",
+  "host_tests": "PASS",
+  "device_tests": "NOT_RUN",
+  "publication": "HOLD_UNTIL_DEVICE_VALIDATION",
+  "source_base_commit": "f66616ac4ae889b52561f9d94ef6395f3c4600b3",
+  "source_working_tree_dirty": true,
+  "application_bytes": 3488240,
+  "application_sha256": "6a2fd27e278d3fb68d00e72e61a4b096d540b5a7f17ecd01e3c6c19016c5f610",
+  "elf_sha256": "a97f2d603da0acf4a7a9725df6d4496a111003ab44d3e4d76d3a64e33ad71ccd",
+  "build_environment": "ESP-IDF 6.0.2, frozen release configuration, ESP32-C3",
+  "changes": [
+    "Release stopped voice codecs only when entering radio, preserving the input resampler; rebuild voice tasks and codecs transactionally on return.",
+    "Reserve the largest voice task stack before encoder and decoder workspaces; pending tasks wait until all startup allocations and timer setup succeed.",
+    "Keep an explicit error state after failed voice restoration and retry on a later user listening request.",
+    "Use connection-local 20-second valid-audio inactivity grace for QTFM sources while retaining the 8-second generic floor; metadata does not reset audio liveness and local ring backpressure does not count as a source stall."
+  ],
+  "host_validation": {
+    "full_regression_scripts": 16,
+    "network_scenarios": 40,
+    "audio_lifecycle_configurations": 4,
+    "audio_allocation_failure_sites_per_configuration": 8,
+    "audio_vendor_or_timer_failure_cases_per_configuration": 7,
+    "audio_retained_codec_restart_failure_cases_per_configuration": 7,
+    "nabo_fragmented_heap_cycles_per_processor_configuration": 50,
+    "source_bound_lifecycle_report_refreshed_after_final_log_change": true,
+    "format_and_diff_checks": "PASS"
+  },
+  "previous_device_evidence": "06r3 failed sustained station-26 playback quality; its evidence is retained separately and is not counted as a pass for this repair.",
+  "unverified": [
+    "Actual reclaimed device memory and selected radio ring size.",
+    "Sustained playback, three fixed-station runs and twenty switches on this exact image.",
+    "Physical audio quality and microphone/upload/TTS after voice codec restoration.",
+    "Vendor-internal allocation-failure behavior; host codec and RTOS boundaries are stubs."
+  ]
+}

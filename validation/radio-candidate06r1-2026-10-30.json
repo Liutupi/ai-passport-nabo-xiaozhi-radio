@@ -1,0 +1,252 @@
+{
+  "date": "2026-10-30",
+  "candidate": "06r1",
+  "status": "build-and-host-pass-awaiting-user-confirmation-no-device-access",
+  "base": {
+    "git_commit": "f66616ac4ae889b52561f9d94ef6395f3c4600b3",
+    "branch": "work/fm-smooth-06",
+    "worktree_uncommitted": true,
+    "repair_parent_candidate": "06",
+    "parent_application_sha256": "9b9975dd55494c8383c436de9ed49356cb51e62c82ae949a431f11615c8a36ce",
+    "parent_device_result": "FAIL: user reported no sound",
+    "parent_device_record": "validation/radio-candidate06-device-2026-10-30.json"
+  },
+  "diagnosis": {
+    "confirmed": "Low heap prevented the compressed-ring memory guard from admitting a new pipeline; host controls reproduce premature EAGAIN reconnect and empty-ring open-failure termination in sealed06 source.",
+    "workspace_accounting_bytes": {
+      "decode_t": 11232,
+      "helix_allocations_total": 23816,
+      "network_stack": 8192
+    },
+    "unproven": [
+      "TLS memory leak",
+      "a retained 8 KiB task stack",
+      "two-second policy as the sole physical root cause",
+      "whether this revision restores audible device playback"
+    ]
+  },
+  "changes": [
+    "Keep the 06 low/high recovery thresholds and PCM smoothing; use at least 8000 ms without audio body before retiring an EAGAIN session.",
+    "Retry failed HTTP attempts inside the existing decoder/ring/network task rather than terminating solely because the compressed ring is empty.",
+    "Clean every HTTP attempt and back off 1000/2000/4000/8000 ms; reset only after cleaned audio bytes enter the ring.",
+    "Do not start HTTP attempts while Wi-Fi is down or free heap is below 16384 bytes or largest block below 4096 bytes.",
+    "Bound low-memory waiting to 10000 ms, then hand off to the owner for one cleanup and allocation backoff.",
+    "Allocation retries use 3000/6000/12000/24000/30000 ms; allocating alone does not reset the delay, actual decoded PCM does.",
+    "Bind retry deadlines to selection/play generation so a late failure cannot delay the newly selected station.",
+    "Expose memory_wait in the existing FM-Audio stall_reason."
+  ],
+  "unchanged": {
+    "minimum_ring_bytes": 8192,
+    "ring_candidates_bytes": [
+      32768,
+      16384,
+      8192
+    ],
+    "network_reserve_bytes": 16384,
+    "network_largest_block_reserve_bytes": 4096,
+    "network_stack_bytes": 8192,
+    "speaker_task_priority": 5,
+    "network_task_priority": 4,
+    "memory_layout_and_codec_workspace": true,
+    "station_urls_and_bitrates": true,
+    "partition_nvs_interface": true,
+    "bootloader_partition_assets_bytes": true
+  },
+  "build": {
+    "status": "PASS",
+    "command": "python tools/build.py",
+    "idf": "6.0.2",
+    "target": "esp32c3",
+    "board": "ai-passport-nabo",
+    "actual_config_matches_tracked_defaults": true,
+    "config_differences": {},
+    "internal_project_version": "2.5.0",
+    "app_descriptor_compile_time_is_not_candidate_identity": true,
+    "application_bytes": 3484400,
+    "application_partition_free_bytes": 644368,
+    "artifacts": {
+      "xiaozhi.bin": {
+        "bytes": 3484400,
+        "sha256": "0a80d6f6fd0ad4b01ac2efbd85707bd1a1b3b47db4cf56ff7db42094bb63c82c"
+      },
+      "xiaozhi.elf": {
+        "bytes": 35417728,
+        "sha256": "6813b8aec33df407a106ac515a35fe6e76f74c11f8eeb7e4e1a1399880deeacb"
+      },
+      "xiaozhi.map": {
+        "bytes": 17474947,
+        "sha256": "c41043d6118689cbaf9d68c01787094cd4652ecacbd6681847485e84b3caf414"
+      },
+      "generated_assets.bin": {
+        "bytes": 3019577,
+        "sha256": "0de5c9d3b8f824730b169549463b06d00bbce27814daf1d633ac3b6a068dbb3f"
+      },
+      "bootloader/bootloader.bin": {
+        "bytes": 14976,
+        "sha256": "886f5ef7541c3e6c93914cf932f211b34f1693a793952bf0b46a392b99cecf0a"
+      },
+      "partition_table/partition-table.bin": {
+        "bytes": 3072,
+        "sha256": "feb7ea496adb63179bf197f87431e6c8ddade47ce0228c1e671ef01421effc0c"
+      },
+      "full-build.bin": {
+        "bytes": 7213881,
+        "sha256": "f50beea8fa11394a5a29281117c85fe5415c5f5c7e3be7b5a4cfdd5a5d4f751f"
+      },
+      "sdkconfig": {
+        "bytes": 120305,
+        "sha256": "707dfbd58c2790d04b602022b69751f2e089e918c9fded85492c0ac9fc5e1b21"
+      },
+      "flasher_args.json": {
+        "bytes": 1074,
+        "sha256": "2fbb5bf5a2f0269f9649f02e47079d8b3ccc0186d7460b1d97e3c83799e842c2"
+      }
+    },
+    "merged_image": "offline archive verification only; not the data-preserving upgrade plan"
+  },
+  "host_tests": {
+    "status": "PASS",
+    "suite": "python tools/run_tests.py",
+    "suite_scripts": 14,
+    "resource_verification": {
+      "status": "PASS",
+      "files": 242,
+      "bytes": 160260981
+    },
+    "real_worker_network_model": {
+      "result": "PASS",
+      "evidence": "host_scripted_real_network_worker",
+      "hardware_or_live_network_test": false,
+      "eagain_gap_same_connection_ms": [
+        3000,
+        7000
+      ],
+      "eagain_stall_floor_ms": 8000,
+      "retry_backoff_ms": [
+        1000,
+        2000,
+        4000,
+        8000
+      ],
+      "closures": [
+        {
+          "read_result": 0,
+          "complete": false
+        },
+        {
+          "read_result": 0,
+          "complete": true
+        },
+        {
+          "read_result": -1,
+          "complete": false
+        }
+      ],
+      "http_attempts_cleaned_once": true,
+      "queued_bytes_decoder_task_preserved": true,
+      "wifi_wait_and_cancel": true,
+      "heap_wait_and_cancel": true,
+      "memory_wait_bound_ms": 10000,
+      "owner_memory_release_once": true,
+      "first_allocation_retry_ms": 3000,
+      "memory_release_drain_inputs": [
+        "empty",
+        "partial_header",
+        "ready_pcm"
+      ],
+      "scenario_count": 17,
+      "before_control": {
+        "short_gap": {
+          "result": "FAIL_REPRODUCED",
+          "gap_script_ms": 3000,
+          "read_calls_before_reconnect": 4,
+          "reconnects": 1
+        },
+        "empty_ring_open_failure": {
+          "result": "FAIL_REPRODUCED",
+          "attempts_started": 1,
+          "future_script_attempts_not_reached": 1,
+          "worker_done": true,
+          "state": "FAILED"
+        },
+        "source_sha256": "fbbee2ebde13c8d7cfedea780c3d81be9a221969adf9de31bf8443ecac9fe891",
+        "only_test_enable_macro_changed": true
+      }
+    },
+    "decoder_recovery_and_allocation_model": {
+      "environment": "host-only deterministic offline MP3; no device/network QA",
+      "candidate_under_test": "06r1",
+      "baseline_source": "f66616a",
+      "max_synthetic_tail_step": 137,
+      "allocation_retry": {
+        "initial_allocation_retry_delays_ms": [
+          3000,
+          6000,
+          12000,
+          24000,
+          30000,
+          30000
+        ],
+        "low_heap_guard_retained": true,
+        "cancel_resume_selection_reset": true,
+        "no_pcm_rebuild_keeps_backoff": true,
+        "real_pcm_resets_backoff": true,
+        "restored_heap_ring_bytes": 8192
+      },
+      "late_old_generation_retry_isolated": true,
+      "metric_definition": "silent_ms counts output-clock slots without real decoded PCM, including short-block padding; a 30 ms synthetic tail is not music. This is not final-PCM threshold detection or a device acoustic measurement.",
+      "holes": [
+        {
+          "candidate03": {
+            "hole_ms": 1000,
+            "silent_ms": 1024.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592
+          },
+          "candidate06r1": {
+            "hole_ms": 1000,
+            "silent_ms": 504.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592,
+            "rebuffers": 1,
+            "rebuffer_ms": 520
+          }
+        },
+        {
+          "candidate03": {
+            "hole_ms": 3000,
+            "silent_ms": 3024.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592
+          },
+          "candidate06r1": {
+            "hole_ms": 3000,
+            "silent_ms": 2504.0,
+            "decoded_samples": 331200,
+            "fed_bytes": 110592,
+            "rebuffers": 1,
+            "rebuffer_ms": 2520
+          }
+        }
+      ]
+    },
+    "scope": "Production network_worker, ring, Helix and decoder run with scripted HTTP/RTOS/Wi-Fi substitutes; no real TLS/socket/device."
+  },
+  "device_tests": {
+    "status": "NOT_RUN_FOR_06r1",
+    "ports_enumerated": false,
+    "serial_opened": false,
+    "reset_issued": false,
+    "flashed": false,
+    "device_last_confirmed_firmware": "candidate06, playback failed in prior round"
+  },
+  "unverified": [
+    "Real TLS/Wi-Fi memory behavior and audible playback",
+    "Three fixed stations for at least 10 minutes each",
+    "20 controlled station switches, physical controls and voice after exit",
+    "AAC/HE-AAC, all station availability and long-run stability"
+  ],
+  "archive": "private/candidates/fm-audio-20261030-06r1",
+  "next_step": "Stop here. After explicit confirmation of the exact 06r1 application, rebind the live device, back up and verify compatibility, write only app at 0x10000 and read back all protected data.",
+  "committed_pushed_or_published": false
+}

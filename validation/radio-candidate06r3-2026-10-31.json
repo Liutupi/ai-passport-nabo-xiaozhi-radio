@@ -1,0 +1,70 @@
+{
+  "candidate": "NABO FM 06r3",
+  "date": "2026-10-31",
+  "source_base_commit": "f66616ac4ae889b52561f9d94ef6395f3c4600b3",
+  "source_working_tree_dirty": true,
+  "repair_parent_candidate": "06r2",
+  "repair_parent_application_sha256": "5422649287ccc601e873d2768ad59dd8942818420501a1eb5b33eb5816b99888",
+  "build": "PASS",
+  "host_tests": "PASS",
+  "device_tests": "NOT_RUN",
+  "application": {
+    "bytes": 3486272,
+    "sha256": "9a4daec3685adbf97064409c150f6eb6de7c86ccce4b57a0e06f30f1d07cd156"
+  },
+  "elf_sha256": "f97fef204c2568a0f0b52edcc4ede3553b2bc4d211dfc7a0759b122b89b86f2d",
+  "full_image_sha256": "c0d1412c46148b93f6e14676e742ae46c67856bf2ca06113215ee6138693371c",
+  "app_partition_free_bytes": 642496,
+  "unchanged_bootloader_partition_assets_config": true,
+  "changes": [
+    "Keep 5000ms open timeout; after valid HTTP200 set both HTTP poll and socket SO_RCVTIMEO to 800ms, refuse setup failures via cleanup/backoff",
+    "Read 256 bytes below min(4096,ring/2), 1024 bytes otherwise; no new PCM queue or larger memory allocation",
+    "Separate ON_DATA timing, HTTP-read duration/inflight age, actual ring publication, backpressure and producer runtime/stack telemetry"
+  ],
+  "bounds": [
+    "Receive timeout is per socket wait, not a hard deadline for a whole HTTP/TLS read",
+    "Body callback only counts; audio enters ring exactly once from the returned/ICY-filtered data",
+    "Original 8-second no-valid-audio grace, pipeline retention, allocator protection and priorities are unchanged"
+  ],
+  "host": {
+    "full_suite_scripts": 15,
+    "network_scenarios": 30,
+    "sealed06_failure_controls": 2,
+    "network_cases": [
+      "socket fd0 and setter/fd/setsockopt failures",
+      "8/16KiB low/boundary/high-water request sizes",
+      "callback/inflight/delayed return snapshots with byte conservation",
+      "ICY metadata byte accounting and invalid HTML",
+      "ring-full backpressure versus publication accounting",
+      "finish retention and new-generation reset",
+      "unchanged 3/7/8s EAGAIN grace and retry/cancel policies"
+    ],
+    "engine": "54720 exact PCM samples, 5 read sizes, 8/16/32KiB rings, 50 clean cycles",
+    "memory": "4 fragmented profiles, 54720 samples x50, 22 allocation failures, AAC 4608/4609 capacity guard"
+  },
+  "desktop_source_probe": {
+    "stations": [
+      7,
+      1,
+      26
+    ],
+    "actual_http64_direct_200": true,
+    "http32_https32_all_404": true,
+    "station26_observed_max_body_gap_ms": 15281,
+    "station26_body_observation_ms": 33860,
+    "station26_production_helix_decoded_seconds": 40.68,
+    "application_proxy_used": false,
+    "limitation": "Desktop/direct-client/route/flow-control evidence cannot establish the cause of the badge gaps"
+  },
+  "device_acceptance_plan": [
+    "New exact image, full fresh backup, application-only write and full readback",
+    "Prioritize station26 FM-Net diagnosis before another full acceptance run",
+    "Keep previous 06r2 failures and the unchanged per-window 90 percent decode/output gate"
+  ],
+  "unverified": [
+    "Actual per-recv timeout and body-to-publication behavior on the badge",
+    "Sustained audio, HOME reentry, 3x600s and 20 switches for 06r3",
+    "Weak network, AAC/HE-AAC, full voice conversations and blank-device installation"
+  ],
+  "private_raw_logs_backup_and_credentials_included": false
+}

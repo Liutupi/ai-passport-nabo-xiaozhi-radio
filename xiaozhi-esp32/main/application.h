@@ -1,42 +1,41 @@
 #ifndef _APPLICATION_H_
 #define _APPLICATION_H_
 
+#include <esp_timer.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
 #include <freertos/task.h>
-#include <esp_timer.h>
 
-#include <string>
-#include <mutex>
-#include <deque>
-#include <memory>
-#include <functional>
 #include <cstdint>
+#include <deque>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <string>
 #include <vector>
 
-#include "protocol.h"
-#include "ota.h"
 #include "audio_service.h"
 #include "device_state.h"
 #include "device_state_machine.h"
 #include "notify/notify_player.h"
+#include "ota.h"
+#include "protocol.h"
 
 // Main event bits
-#define MAIN_EVENT_SCHEDULE             (1 << 0)
-#define MAIN_EVENT_SEND_AUDIO           (1 << 1)
-#define MAIN_EVENT_WAKE_WORD_DETECTED   (1 << 2)
-#define MAIN_EVENT_VAD_CHANGE           (1 << 3)
-#define MAIN_EVENT_ERROR                (1 << 4)
-#define MAIN_EVENT_ACTIVATION_DONE      (1 << 5)
-#define MAIN_EVENT_CLOCK_TICK           (1 << 6)
-#define MAIN_EVENT_NETWORK_CONNECTED    (1 << 7)
+#define MAIN_EVENT_SCHEDULE (1 << 0)
+#define MAIN_EVENT_SEND_AUDIO (1 << 1)
+#define MAIN_EVENT_WAKE_WORD_DETECTED (1 << 2)
+#define MAIN_EVENT_VAD_CHANGE (1 << 3)
+#define MAIN_EVENT_ERROR (1 << 4)
+#define MAIN_EVENT_ACTIVATION_DONE (1 << 5)
+#define MAIN_EVENT_CLOCK_TICK (1 << 6)
+#define MAIN_EVENT_NETWORK_CONNECTED (1 << 7)
 #define MAIN_EVENT_NETWORK_DISCONNECTED (1 << 8)
-#define MAIN_EVENT_TOGGLE_CHAT          (1 << 9)
-#define MAIN_EVENT_START_LISTENING      (1 << 10)
-#define MAIN_EVENT_STOP_LISTENING       (1 << 11)
-#define MAIN_EVENT_STATE_CHANGED        (1 << 12)
-#define MAIN_EVENT_PLAYBACK_DRAINED     (1 << 13)
-
+#define MAIN_EVENT_TOGGLE_CHAT (1 << 9)
+#define MAIN_EVENT_START_LISTENING (1 << 10)
+#define MAIN_EVENT_STOP_LISTENING (1 << 11)
+#define MAIN_EVENT_STATE_CHANGED (1 << 12)
+#define MAIN_EVENT_PLAYBACK_DRAINED (1 << 13)
 
 enum AecMode {
     kAecOff,
@@ -70,7 +69,7 @@ public:
 
     DeviceState GetDeviceState() const { return state_machine_.GetState(); }
     bool IsVoiceDetected() const { return audio_service_.IsVoiceDetected(); }
-    
+
     /**
      * Request state transition
      * Returns true if transition was successful
@@ -85,7 +84,8 @@ public:
     /**
      * Alert with status, message, emotion and optional sound
      */
-    void Alert(const char* status, const char* message, const char* emotion = "", const std::string_view& sound = "");
+    void Alert(const char* status, const char* message, const char* emotion = "",
+               const std::string_view& sound = "");
     void DismissAlert();
 
     void AbortSpeaking(AbortReason reason);
@@ -122,7 +122,7 @@ public:
     void EndLocalApp();
     bool IsLocalAppActive() const { return local_app_active_.load(); }
     bool IsProtocolInitializing() const { return protocol_initializing_.load(); }
-    
+
     /**
      * Reset protocol resources (thread-safe)
      * Can be called from any task to release resources allocated after network connected
@@ -161,11 +161,15 @@ private:
     bool has_server_time_ = false;
     bool aborted_ = false;
     bool assets_version_checked_ = false;
-    bool play_popup_on_listening_ = false;  // Flag to play popup sound after state changes to listening
-    bool pending_listening_start_ = false;  // Waiting for playback to drain before starting listening (auto mode)
+    bool play_popup_on_listening_ =
+        false;  // Flag to play popup sound after state changes to listening
+    bool pending_listening_start_ =
+        false;  // Waiting for playback to drain before starting listening (auto mode)
+    std::atomic<bool> audio_recovery_pending_{false};
+    bool EnsureVoiceAudioReady();
+    void ReportAudioRestoreFailure();
     int clock_ticks_ = 0;
     TaskHandle_t activation_task_handle_ = nullptr;
-
 
     // Event handlers
     void HandleStateChangedEvent();
@@ -195,11 +199,10 @@ private:
     void ShowActivationCode(const std::string& code, const std::string& message);
     void SetListeningMode(ListeningMode mode);
     ListeningMode GetDefaultListeningMode() const;
-    
+
     // State change handler called by state machine
     void OnStateChanged(DeviceState old_state, DeviceState new_state);
 };
-
 
 class TaskPriorityReset {
 public:
@@ -207,12 +210,10 @@ public:
         original_priority_ = uxTaskPriorityGet(NULL);
         vTaskPrioritySet(NULL, priority);
     }
-    ~TaskPriorityReset() {
-        vTaskPrioritySet(NULL, original_priority_);
-    }
+    ~TaskPriorityReset() { vTaskPrioritySet(NULL, original_priority_); }
 
 private:
     BaseType_t original_priority_;
 };
 
-#endif // _APPLICATION_H_
+#endif  // _APPLICATION_H_

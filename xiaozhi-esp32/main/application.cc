@@ -75,7 +75,7 @@ void Application::Initialize() {
     // Setup the audio service
     auto codec = board.GetAudioCodec();
     audio_service_.Initialize(codec);
-    audio_service_.Start();
+    EnsureVoiceAudioReady();
     ESP_LOGI(TAG, "After board/audio init");
     SystemInfo::PrintHeapStats();
 
@@ -292,7 +292,7 @@ void Application::Run() {
 
 void Application::HandleNetworkConnectedEvent() {
     if (local_app_active_.load()) {
-        network_up_during_local_ = true;   // handled when the local program ends
+        network_up_during_local_ = true;  // handled when the local program ends
         return;
     }
     ESP_LOGI(TAG, "Network connected");
@@ -585,7 +585,7 @@ void Application::CheckNewVersion() {
         // The next version check may show (and speak) the code again; an idle
         // service costs no Opus decoder. InitializeProtocol stops it again.
         if (audio_stopped) {
-            audio_service_.Start();
+            EnsureVoiceAudioReady();
         }
 #endif
     }
@@ -812,7 +812,7 @@ void Application::InitializeProtocol() {
 #if CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO
     // Local restore releases its 8 KiB handshake stack before restarting audio.
     if (!local_app_active_.load())
-        audio_service_.Start();
+        EnsureVoiceAudioReady();
 #endif
     protocol_initializing_ = false;
 }
@@ -878,6 +878,11 @@ void Application::HandleToggleChatEvent() {
         StopNotification();
         state = kDeviceStateIdle;
     }
+    // A failed local-app restore leaves the service stopped. A fresh user
+    // listening request can retry; never run an unbounded allocation loop.
+    if ((state == kDeviceStateIdle || state == kDeviceStateWifiConfiguring) &&
+        !EnsureVoiceAudioReady())
+        return;
 
     if (state == kDeviceStateActivating) {
         SetDeviceState(kDeviceStateIdle);
@@ -944,6 +949,9 @@ void Application::HandleStartListeningEvent() {
         StopNotification();
         state = kDeviceStateIdle;
     }
+    if ((state == kDeviceStateIdle || state == kDeviceStateWifiConfiguring) &&
+        !EnsureVoiceAudioReady())
+        return;
 
     if (state == kDeviceStateActivating) {
         SetDeviceState(kDeviceStateIdle);
@@ -1106,7 +1114,9 @@ void Application::HandleStateChangedEvent() {
             // Keep a just-raised network error visible. SetDeviceState(idle)
             // queues STATE_CHANGED after Alert(), and the idle handler would
             // otherwise wipe the status, emotion, and chat message.
-            if (last_error_message_.empty()) {
+            if (audio_recovery_pending_.load()) {
+                display->SetStatus(Lang::Strings::ERROR);
+            } else if (last_error_message_.empty()) {
                 display->SetStatus(Lang::Strings::STANDBY);
                 display->ClearChatMessages();  // Clear messages first
                 display->SetEmotion(
@@ -1344,7 +1354,7 @@ bool Application::UpgradeFirmware(const std::string& url, const std::string& ver
         // Upgrade failed, restart audio service and continue running
         ESP_LOGE(TAG,
                  "Firmware upgrade failed, restarting audio service and continuing operation...");
-        audio_service_.Start();                              // Restart audio service
+        EnsureVoiceAudioReady();                             // Restart audio service
         board.SetPowerSaveLevel(PowerSaveLevel::LOW_POWER);  // Restore power save level
         Alert(Lang::Strings::ERROR, Lang::Strings::UPGRADE_FAILED, "cancel",
               Lang::Sounds::OGG_EXCLAMATION);
@@ -1455,6 +1465,28 @@ void Application::SetAecMode(AecMode mode) {
 
 void Application::PlaySound(const std::string_view& sound) { audio_service_.PlaySound(sound); }
 
+void Application::ReportAudioRestoreFailure() {
+    audio_recovery_pending_.store(true);
+    Board::GetInstance().GetDisplay()->SetStatus(Lang::Strings::ERROR);
+    ESP_LOGE(TAG, "Local app: audio restore failed; service stopped, listening retries");
+}
+
+bool Application::EnsureVoiceAudioReady() {
+    if (!audio_service_.Start()) {
+        ReportAudioRestoreFailure();
+        return false;
+    }
+    if (audio_recovery_pending_.exchange(false)) {
+        // Protocol initialization may finish outside the main task. Keep
+        // DismissAlert's shared error/message state on the main task.
+        Schedule([this]() {
+            if (!audio_recovery_pending_.load())
+                DismissAlert();
+        });
+    }
+    return true;
+}
+
 void Application::BeginLocalApp() {
     Schedule([this]() {
         if (local_app_active_.exchange(true))
@@ -1485,10 +1517,15 @@ void Application::EndLocalApp() {
         if (local_from_boot_.exchange(false)) {
             // Never activated: resume the boot flow. If Wi-Fi came up meanwhile, activate now;
             // otherwise the board keeps scanning or serving Wi-Fi setup as before.
-            audio_service_.Start();
+            bool audio_ready = audio_service_.Start();
             local_app_active_.store(false);
             if (network_up_during_local_.exchange(false))
                 xEventGroupSetBits(event_group_, MAIN_EVENT_NETWORK_CONNECTED);
+            if (!audio_ready) {
+                ReportAudioRestoreFailure();
+                return;
+            }
+            audio_recovery_pending_.exchange(false);
             ESP_LOGI(TAG, "Local app: closed during startup, boot flow resumed");
             return;
         }
@@ -1506,9 +1543,14 @@ void Application::EndLocalApp() {
                 // before allocating the C3's 24 KiB Opus task stack.
                 vTaskDelete(completed);
                 app->activation_task_handle_ = nullptr;
-                app->audio_service_.Start();
+                bool audio_ready = app->audio_service_.Start();
                 app->local_app_active_.store(false);
                 app->SetDeviceState(kDeviceStateIdle);
+                if (!audio_ready) {
+                    app->ReportAudioRestoreFailure();
+                    return;
+                }
+                app->audio_recovery_pending_.exchange(false);
                 ESP_LOGI(TAG, "Local app: conversation restored after handshake stack release");
             });
             vTaskSuspend(nullptr);

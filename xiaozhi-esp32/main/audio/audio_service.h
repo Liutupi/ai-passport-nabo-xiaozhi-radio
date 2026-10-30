@@ -124,9 +124,12 @@ public:
     ~AudioService();
 
     void Initialize(AudioCodec* codec);
-    void Start();
+    bool Start();
     void Stop();
     bool WaitStopped(int timeout_ms = 2000);
+    // Release voice codecs only after all service tasks have acknowledged Stop.
+    // Start restores these resources before allowing any task to run.
+    bool ReleaseStoppedCodecs();
     void LogMemoryStats();
     void EncodeWakeWord();
     std::unique_ptr<AudioStreamPacket> PopWakeWordPacket();
@@ -164,6 +167,8 @@ private:
     std::unique_ptr<AudioDebugger> audio_debugger_;
     void* opus_encoder_ = nullptr;
     void* opus_decoder_ = nullptr;
+    std::mutex lifecycle_mutex_;
+    bool tasks_started_ = false;
     std::mutex decoder_mutex_;
     std::mutex input_resampler_mutex_;
     esp_ae_rate_cvt_handle_t input_resampler_ = nullptr;
@@ -223,6 +228,8 @@ private:
     void AudioInputTask();
     void AudioOutputTask();
     void OpusCodecTask();
+    bool EnsureCodecsLocked();
+    void CloseCodecsLocked();
     void PushTaskToEncodeQueue(AudioTaskType type, std::vector<int16_t>&& pcm);
     bool InitializeAudioEngine();
     void SetDecodeSampleRate(int sample_rate, int frame_duration);

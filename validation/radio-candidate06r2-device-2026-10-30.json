@@ -1,0 +1,438 @@
+{
+  "schema": "nabo-fm-device-validation-v1",
+  "candidate": "06r2",
+  "date": "2026-10-30",
+  "generated_utc": "2026-10-30T15:19:20.882635+00:00",
+  "status": "HOLD_SWITCH_11_QUALITY_FAILURE",
+  "application_sha256": "5422649287ccc601e873d2768ad59dd8942818420501a1eb5b33eb5816b99888",
+  "elf_sha256": "92bff1550b29843b91c6af4b8faa29b3632dfb547d698ef1c604aaddc3c4d53b",
+  "build_and_host_record": "validation/radio-candidate06r2-2026-10-30.json",
+  "flash": {
+    "status": "PASS",
+    "write_offsets": [
+      "0x10000"
+    ],
+    "all_unwritten_bytes_preserved": true,
+    "private_receipt": "private/device-upgrades/20261030T142343.814794Z-06r2/verification.json",
+    "fresh_full_backup_verified": true,
+    "application_readback_exact": true,
+    "nvs_phy_assets_files_preserved": true,
+    "normal_reset_count": 1
+  },
+  "boot_elf_identity": "prefix_match",
+  "short_listening": {
+    "feedback": "连续、清楚",
+    "scope": "Initial station7 playback before the manual HOME cycle only; no new listening acceptance is inferred for later cycles."
+  },
+  "home_radio_reentry": {
+    "cycles": 6,
+    "complete_windows": 18,
+    "review_result": "PASS_SIX_BOUNDED_HOME_RADIO_REENTRY_CYCLES",
+    "scope": "Bounded log evidence; user listening feedback applies only to the initial session."
+  },
+  "fixed_stations": [
+    {
+      "kind": "fixed_station",
+      "station": 7,
+      "source_status": "observations_collected",
+      "pass": true,
+      "errors": [],
+      "failed_windows": [],
+      "started_utc": "2026-10-30T14:32:32.690+00:00",
+      "finished_utc": "2026-10-30T14:42:48.965+00:00",
+      "windows": 120,
+      "window_ms": 601214,
+      "device_interval_ms": [
+        436741,
+        1038014
+      ],
+      "device_span_ms": 601273,
+      "out": 14142720,
+      "decoded": 14142720,
+      "decoded_ratio": 1.0,
+      "output_clock_ratio": 0.9801501628371927,
+      "max_rebuffers": 0,
+      "max_rebuffer_ms": 0,
+      "max_reconnects": 0,
+      "minimum_heap": 6684,
+      "minimum_largest": 512
+    },
+    {
+      "kind": "fixed_station",
+      "station": 1,
+      "source_status": "observations_collected",
+      "pass": true,
+      "errors": [],
+      "failed_windows": [],
+      "started_utc": "2026-10-30T14:42:48.972+00:00",
+      "finished_utc": "2026-10-30T14:53:05.990+00:00",
+      "windows": 120,
+      "window_ms": 601720,
+      "device_interval_ms": [
+        1053020,
+        1654794
+      ],
+      "device_span_ms": 601774,
+      "out": 12947760,
+      "decoded": 12941088,
+      "decoded_ratio": 0.9994846985115572,
+      "output_clock_ratio": 0.9758691750315754,
+      "max_rebuffers": 1,
+      "max_rebuffer_ms": 329,
+      "max_reconnects": 0,
+      "minimum_heap": 8388,
+      "minimum_largest": 1792
+    },
+    {
+      "kind": "fixed_station_retest",
+      "station": 26,
+      "source_status": "observations_collected",
+      "pass": true,
+      "errors": [],
+      "failed_windows": [],
+      "started_utc": "2026-10-30T14:59:51.481+00:00",
+      "finished_utc": "2026-10-30T15:10:08.057+00:00",
+      "windows": 120,
+      "window_ms": 601132,
+      "device_interval_ms": [
+        2075704,
+        2676894
+      ],
+      "device_span_ms": 601190,
+      "out": 9529280,
+      "decoded": 9529280,
+      "decoded_ratio": 1.0,
+      "output_clock_ratio": 0.9907640917469042,
+      "max_rebuffers": 0,
+      "max_rebuffer_ms": 0,
+      "max_reconnects": 0,
+      "minimum_heap": 6612,
+      "minimum_largest": 704
+    }
+  ],
+  "twenty_controlled_switches": {
+    "count": 10,
+    "all_pass_original_gate": false,
+    "sequence": [
+      7,
+      1,
+      26,
+      7,
+      26,
+      1,
+      7,
+      1,
+      26,
+      7
+    ],
+    "target": 20,
+    "attempted": 11,
+    "failed_switch": 11,
+    "unattempted_after_failure": 9,
+    "status": "NOT_COMPLETED"
+  },
+  "retest_source_status": "evidence_below_gate",
+  "retest_source_reason": "decoded_or_output_clock_below_reviewed_gate",
+  "retest_current_or_failed_stage": {
+    "kind": "controlled_switch_retest_11",
+    "station": 26,
+    "source_status": "evidence_below_gate",
+    "pass": false,
+    "errors": [
+      "fewer_than_three_complete_windows",
+      "one_or_more_windows_failed_original_gate",
+      "stage_not_collected"
+    ],
+    "failed_windows": [
+      {
+        "index": 1,
+        "esp_uptime_ms": 3012674,
+        "reasons": [
+          "decoded_ratio_below_0.90"
+        ],
+        "decoded_ratio": 0.2686991869918699,
+        "output_clock_ratio": 0.9820359281437125,
+        "out": 78720,
+        "decoded": 21152,
+        "missing_real_pcm_samples": 57568,
+        "missing_real_pcm_ms": 3598.0,
+        "min_buffered": 0,
+        "short": 1,
+        "max_decode_us": 80522,
+        "max_loop_us": 80812,
+        "rebuffers": 1,
+        "rebuffer_ms": 3609
+      }
+    ],
+    "started_utc": "2026-10-30T15:15:18.811+00:00",
+    "finished_utc": null,
+    "windows": 1,
+    "window_ms": 5010,
+    "device_interval_ms": [
+      3007664,
+      3012674
+    ],
+    "device_span_ms": 5010,
+    "out": 78720,
+    "decoded": 21152,
+    "decoded_ratio": 0.2686991869918699,
+    "output_clock_ratio": 0.9820359281437125,
+    "max_rebuffers": 1,
+    "max_rebuffer_ms": 3609,
+    "max_reconnects": 0,
+    "minimum_heap": 15704,
+    "minimum_largest": 7680
+  },
+  "metric_definition": {
+    "decoded_ratio": "Real decoded PCM samples / output PCM slots for each complete window.",
+    "output_clock_ratio": "Output slots / (output rate * device-reported window milliseconds / 1000).",
+    "missing_real_pcm_ms": "Missing real decoded PCM samples * 1000 / output rate; includes short-block zero-fill slots and does not count synthetic fade tails as music. This is not acoustic silence measured on the device.",
+    "rebuffer_ms": "Cumulative firmware telemetry for post-first-play rebuffer episodes in the selection/play generation, not an acoustic silence measurement."
+  },
+  "initial_station26_failure": {
+    "status": "FAIL_RETAINED",
+    "first_bad_window": [
+      {
+        "index": 16,
+        "esp_uptime_ms": 1755034,
+        "reasons": [
+          "decoded_ratio_below_0.90"
+        ],
+        "decoded_ratio": 0.6533140120967742,
+        "output_clock_ratio": 0.9902176083050509,
+        "out": 79360,
+        "decoded": 51847,
+        "missing_real_pcm_samples": 27513,
+        "missing_real_pcm_ms": 1719.5625,
+        "min_buffered": 0,
+        "short": 1,
+        "max_decode_us": 14022,
+        "max_loop_us": 70893,
+        "rebuffers": 1,
+        "rebuffer_ms": 1728
+      }
+    ],
+    "all_sixteen_window_metrics": {
+      "windows": 16,
+      "window_ms": 80189,
+      "device_interval_ms": [
+        1674835,
+        1755034
+      ],
+      "device_span_ms": 80199,
+      "out": 1263040,
+      "decoded": 1235527,
+      "decoded_ratio": 0.9782168419052445,
+      "output_clock_ratio": 0.9844242975969273,
+      "max_rebuffers": 1,
+      "max_rebuffer_ms": 1728,
+      "max_reconnects": 0,
+      "minimum_heap": 6748,
+      "minimum_largest": 672
+    },
+    "initial_failed_gate_rebuffer_ms": 1728,
+    "observed_session_rebuffers_before_retest": 3,
+    "observed_session_rebuffer_ms_before_retest": 2544,
+    "interpretation": "The failed window drained compressed input and lost real PCM while the output clock advanced; following windows recovered in the same session. Source, Wi-Fi/TLS delivery and producer scheduling have not been distinguished.",
+    "retest_does_not_erase_first_failure": true
+  },
+  "second_failure": {
+    "status": "FAIL_RETAINED",
+    "stage": "controlled_switch_retest_11",
+    "station": 26,
+    "failed_stage_gate": {
+      "kind": "controlled_switch_retest_11",
+      "station": 26,
+      "source_status": "evidence_below_gate",
+      "pass": false,
+      "errors": [
+        "fewer_than_three_complete_windows",
+        "one_or_more_windows_failed_original_gate",
+        "stage_not_collected"
+      ],
+      "failed_windows": [
+        {
+          "index": 1,
+          "esp_uptime_ms": 3012674,
+          "reasons": [
+            "decoded_ratio_below_0.90"
+          ],
+          "decoded_ratio": 0.2686991869918699,
+          "output_clock_ratio": 0.9820359281437125,
+          "out": 78720,
+          "decoded": 21152,
+          "missing_real_pcm_samples": 57568,
+          "missing_real_pcm_ms": 3598.0,
+          "min_buffered": 0,
+          "short": 1,
+          "max_decode_us": 80522,
+          "max_loop_us": 80812,
+          "rebuffers": 1,
+          "rebuffer_ms": 3609
+        }
+      ],
+      "started_utc": "2026-10-30T15:15:18.811+00:00",
+      "finished_utc": null,
+      "windows": 1,
+      "window_ms": 5010,
+      "device_interval_ms": [
+        3007664,
+        3012674
+      ],
+      "device_span_ms": 5010,
+      "out": 78720,
+      "decoded": 21152,
+      "decoded_ratio": 0.2686991869918699,
+      "output_clock_ratio": 0.9820359281437125,
+      "max_rebuffers": 1,
+      "max_rebuffer_ms": 3609,
+      "max_reconnects": 0,
+      "minimum_heap": 15704,
+      "minimum_largest": 7680
+    },
+    "all_available_session_metrics_before_home": {
+      "windows": 21,
+      "window_ms": 105323,
+      "device_interval_ms": [
+        2987549,
+        3092884
+      ],
+      "device_span_ms": 105335,
+      "out": 1668640,
+      "decoded": 1573632,
+      "decoded_ratio": 0.9430626138651836,
+      "output_clock_ratio": 0.9901920758049049,
+      "max_rebuffers": 1,
+      "max_rebuffer_ms": 4440,
+      "max_reconnects": 0,
+      "minimum_heap": 6744,
+      "minimum_largest": 672
+    },
+    "all_available_metrics_include_discarded_transition_windows": true,
+    "complete_post_boundary_diagnostic_metrics": {
+      "windows": 17,
+      "window_ms": 85210,
+      "device_interval_ms": [
+        3007664,
+        3092884
+      ],
+      "device_span_ms": 85220,
+      "out": 1343680,
+      "decoded": 1272992,
+      "decoded_ratio": 0.9473922362467254,
+      "output_clock_ratio": 0.9855650745217698,
+      "max_rebuffers": 1,
+      "max_rebuffer_ms": 4440,
+      "max_reconnects": 0,
+      "minimum_heap": 6744,
+      "minimum_largest": 672
+    },
+    "real_pcm_deficit_windows": [
+      {
+        "esp_uptime_ms": 3012674,
+        "ms": 5010,
+        "rate": 16000,
+        "out": 78720,
+        "decoded": 21152,
+        "min_buffered": 0,
+        "short": 1,
+        "max_decode_us": 80522,
+        "max_loop_us": 80812,
+        "heap": 15704,
+        "largest": 7680,
+        "rebuffers": 1,
+        "rebuffer_ms": 3609,
+        "reconnects": 0,
+        "stall_reason": "none",
+        "missing_real_pcm_samples": 57568,
+        "missing_real_pcm_ms": 3598.0
+      },
+      {
+        "esp_uptime_ms": 3017694,
+        "ms": 5019,
+        "rate": 16000,
+        "out": 78080,
+        "decoded": 64960,
+        "min_buffered": 0,
+        "short": 0,
+        "max_decode_us": 83340,
+        "max_loop_us": 83634,
+        "heap": 10408,
+        "largest": 2304,
+        "rebuffers": 1,
+        "rebuffer_ms": 4440,
+        "reconnects": 0,
+        "stall_reason": "none",
+        "missing_real_pcm_samples": 13120,
+        "missing_real_pcm_ms": 820.0
+      }
+    ],
+    "interpretation": "Compressed input reached zero while the output clock kept advancing. The next window retained a PCM deficit and following windows recovered without reconnect or pipeline rebuild. No allocation, HTTP-open, memory-wait or multi-second speaker-owner stall was observed; network-source, Wi-Fi/TLS and producer scheduling causes remain unresolved."
+  },
+  "publication": {
+    "status": "NOT_PUBLISHED",
+    "reason": "Second quality-gate failure during controlled switch 11",
+    "github_main_unchanged": "f66616ac4ae889b52561f9d94ef6395f3c4600b3",
+    "v1_0_1_release_created": false,
+    "community_project_id": 1423,
+    "community_revision_unchanged": 3241,
+    "community_submission_result": null,
+    "new_code_committed_or_pushed": false,
+    "draft_package_location_private": true,
+    "authorization_credentials_outside_repository": true
+  },
+  "observation": {
+    "started_utc": "2026-10-30T14:25:30.620+00:00",
+    "finished_utc": "2026-10-30T15:17:20.011+00:00",
+    "elapsed_seconds": 3109.391,
+    "status_responses": 612,
+    "fm_windows": 611,
+    "faults": {},
+    "memory_wait_logs": 0,
+    "memory_release_events": 0,
+    "serial_closed": true,
+    "elapsed_monitor_time_is_not_continuous_music_duration": true
+  },
+  "final_status": {
+    "wanted": 0,
+    "page": 0,
+    "ready": 0,
+    "local": 0,
+    "station": 26,
+    "radio": 0,
+    "radio_state": "按 OK 收听",
+    "wifi": 1
+  },
+  "unverified": [
+    "controlled real weak-network/reconnect and memory-release recovery",
+    "actual complete continuous voice conversations",
+    "AAC/HE-AAC",
+    "full first installation on a blank device",
+    "all 1105 stations and arbitrary networks"
+  ],
+  "limitations": [
+    "Original station26 failed its single-window gate and remains a disclosed failure.",
+    "Any later successful retest is limited to this bounded session; no zero-interruption claim.",
+    "Detected compressed starvation recovery is not a controlled weak-network validation."
+  ],
+  "private_gate_review": "private/diagnostics/candidate06r2-device-20261030/gate-review.json",
+  "hold_reasons": [
+    "one_or_more_switch_stages_incomplete_or_below_gate",
+    "retest_not_completed_successfully",
+    "switch_11_quality_failure_release_stopped",
+    "switch_stage_numbers_differ",
+    "twenty_switch_count_or_sequence_differs",
+    "unexpected_retest_stage_count"
+  ],
+  "privacy": "Device identifiers, network names/addresses, credentials, raw logs, NVS contents and device-backup hashes omitted.",
+  "full_image_sha256": "22a2d185d16bec11c140f6afbfcf23e84fb72578423a5a865d562319fcd3ee1a",
+  "source_fingerprint_sha256": "84e3e6c42970c66c1cb64e7d61937259057b554df3c6565e72834ad8ca8fcb92",
+  "final_host_suite": {
+    "status": "PASS",
+    "scripts": 15,
+    "package_cases": 19,
+    "package_case_skips": 1,
+    "skip_reason": "Windows file symlink privilege unavailable",
+    "source_inputs_byte_match_sealed": 7
+  }
+}

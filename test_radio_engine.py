@@ -110,7 +110,11 @@ with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as temp:
         if lib.nabo_radio_finished():break
         n=lib.nabo_radio_read(dst,480,0);audio.extend(dst[:n])
     else:raise AssertionError('rebuffered stream did not drain')
-    assert audio==expected,'lost compressed input or decoder state on starvation'
+    # Recovery now fades the first 5 ms of resumed PCM. All decoded samples
+    # must survive; outside that bounded transition they remain byte-exact.
+    assert len(audio)==len(expected),'lost decoded samples on starvation'
+    changed=[i for i,(a,b) in enumerate(zip(audio,expected)) if a!=b]
+    assert not changed or max(changed)-min(changed)<120,'recovery changed PCM beyond its 5 ms fade'
     lib.nabo_radio_stop();lib.nabo_radio_finish();assert lib.host_clean()
     lib.host_limit_ring(32768)
     # Failed HTTP requests can finish before an MP3 header (or in an ID3 tag).

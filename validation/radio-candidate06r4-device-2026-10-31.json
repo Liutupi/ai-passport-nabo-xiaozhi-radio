@@ -1,0 +1,111 @@
+{
+  "schema": "nabo-fm-device-validation-v1",
+  "candidate": "06r4",
+  "date": "2026-10-31",
+  "status": "FAIL_VOICE_RESTORE_TIMER",
+  "publication_status": "PUBLISH_HOLD",
+  "application_bytes": 3488240,
+  "application_sha256": "6a2fd27e278d3fb68d00e72e61a4b096d540b5a7f17ecd01e3c6c19016c5f610",
+  "elf_sha256": "a97f2d603da0acf4a7a9725df6d4496a111003ab44d3e4d76d3a64e33ad71ccd",
+  "full_image_sha256": "a83980e1001e043bb4a2123fb912e8cdfe425ff730151d52cc107e098a88aa1a",
+  "build_and_host_record": "validation/radio-candidate06r4-2026-10-31.json",
+  "build_record_device_not_run_is_historical": true,
+  "flash": {
+    "status": "PASS",
+    "written_offsets": ["0x10000"],
+    "write_operations": 1,
+    "fresh_full_backup_verified": true,
+    "application_readback_exact": true,
+    "full_readback_matches_expected": true,
+    "all_unwritten_bytes_preserved": true,
+    "protected_regions_unchanged": ["bootloader", "partition", "nvs", "phy", "app_tail", "assets", "files"],
+    "sector_tail_restored_bytes": 1552,
+    "private_evidence_retained": true,
+    "flash_integrity_pass_is_not_voice_or_playback_acceptance": true
+  },
+  "boot_identity": {
+    "normal_reset_requested": true,
+    "observed_mcu_reset_count": 1,
+    "reset_reason": "USB_UART_CHIP_RESET",
+    "elf_identity": "prefix_match",
+    "observed_elf_prefix": "a97f2d603",
+    "full_elf_hash_observed_on_serial": false,
+    "unexpected_reboot_observed": false,
+    "nvs_erase_observed": false,
+    "identity_confirmation_is_not_functional_boot_acceptance": true
+  },
+  "voice_restore_regression": {
+    "status": "FAIL_VOICE_RESTORE_TIMER",
+    "initial_task_stop_acknowledgements": [
+      {"task": "audio_input", "uptime_ms": 2264},
+      {"task": "audio_output", "uptime_ms": 2264},
+      {"task": "opus_codec", "uptime_ms": 2264}
+    ],
+    "failure_chain": [
+      {"uptime_ms": 12674, "owner": "AudioService", "message": "Cannot start audio power timer"},
+      {"uptime_ms": 12684, "owner": "Application", "message": "Local app: audio restore allocation failed; service stopped, listening retries"}
+    ],
+    "independent_observed_voice_restore_failure_chains": 1,
+    "raw_monitor_classifier_hits": {"audio_resource_failure": 2, "allocation": 1},
+    "classifier_hits_overlap_same_failure_chain": true,
+    "generic_restore_allocation_message_does_not_prove_separate_malloc_failure": true,
+    "successful_conversation_owner_restore_observed": false,
+    "interpretation": "The audio timer start failed during real boot voice restoration, followed ten milliseconds later by the generic upper-layer restoration failure. The three monitor classifier hits describe this one observed chain, not three independent failures."
+  },
+  "observation": {
+    "started_utc": "2026-10-30T16:47:29.681+00:00",
+    "finished_utc": "2026-10-30T16:48:23.165+00:00",
+    "local_date_timezone": "Asia/Shanghai",
+    "elapsed_seconds": 53.484,
+    "status_responses": 11,
+    "fm_audio_windows": 0,
+    "fm_network_windows": 0,
+    "radio_pipeline_ready_logs": 0,
+    "radio_stream_connected_logs": 0,
+    "memory_wait_logs": 0,
+    "memory_release_events": 0,
+    "control_commands_sent": 0,
+    "serial_closed": true,
+    "exit_reason": "stop_file",
+    "acceptance_stopped_after_failure_evidence": true,
+    "elapsed_monitor_time_is_not_music_duration": true
+  },
+  "final_observed_state": {
+    "page": 0,
+    "ready": 0,
+    "local": 0,
+    "radio": 0,
+    "wanted": 0,
+    "normal_home_or_voice_restoration_confirmed": false,
+    "page_zero_does_not_establish_recovered_home": true,
+    "serial_closed": true,
+    "device_retained_candidate": "06r4"
+  },
+  "acceptance_completion": {
+    "voice_restore": "FAIL",
+    "reclaimed_memory_and_selected_ring_size": "NOT_OBSERVED",
+    "qtfm_20_second_grace_on_device": "NOT_TESTED",
+    "sustained_audio": "NOT_TESTED",
+    "three_stations_600_seconds_each": "NOT_RUN_FOR_06r4",
+    "twenty_controlled_switches": "NOT_RUN_FOR_06r4",
+    "full_voice_conversation": "NOT_TESTED"
+  },
+  "publication": {
+    "status": "PUBLISH_HOLD",
+    "reason": "Real boot voice-restoration timer regression; no radio acceptance windows were collected.",
+    "previous_06r3_and_06r2_failures_retained": true
+  },
+  "next_step": {
+    "candidate": "06r5",
+    "status": "REPAIR_IN_PROGRESS",
+    "scope": "Repair the core audio start/stop timer lifecycle and extend host coverage for the real boot restoration sequence. Preserve radio buffering, memory guards, priorities and the existing quality gate.",
+    "device_improvement_claimed": false,
+    "new_firmware_requires_separate_build_host_and_device_evidence": true
+  },
+  "limitations": [
+    "Build and host tests passed before this real-device failure; host timer and codec substitutes did not establish the failed boot behavior.",
+    "No R4 memory reclamation, larger compressed ring, QTFM grace or playback-quality improvement was established on the device.",
+    "Matching flash bytes and ELF prefix establish image identity, not successful voice restoration or a usable HOME state."
+  ],
+  "privacy": "Private evidence retained. Device identifiers, network details, personal settings, credentials, raw-log paths, NVS contents and device-backup hashes are omitted."
+}

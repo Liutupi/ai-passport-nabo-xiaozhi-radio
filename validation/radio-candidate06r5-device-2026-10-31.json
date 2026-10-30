@@ -1,0 +1,189 @@
+{
+  "schema": "nabo-fm-device-validation-v1",
+  "candidate": "06r5",
+  "date": "2026-10-31",
+  "status": "PARTIAL_USER_ENDED_TEST",
+  "publication_status": "PREVIEW_PUBLICATION_AUTHORIZED",
+  "full_qa_pass": false,
+  "application_bytes": 3488272,
+  "application_sha256": "282cf47d20af170dccbcaf0e6b06c84cbf73cea8e8752744f9a0f0463d90f836",
+  "elf_sha256": "dcc938b548d24169125d158d9cf47e8edc09b262b3f6ce800f2d8815b7ef236a",
+  "full_image_sha256": "14655b7580cd43d5e6735d65fd34ef5c3943a8ebf06fdd271cac617f1d8f51dd",
+  "build_and_host_record": "validation/radio-candidate06r5-2026-10-31.json",
+  "build_record_device_not_run_is_historical": true,
+  "flash": {
+    "status": "PASS",
+    "written_offsets": [
+      "0x10000"
+    ],
+    "write_operations": 1,
+    "fresh_full_backup_verified": true,
+    "application_readback_exact": true,
+    "full_readback_matches_expected": true,
+    "all_unwritten_bytes_preserved": true,
+    "protected_regions_unchanged": [
+      "bootloader",
+      "partition",
+      "nvs",
+      "phy",
+      "app_tail",
+      "assets",
+      "files"
+    ],
+    "sector_tail_restored_bytes": 1520,
+    "existing_8mb_readback_rechecked_offline_at_final_close": true,
+    "private_evidence_retained": true
+  },
+  "boot_identity": {
+    "normal_reset_requested": true,
+    "observed_mcu_reset_count": 1,
+    "elf_identity": "prefix_match",
+    "observed_elf_prefix": "dcc938b54",
+    "full_elf_hash_observed_on_serial": false,
+    "unexpected_reboot_observed": false,
+    "nvs_erase_observed": false,
+    "r4_timer_or_voice_restore_signature_recurred": false
+  },
+  "observation": {
+    "started_utc": "2026-10-30T16:53:19.485+00:00",
+    "finished_utc": "2026-10-30T17:02:12.477+00:00",
+    "local_date_timezone": "Asia/Shanghai",
+    "elapsed_seconds": 532.985,
+    "status_responses": 107,
+    "fm_audio_windows": 86,
+    "fm_network_windows": 86,
+    "observed_faults": {},
+    "parse_errors": {},
+    "memory_wait_logs": 0,
+    "memory_release_events": 0,
+    "audio_resource_release_logs": 4,
+    "conversation_owner_restore_logs": 4,
+    "audio_resource_failure_logs": 0,
+    "serial_closed": true,
+    "exit_reason": "stop_file",
+    "elapsed_monitor_time_is_not_continuous_music_duration": true
+  },
+  "user_listening": {
+    "clear_audio_confirmed": true,
+    "scope": "User confirmation of short current-image listening, not every phase or long-run audio."
+  },
+  "station26_preflight": {
+    "status": "PASS_BOUNDED_180_SECOND_PREFLIGHT",
+    "station": 26,
+    "windows": 36,
+    "window_ms": 180422,
+    "device_span_ms": 180439,
+    "decoded_ratio": 1.0,
+    "output_clock_ratio": 0.9871301725953597,
+    "minimum_window_clock_ratio": 0.9580838323353293,
+    "maximum_window_clock_ratio": 0.9982032341784788,
+    "rebuffer_count": 0,
+    "reconnect_count": 0,
+    "compressed_ring_bytes": 32768,
+    "minimum_buffered_bytes": 7045,
+    "coverage_gap_or_overlap_above_tolerance": false,
+    "unrelaxed_decoded_ratio_minimum": 0.9,
+    "unrelaxed_clock_ratio_range": [
+      0.9,
+      1.1
+    ],
+    "is_not_the_planned_600_second_fixed_station_test": true
+  },
+  "operator_interruption_history": {
+    "first_diagnostic": "OPERATOR_INTERRUPTION",
+    "user_confirmed_manual_station_26_to_27": true,
+    "original_report_preserved": true,
+    "counts_as_preflight_pass": false,
+    "counts_as_firmware_failure": false
+  },
+  "formal_acceptance": {
+    "status": "PARTIAL_USER_ENDED_TEST",
+    "coordinator_status": "operator_interrupted",
+    "coordinator_reason": "operator_stopped_coordinator",
+    "firmware_failure": false,
+    "completed_substages": [
+      "home_restore_1",
+      "home_radio_cycle_1",
+      "home_restore_2",
+      "home_radio_cycle_2",
+      "home_restore_3"
+    ],
+    "completed_substage_count": 5,
+    "complete_home_radio_cycles": 2,
+    "planned_home_radio_cycles": 5,
+    "complete_radio_windows": 6,
+    "complete_radio_window_ms": 30064,
+    "cycles": [
+      {
+        "cycle": 1,
+        "station": 7,
+        "windows": 3,
+        "window_ms": 15039,
+        "device_span_ms": 15039,
+        "decoded_ratio": 1.0,
+        "output_clock_ratio": 0.9575104727707959,
+        "minimum_window_clock_ratio": 0.9442231075697212,
+        "maximum_window_clock_ratio": 0.9723052400876668,
+        "rebuffer_count": 0,
+        "reconnect_count": 0
+      },
+      {
+        "cycle": 2,
+        "station": 7,
+        "windows": 3,
+        "window_ms": 15025,
+        "device_span_ms": 15030,
+        "decoded_ratio": 1.0,
+        "output_clock_ratio": 0.9584026622296173,
+        "minimum_window_clock_ratio": 0.952,
+        "maximum_window_clock_ratio": 0.9643355250049811,
+        "rebuffer_count": 0,
+        "reconnect_count": 0
+      }
+    ],
+    "third_cycle": {
+      "home_restore_completed": true,
+      "radio_play_and_decode_started": true,
+      "accepted_complete_windows": 0,
+      "counts_as_completed_cycle": false,
+      "stop_reason": "user_requested_end_remaining_tests"
+    },
+    "three_fixed_station_runs_600_seconds_each": "NOT_RUN",
+    "twenty_controlled_switches": "NOT_RUN",
+    "original_quality_thresholds_changed": false
+  },
+  "final_state": {
+    "home_confirmed": true,
+    "radio_inactive": true,
+    "local_audio_released": true,
+    "conversation_owner_restored": true,
+    "serial_closed": true,
+    "device_retained_candidate": "06r5"
+  },
+  "voice_restore_boundary": {
+    "codec_release_and_owner_restore_observed": true,
+    "new_microphone_upload_and_tts_after_restore": "NOT_TESTED",
+    "voice_memory_encoded_decoded_played_counters_unchanged_from_boot": true,
+    "unchanged_counters_do_not_establish_a_new_restored_voice_conversation": true
+  },
+  "publication": {
+    "status": "PREVIEW_PUBLICATION_AUTHORIZED",
+    "user_requested_ending_remaining_tests_and_publishing_current_firmware": true,
+    "full_qa_pass_required_by_latest_user_instruction": false,
+    "release_mode": "preview",
+    "full_qa_pass_claimed": false,
+    "github_or_community_submission_status_not_asserted_by_device_record": true
+  },
+  "unverified": [
+    "Remaining HOME/radio cycles, all three 600-second fixed-station runs and twenty switches.",
+    "First installation on a blank device, AAC/HE-AAC and all-station availability.",
+    "New microphone capture/upload, TTS and continuous conversation after codec restoration.",
+    "Long-run playback and controlled weak-network behavior on arbitrary networks."
+  ],
+  "historical_failures_preserved": [
+    "06r4 startup voice-restoration timer failure",
+    "06r3 station-26 quality failure",
+    "06r2 station-26 quality failures"
+  ],
+  "privacy": "Device identifiers, personal settings, network details, credentials, raw logs, captured audio, backup hashes and private paths are omitted."
+}

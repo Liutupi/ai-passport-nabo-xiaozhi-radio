@@ -20,6 +20,7 @@
 #include "esp_timer.h"
 #include "mcp_server.h"
 #include "nabo_display.h"
+#include "nabo_radio_audio.h"
 #include "nabo_radio_clock.h"
 #include "nabo_radio_view.h"
 #include "nvs.h"
@@ -79,7 +80,14 @@ extern "C" bool muse_wifi_connected(void) {
     return wifi_on.load() && WifiManager::GetInstance().IsConnected();
 }
 extern "C" bool app_nabo_radio_network_begin(void) {
-    if (!ready.load() || !Application::GetInstance().IsLocalAppActive())
+    auto& app = Application::GetInstance();
+    if (!ready.load() || !app.IsLocalAppActive())
+        return false;
+    /* The local owner has already joined all voice tasks. Return the unused
+     * Opus workspaces before allocating the radio ring, rather than keeping
+     * both codecs resident throughout a long stream. Start() rebuilds voice
+     * transactionally after the radio/UI and handshake stack are released. */
+    if (!app.GetAudioService().ReleaseStoppedCodecs())
         return false;
     // The idle voice state enables MAX_MODEM sleep. Continuous radio must
     // receive promptly rather than wait for power-save bursts.
@@ -245,27 +253,29 @@ static void diagnostic(const char* line) {
         // USB inspection must never wait for a whole GUI frame on the I2S
         // owner. Take the display snapshot on the main task instead.
         app.Schedule([]() {
-        auto& app = Application::GetInstance();
-        DisplayLockGuard lock(Board::GetInstance().GetDisplay());
-        char clock[8];
-        nrf_clock_text(clock, sizeof(clock), esp_timer_get_time());
-        printf(
-            "\n@apps "
-            "{\"wanted\":%d,\"page\":%d,\"ready\":%d,\"local\":%d,\"heap\":%u,\"largest\":%u,"
-            "\"radio\":%d,\"radio_state\":\"%s\",\"station\":%d,\"volume\":%d,\"brightness\":%d,"
-            "\"sleep\":%d,\"wifi\":%d,\"edit\":%d,\"detail_parent\":%d,\"clock\":\"%s\","
-            "\"standby\":%u}\n",
-            wanted.load(), (int)page, ready.load(), app.IsLocalAppActive(),
-            (unsigned)esp_get_free_heap_size(),
-            (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL), nabo_radio_active(),
-            nabo_radio_state_text(), nabo_radio_current_station(), volume.load(), brightness.load(),
-            sleep_seconds.load(), WifiManager::GetInstance().IsConnected(), edit,
-            detail_parent.load(), clock, nabo_radio_clock_seconds());
-        if (page == NABO_RADIO) {
-            char text[640];
-            nabo_radio_menu_text(text, sizeof(text));
-            printf("@radio-menu %s\n", text);
-        }
+            auto& app = Application::GetInstance();
+            DisplayLockGuard lock(Board::GetInstance().GetDisplay());
+            char clock[8];
+            nrf_clock_text(clock, sizeof(clock), esp_timer_get_time());
+            printf(
+                "\n@apps "
+                "{\"wanted\":%d,\"page\":%d,\"ready\":%d,\"local\":%d,\"heap\":%u,\"largest\":%u,"
+                "\"radio\":%d,\"radio_state\":\"%s\",\"station\":%d,\"volume\":%d,\"brightness\":%"
+                "d,"
+                "\"sleep\":%d,\"wifi\":%d,\"edit\":%d,\"detail_parent\":%d,\"clock\":\"%s\","
+                "\"standby\":%u}\n",
+                wanted.load(), (int)page, ready.load(), app.IsLocalAppActive(),
+                (unsigned)esp_get_free_heap_size(),
+                (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL),
+                nabo_radio_active(), nabo_radio_state_text(), nabo_radio_current_station(),
+                volume.load(), brightness.load(), sleep_seconds.load(),
+                WifiManager::GetInstance().IsConnected(), edit, detail_parent.load(), clock,
+                nabo_radio_clock_seconds());
+            if (page == NABO_RADIO) {
+                char text[640];
+                nabo_radio_menu_text(text, sizeof(text));
+                printf("@radio-menu %s\n", text);
+            }
         });
     } else if (!strncmp(line, ">radio.play=", 12)) {
         char* end;
@@ -363,6 +373,7 @@ static void worker(void*) {
     char command_line[96] = {};
     unsigned command_len = 0;
     int16_t samples[480];
+    nrf_audio_tail_t radio_tail = {};
     unsigned output_rate = 16000;
     bool usb_attached = false;
     unsigned out_frames = 0, decoded_frames = 0, short_blocks = 0, max_decode_us = 0;
@@ -409,7 +420,8 @@ static void worker(void*) {
                     continue;
                 }
                 ready = true;
-                static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())->ReleaseGameDrawBuffer();
+                static_cast<NaboDisplay*>(Board::GetInstance().GetDisplay())
+                    ->ReleaseGameDrawBuffer();
                 output_rate = 16000;
                 ESP_LOGI("NABO-Apps", "local audio ownership ready, heap=%u",
                          (unsigned)esp_get_free_heap_size());
@@ -437,10 +449,10 @@ static void worker(void*) {
                 else {
                     int64_t decode_start = esp_timer_get_time();
                     audio_samples = nabo_radio_read(samples, sample_count, 0);
-                    max_decode_us = std::max(max_decode_us,
-                                            (unsigned)(esp_timer_get_time() - decode_start));
+                    max_decode_us =
+                        std::max(max_decode_us, (unsigned)(esp_timer_get_time() - decode_start));
                     decoded_frames += audio_samples;
-                    if (nabo_radio_state() == 3 && audio_samples < sample_count)
+                    if (audio_samples && audio_samples < sample_count)
                         ++short_blocks;
                     min_buffered = std::min(min_buffered, nabo_radio_buffered_bytes());
                     unsigned new_rate = nabo_radio_output_rate();
@@ -459,9 +471,9 @@ static void worker(void*) {
                     }
                 }
             }
+            nrf_audio_smooth(&radio_tail, samples, audio_samples, sample_count, output_rate);
             if (!audio_samples && desired == NABO_RADIO && nabo_radio_wanted() &&
-                nabo_radio_noise() &&
-                (nabo_radio_state() == 1 || nabo_radio_state() == 2 || nabo_radio_state() == 5)) {
+                nabo_radio_tuning_noise()) {
                 static uint32_t noise_rng = 0x6e61626f;
                 static int32_t noise_lp = 0;
                 for (size_t i = 0; i < sample_count; ++i) {
@@ -506,15 +518,39 @@ static void worker(void*) {
             if (desired == NABO_HOME && !app.IsLocalAppActive() && !app.IsProtocolInitializing())
                 app.GetAudioService().LogMemoryStats();
             else if (ready.load() && nabo_radio_active()) {
+                nabo_radio_telemetry_t telemetry;
+                nabo_radio_telemetry(&telemetry);
+                static const char* const reasons[] = {
+                    "none",        "eagain_timeout", "read_le_zero", "wifi_down",
+                    "open_failed", "invalid_stream", "memory_wait",  "timeout_setup"};
+                unsigned reason = telemetry.stall_reason;
                 ESP_LOGI("FM-Audio",
                          "ms=%u rate=%u out=%u decoded=%u short=%u max_decode_us=%u max_loop_us=%u "
-                         "min_buffered=%u heap=%u largest=%u stack=%u",
+                         "min_buffered=%u heap=%u largest=%u stack=%u ring=%u rebuffers=%u "
+                         "rebuffer_ms=%u reconnects=%u open_ms=%u heap_before_open=%u "
+                         "largest_before_open=%u stall_reason=%s",
                          (unsigned)((now - measured_at) / 1000), output_rate, out_frames,
                          decoded_frames, short_blocks, max_decode_us, max_loop_us, min_buffered,
                          (unsigned)esp_get_free_heap_size(),
                          (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL |
                                                                     MALLOC_CAP_8BIT),
-                         (unsigned)uxTaskGetStackHighWaterMark(nullptr));
+                         (unsigned)uxTaskGetStackHighWaterMark(nullptr), telemetry.ring,
+                         telemetry.rebuffers, telemetry.rebuffer_ms, telemetry.reconnects,
+                         telemetry.open_ms, telemetry.heap_before_open,
+                         telemetry.largest_before_open,
+                         reasons[reason <= NABO_RADIO_STALL_TIMEOUT_SETUP ? reason : 0]);
+                nabo_radio_network_telemetry_t network;
+                nabo_radio_network_telemetry(&network);
+                ESP_LOGI("FM-Net",
+                         "reads=%u eagains=%u read_max_ms=%u read_inflight_ms=%u "
+                         "body_bytes=%u body_age_ms=%u body_gap_max_ms=%u published_bytes=%u "
+                         "publish_age_ms=%u ring_wait_ms=%u timeout_errors=%u task_state=%u "
+                         "runtime_us=%u stack=%u",
+                         network.reads, network.eagains, network.read_max_ms,
+                         network.read_inflight_ms, network.body_bytes, network.body_age_ms,
+                         network.body_gap_max_ms, network.published_bytes, network.publish_age_ms,
+                         network.ring_wait_ms, network.timeout_errors, network.task_state,
+                         network.runtime_us, network.stack);
             }
             out_frames = decoded_frames = short_blocks = max_decode_us = max_loop_us = 0;
             min_buffered = UINT32_MAX;

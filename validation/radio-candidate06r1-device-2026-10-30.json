@@ -1,0 +1,118 @@
+{
+  "schema": "nabo-fm-device-validation-v1",
+  "date": "2026-10-30",
+  "candidate": "06r1",
+  "status": "short-listening-pass-lifecycle-reentry-fail",
+  "validation_round_complete": true,
+  "playback_optimization_complete": false,
+  "application_sha256": "0a80d6f6fd0ad4b01ac2efbd85707bd1a1b3b47db4cf56ff7db42094bb63c82c",
+  "elf_sha256": "6813b8aec33df407a106ac515a35fe6e76f74c11f8eeb7e4e1a1399880deeacb",
+  "build_and_host_record": "validation/radio-candidate06r1-2026-10-30.json",
+  "flash": {
+    "status": "PASS_APP_AND_ALL_UNWRITTEN_BYTES_VERIFIED",
+    "explicit_user_confirmation": true,
+    "write_offsets": ["0x10000"],
+    "fresh_full_backup_verified": true,
+    "full_readback_verified": true,
+    "all_unwritten_bytes_preserved": true,
+    "full_chip_erase_performed": false,
+    "private_receipt": "private/device-upgrades/20261030T135359.820348Z-06r1/verification.json",
+    "receipt_status_at_write_completion": "PASS_APP_AND_ALL_UNWRITTEN_BYTES_VERIFIED_RESTART_PENDING",
+    "subsequent_boot_observed": true
+  },
+  "boot_and_wifi": {
+    "status": "PASS",
+    "normal_boot_observed": true,
+    "observed_elf_prefix": "6813b8ae",
+    "saved_wifi_restored_without_reprovisioning": true,
+    "nvs_erase_observed": false
+  },
+  "observation": {
+    "started_utc": "2026-10-30T13:55:54.151+00:00",
+    "finished_utc": "2026-10-30T14:10:38.754+00:00",
+    "elapsed_seconds": 884.61,
+    "apps_status_responses": 176,
+    "fm_audio_windows": 28,
+    "control_commands": 5,
+    "play_commands_for_station7": 4,
+    "normal_finish_home_commands": 1,
+    "error_events": {
+      "codec_workspace_allocation": 12,
+      "http_open": 0
+    },
+    "memory_wait_logs": 0,
+    "memory_release_events": 0,
+    "panic_assert_watchdog_observed": false,
+    "elapsed_monitor_time_is_not_continuous_music_duration": true,
+    "serial_closed": true,
+    "exit_reason": "stop_file"
+  },
+  "short_playback": {
+    "status": "PASS_FOR_BOUNDED_LISTENING_ONLY",
+    "user_feedback": "连续、清楚",
+    "observed_active_station_ids": [7, 8, 9, 10],
+    "observed_decoded_formats": [
+      {"input_rate": 48000, "channels": 2, "output_rate": 24000},
+      {"input_rate": 44100, "channels": 2, "output_rate": 22050}
+    ],
+    "parsed_fm_max_rebuffers": 0,
+    "parsed_fm_max_rebuffer_ms": 0,
+    "parsed_fm_max_reconnects": 0,
+    "parsed_fm_stall_reasons": ["none"],
+    "network_memory_recovery_path_exercised": false
+  },
+  "navigation_and_attribution": {
+    "user_confirmed_initial_button_station_and_pause_testing": true,
+    "user_confirmed_later_navigation_and_volume50_change": true,
+    "uncommanded_or_ghost_input_claimed": false,
+    "subsequent_controlled_attempt_was_hands_off": true,
+    "fm_last_status_tag_does_not_prove_whole_window_station": true,
+    "switch_and_navigation_intervals_not_counted_as_fixed_station_music": true
+  },
+  "lifecycle_reentry": {
+    "status": "FAIL",
+    "trigger": "Re-entering radio after repeated HOME/settings navigation and voice-owner restoration",
+    "controlled_station_index": 7,
+    "first_reentry_audio_ownership_uptime_ms": 610414,
+    "heap_at_audio_ownership_bytes": 76100,
+    "first_codec_workspace_failure_uptime_ms": 610484,
+    "failure_count": 12,
+    "failure_stage": "codec workspace",
+    "free_heap_range_at_failure_bytes": [53576, 53732],
+    "largest_free_block_at_failure_bytes": 7680,
+    "helix_largest_allocation_bytes": 8708,
+    "interpretation": "Codec initialization cannot satisfy its contiguous-block requirement in the observed heap layout; total free bytes alone do not establish allocation feasibility.",
+    "different_from_candidate06_ring_budget_rejection": true,
+    "tls_leak_or_fragmentation_origin_proven": false
+  },
+  "planned_acceptance": {
+    "coordinator_status": "needs_attention",
+    "coordinator_reason": "no_confirmed_playback",
+    "completed_stages": 0,
+    "fixed_station_plan": [7, 1, 26],
+    "three_stations_ten_minutes_each": "NOT_COMPLETED",
+    "twenty_controlled_station_switches": "NOT_COMPLETED",
+    "voice_owner_restore_log_observation": "PASS_FOR_OWNERSHIP_TRANSITION_ONLY",
+    "actual_continuous_voice_conversation": "NOT_VERIFIED"
+  },
+  "final_status": {
+    "wanted": 0,
+    "page": 0,
+    "ready": 0,
+    "local": 0,
+    "station": 7,
+    "radio": 0,
+    "radio_state": "按 OK 收听",
+    "wifi": 1,
+    "volume": 50,
+    "brightness": 80,
+    "standby": 60,
+    "clock": "22:10"
+  },
+  "device_kept_on_exact_candidate06r1": true,
+  "additional_flash_after_test": false,
+  "next_step": "Prepare candidate06r2 memory-layout repair while preserving buffer capacities; build and host-test it, then stop for confirmation of the exact image. No 06r2 build or device result is claimed here.",
+  "private_diagnostics_directory": "private/diagnostics/candidate06r1-device-20261030",
+  "privacy": "Device identifiers, network names and addresses, credentials, NVS contents and device-backup hashes are omitted.",
+  "git_commit_push_or_publish_performed": false
+}

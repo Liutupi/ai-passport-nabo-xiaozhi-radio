@@ -4,16 +4,24 @@ SVG is the editable source; text is outlined for portable Chinese font rendering
 Export the SVG files with an SVG-capable rasterizer at their native 900 x 1200 size.
 No device photo or invented firmware screen is used.
 """
+import argparse
 import base64
 import hashlib
 import html
 import json
+import re
 from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / 'docs/images/community-v1.0.0'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--version', default='1.0.0')
+args = parser.parse_args()
+if not re.fullmatch(r'\d+\.\d+\.\d+', args.version):
+    parser.error('Use a semantic release version, e.g. 1.0.1')
+VERSION = args.version
+OUT = ROOT / ('docs/images/community-v' + VERSION)
 OUT.mkdir(parents=True, exist_ok=True)
 NAVY, AMBER, CORAL, CREAM, MUTED = '#10141f', '#ffbe53', '#ff7054', '#f5f0e7', '#a2a7b3'
 FONT_FILES = {
@@ -69,7 +77,8 @@ def base(index, section, light=False):
     ink, bg = (NAVY, CREAM) if light else (CREAM, NAVY)
     parts = ['<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="900" height="1200" viewBox="0 0 900 1200">', rect(0, 0, 900, 1200, bg)]
     parts += [text('NABO FM', 58, 64, 24, ink, 'bold'), text(section, 842, 64, 17, ink, 'sans', align='right', spacing=1), line(58, 91, 842, 91, ink, opacity=.22)]
-    parts += [line(58, 1114, 842, 1114, ink, opacity=.22), text('AI PASSPORT / v1.0.0 首版体验', 58, 1155, 18, ink), text(f'0{index} / 05', 842, 1155, 18, ink, align='right')]
+    edition = '首版体验' if VERSION == '1.0.0' else '体验更新'
+    parts += [line(58, 1114, 842, 1114, ink, opacity=.22), text(f'AI PASSPORT / v{VERSION} {edition}', 58, 1155, 18, ink), text(f'0{index} / 05', 842, 1155, 18, ink, align='right')]
     return parts
 
 
@@ -120,8 +129,10 @@ p += [text('一块小工牌，', 58, 186, 57, NAVY, 'title'), text('多一点声
 p += [image('design/nabo-radio/art/design/S2_on_air_cutout.png', -120, 304, 700, 700)]
 for n, title, sub, y in [(1, '连上 Wi-Fi', '使用 2.4 GHz 网络', 420), (2, '打开网络电台', '主页下键 → 工具', 572), (3, '按下中键', '开始收听 / 暂停', 724)]:
     p += [text(f'0{n}', 504, y, 20, '#937b55', 'bold'), text(title, 504, y+48, 33, NAVY, 'title', max_width=335), text(sub, 504, y+88, 22, NAVY, max_width=335)]
-p += [rect(58, 940, 784, 80, NAVY, 4), text('上下换台  ·  双击中键收藏  ·  长按中键菜单', 450, 989, 25, CREAM, 'title', align='center', max_width=744), text('首次完整刷机会清空配网与设置，刷后按屏幕提示重新配置。', 58, 1061, 18, NAVY, max_width=784), text('首版体验 · MP3 为主；部分台源、AAC 与长播仍待完善。', 58, 1091, 18, NAVY, max_width=784)]
+limitations = ('首版体验 · MP3 为主；部分台源、AAC 与长播仍待完善。' if VERSION == '1.0.0'
+               else '体验版 · MP3 为主；部分台源、AAC 与弱网表现仍待完善。')
+p += [rect(58, 940, 784, 80, NAVY, 4), text('上下换台  ·  双击中键收藏  ·  长按中键菜单', 450, 989, 25, CREAM, 'title', align='center', max_width=744), text('首次完整刷机会清空配网与设置，刷后按屏幕提示重新配置。', 58, 1061, 18, NAVY, max_width=784), text(limitations, 58, 1091, 18, NAVY, max_width=784)]
 files += [finish('05-start', p)]
-manifest = {'version':'1.0.0','purpose':'AI Passport community launch gallery','dimensions':[900,1200],'format':'SVG source + PNG publication exports','files':files,'source_images':SOURCES,'font_sources':{k:str(v.relative_to(ROOT)) for k,v in FONT_FILES.items()},'provenance':'Deterministic vector layout and outlined exact copy using existing NABO artwork and production-code host UI previews. No device photos; no invented UI; development/design assisted by AI.','firmware_change':False}
+manifest = {'version':VERSION,'purpose':'AI Passport community gallery','dimensions':[900,1200],'format':'SVG source + PNG publication exports','files':files,'source_images':SOURCES,'font_sources':{k:str(v.relative_to(ROOT)) for k,v in FONT_FILES.items()},'provenance':'Deterministic vector layout and outlined exact copy using existing NABO artwork and production-code host UI previews. No device photos; no invented UI; development/design assisted by AI.','firmware_change':False}
 (OUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
 print('Created five 900 x 1200 SVG source posters:',OUT)

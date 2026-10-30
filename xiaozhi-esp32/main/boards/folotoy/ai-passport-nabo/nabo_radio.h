@@ -15,6 +15,36 @@ bool nabo_radio_loudness(void);
 unsigned nabo_radio_output_rate(void);
 /* Speaker-owner diagnostics only; the ring belongs to that same owner. */
 unsigned nabo_radio_buffered_bytes(void);
+enum {
+    NABO_RADIO_STALL_NONE,
+    NABO_RADIO_STALL_EAGAIN,
+    NABO_RADIO_STALL_READ,
+    NABO_RADIO_STALL_WIFI,
+    NABO_RADIO_STALL_OPEN,
+    NABO_RADIO_STALL_FORMAT,
+    NABO_RADIO_STALL_MEMORY,
+    NABO_RADIO_STALL_TIMEOUT_SETUP
+};
+typedef struct {
+    unsigned ring, rebuffers, rebuffer_ms, reconnects, open_ms;
+    unsigned heap_before_open, largest_before_open, stall_reason;
+} nabo_radio_telemetry_t;
+/* Speaker-owner snapshot. Counters cover this selection/play generation, including
+ * automatic pipeline rebuilds, not a five-second window.
+ * rebuffer_ms includes an ongoing wait; open_ms ends at the first response body byte. */
+void nabo_radio_telemetry(nabo_radio_telemetry_t* out);
+typedef struct {
+    unsigned reads, eagains, read_max_ms, read_inflight_ms;
+    unsigned body_bytes, body_age_ms, body_gap_max_ms;
+    unsigned published_bytes, publish_age_ms, ring_wait_ms, timeout_errors;
+    unsigned task_state, runtime_us, stack;
+} nabo_radio_network_telemetry_t;
+/* Body callbacks and actual ring publication are separate: a streaming HTTP
+ * read can receive bytes before returning them. Counters/maxima cover this
+ * play generation; ages and task state are live snapshots. Runtime/stack are
+ * for the current producer task, never the speaker owner. */
+void nabo_radio_network_telemetry(nabo_radio_network_telemetry_t* out);
+bool nabo_radio_tuning_noise(void);
 int nabo_radio_meter(void);
 unsigned nabo_radio_state(void);
 void nabo_radio_set_local(int region);

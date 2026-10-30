@@ -1,0 +1,153 @@
+{
+  "schema": "nabo-fm-device-validation-v1",
+  "candidate": "06r3",
+  "date": "2026-10-31",
+  "status": "FAIL_BOUNDED_STATION26_DIAGNOSTIC_RELEASE_HOLD",
+  "application_sha256": "9a4daec3685adbf97064409c150f6eb6de7c86ccce4b57a0e06f30f1d07cd156",
+  "application_bytes": 3486272,
+  "elf_sha256": "f97fef204c2568a0f0b52edcc4ede3553b2bc4d211dfc7a0759b122b89b86f2d",
+  "full_image_sha256": "c0d1412c46148b93f6e14676e742ae46c67856bf2ca06113215ee6138693371c",
+  "build_and_host_record": "validation/radio-candidate06r3-2026-10-31.json",
+  "build_record_device_not_run_is_historical": true,
+  "flash": {
+    "status": "PASS",
+    "written_offsets": ["0x10000"],
+    "write_operations": 1,
+    "fresh_full_backup_verified": true,
+    "application_readback_exact": true,
+    "full_readback_matches_expected": true,
+    "all_unwritten_bytes_preserved": true,
+    "protected_regions_unchanged": ["bootloader", "partition", "nvs", "phy", "app_tail", "assets", "files"],
+    "sector_tail_restored_bytes": 3520,
+    "private_evidence_retained": true
+  },
+  "boot": {
+    "normal_reset_requested": true,
+    "observed_mcu_reset_count": 1,
+    "reset_reason": "USB_UART_CHIP_RESET",
+    "elf_identity": "prefix_match",
+    "observed_elf_prefix": "f97fef204",
+    "full_elf_hash_observed_on_serial": false,
+    "unexpected_reboot_observed": false,
+    "nvs_erase_observed": false
+  },
+  "observation": {
+    "started_utc": "2026-10-30T16:19:20.876+00:00",
+    "finished_utc": "2026-10-30T16:28:22.363+00:00",
+    "local_date_timezone": "Asia/Shanghai",
+    "elapsed_seconds": 541.484,
+    "status_responses": 108,
+    "fm_audio_windows": 86,
+    "fm_network_windows": 86,
+    "faults": {},
+    "pipeline_allocation_failure_logs": 0,
+    "http_open_failure_logs": 0,
+    "memory_wait_logs": 0,
+    "memory_release_events": 0,
+    "serial_closed": true,
+    "exit_reason": "stop_file",
+    "elapsed_monitor_time_is_not_continuous_music_duration": true
+  },
+  "station26_diagnostic": {
+    "status": "FAIL_QUALITY_GATE",
+    "ring_bytes": 8192,
+    "all_station_labeled_windows": {
+      "windows": 85,
+      "window_ms": 425940,
+      "out": 6751360,
+      "decoded": 5952128,
+      "decoded_ratio": 0.8816191108161912,
+      "output_clock_ratio": 0.9906559609334648,
+      "includes_initial_boundary_window": true
+    },
+    "complete_windows_after_initial_boundary": {
+      "windows": 84,
+      "window_ms": 420931,
+      "first_end_uptime_ms": 30934,
+      "last_end_uptime_ms": 446884,
+      "out": 6671360,
+      "decoded": 5928512,
+      "decoded_ratio": 0.888651189562548,
+      "output_clock_ratio": 0.9905661497965225,
+      "windows_below_original_gate": 16
+    },
+    "original_per_window_gate": {
+      "minimum_decoded_ratio": 0.90,
+      "minimum_output_clock_ratio": 0.90,
+      "not_relaxed_for_diagnostic": true
+    },
+    "final_generation_rebuffers": 20,
+    "final_generation_rebuffer_ms": 49296,
+    "final_generation_reconnects": 2,
+    "complete_zero_decode_windows_end_uptime_ms": [30934, 35954, 60974],
+    "user_listening_acceptance": "NOT_OBTAINED_FOR_06r3",
+    "scope": "Bounded diagnostic observation; the first station-labeled window is excluded from the primary complete-window quality calculation. Later recovery does not erase failed windows."
+  },
+  "network_diagnostic": {
+    "http_read_max_ms": 869,
+    "sampled_http_read_inflight_max_ms": 797,
+    "timeout_setup_errors": 0,
+    "same_body_counter_during_gap": [
+      {"uptime_ms": 25914, "reads": 43, "eagains": 1, "body_bytes": 12505, "body_age_ms": 1608, "runtime_us": 43381, "ring_wait_ms": 0},
+      {"uptime_ms": 30934, "reads": 50, "eagains": 8, "body_bytes": 12505, "body_age_ms": 6628, "runtime_us": 48584, "ring_wait_ms": 0},
+      {"uptime_ms": 35954, "reads": 52, "eagains": 11, "body_bytes": 12505, "body_age_ms": 11648, "runtime_us": 53884, "ring_wait_ms": 0}
+    ],
+    "generation_body_gap_max_ms": 13730,
+    "body_gap_statistic_can_span_reconnects": true,
+    "body_gap_statistic_is_not_a_single_connection_source_gap_measurement": true,
+    "final_cumulative_ring_wait_ms": 306669,
+    "interpretation": "The network worker continued read/EAGAIN activity and accumulated runtime while no new positive body arrived in the selected depleted-ring gap. No multi-second blocking HTTP read or CPU-starvation signature was observed there. This supports transport/body delivery silence as the immediate missing-input condition, without proving a unique backend, Wi-Fi or TCP cause. Cumulative full-ring backpressure is a separate condition."
+  },
+  "desktop_source_comparison": {
+    "evidence": "separate_short_concurrent_desktop_observation",
+    "device_acceptance": false,
+    "direct_connection": true,
+    "station": 26,
+    "endpoints": ["original-http", "original-https", "alias-http"],
+    "elapsed_ms_each": 20000,
+    "http_status_each": 200,
+    "body_bytes_each": 236586,
+    "consecutive_identical_encoded_payload_frames_each_pair": 821,
+    "positive_body_gap_max_ms_each": 10032,
+    "offline_production_helix_decoded_frames_each": 819,
+    "limitations": "Same encoded content and synchronized desktop gaps support burst delivery across the sampled entries. This short desktop route differs from the badge and does not establish an identical backend or long-run device quality. Captured audio and frame hashes remain private."
+  },
+  "metric_definition": {
+    "decoded_ratio": "Real decoded PCM samples / output PCM slots for a complete window; synthetic fade tails are not music.",
+    "output_clock_ratio": "Output slots / (output rate * device-reported window milliseconds / 1000).",
+    "rebuffer_ms": "Cumulative post-first-play rebuffer telemetry within the selection/play generation; not a device acoustic silence measurement.",
+    "body_bytes": "Raw positive HTTP body callback bytes; not equivalent to valid decoded music or bytes already published into the compressed ring."
+  },
+  "final_state": {
+    "home_confirmed": true,
+    "radio_inactive": true,
+    "local_audio_released": true,
+    "conversation_owner_restored": true,
+    "full_voice_conversation_tested": false,
+    "serial_closed": true,
+    "device_retained_candidate": "06r3"
+  },
+  "acceptance_completion": {
+    "three_stations_600_seconds_each": "NOT_COMPLETED",
+    "twenty_controlled_switches": "NOT_RUN_FOR_06r3",
+    "diagnostic_is_not_full_acceptance": true
+  },
+  "publication": {
+    "status": "HOLD_NOT_PUBLISHED",
+    "reason": "R3 bounded diagnostic remains below the unchanged playback quality gate."
+  },
+  "next_step": {
+    "candidate": "06r4",
+    "status": "REPAIR_IN_PROGRESS",
+    "scope": "Release inactive voice codec workspaces to let the existing adaptive ring retain more compressed data, and use at least 20 seconds of connection-local no-audio grace for catalog QTFM stations while preserving the generic 8-second floor, memory guards and task priorities.",
+    "device_improvement_claimed": false,
+    "new_firmware_requires_separate_build_host_and_device_evidence": true
+  },
+  "unverified": [
+    "Complete 3 x 600-second fixed-station and 20-switch acceptance for 06r3",
+    "06r3 user listening and full continuous voice conversations",
+    "Controlled weak-network recovery, AAC/HE-AAC and blank-device first installation",
+    "All stations, arbitrary networks and a uniquely proven source/backend cause"
+  ],
+  "privacy": "Private evidence retained. Device identifiers, network details, personal settings, credentials, raw-log paths, captured audio, frame payload hashes, NVS contents and device-backup hashes are omitted."
+}

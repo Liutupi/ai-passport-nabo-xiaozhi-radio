@@ -47,29 +47,11 @@ AudioService::~AudioService() {
 }
 
 void AudioService::Initialize(AudioCodec* codec) {
+    std::lock_guard<std::mutex> lifecycle_lock(lifecycle_mutex_);
     codec_ = codec;
     codec_->Start();
-
-    esp_opus_dec_cfg_t opus_dec_cfg =
-        OPUS_DEC_CFG(codec->output_sample_rate(), OPUS_FRAME_DURATION_MS);
-    auto ret = esp_opus_dec_open(&opus_dec_cfg, sizeof(esp_opus_dec_cfg_t), &opus_decoder_);
-    if (opus_decoder_ == nullptr) {
-        ESP_LOGE(TAG, "Failed to create audio decoder, error code: %d", ret);
-    } else {
-        decoder_sample_rate_ = codec->output_sample_rate();
-        decoder_duration_ms_ = OPUS_FRAME_DURATION_MS;
-        decoder_frame_size_ = decoder_sample_rate_ / 1000 * OPUS_FRAME_DURATION_MS;
-    }
-    esp_opus_enc_config_t opus_enc_cfg = AS_OPUS_ENC_CONFIG();
-    ret = esp_opus_enc_open(&opus_enc_cfg, sizeof(esp_opus_enc_config_t), &opus_encoder_);
-    if (opus_encoder_ == nullptr) {
-        ESP_LOGE(TAG, "Failed to create audio encoder, error code: %d", ret);
-    } else {
-        encoder_sample_rate_ = 16000;
-        encoder_duration_ms_ = OPUS_FRAME_DURATION_MS;
-        esp_opus_enc_get_frame_size(opus_encoder_, &encoder_frame_size_, &encoder_outbuf_size_);
-        encoder_frame_size_ = encoder_frame_size_ / sizeof(int16_t);
-    }
+    // Voice codecs are created transactionally by Start, after reserving the
+    // C3's larger Opus task stack. Local applications can release them again.
 
     if (codec->input_sample_rate() != 16000) {
         esp_ae_rate_cvt_cfg_t input_resampler_cfg = RATE_CVT_CFG(
@@ -115,88 +97,196 @@ void AudioService::Initialize(AudioCodec* codec) {
     esp_timer_create(&audio_power_timer_args, &audio_power_timer_);
 }
 
-void AudioService::Start() {
-    xEventGroupClearBits(event_group_, (1 << 5) | (1 << 6) | (1 << 7));
-    service_stopped_.store(false);
-    xEventGroupClearBits(event_group_, AS_EVENT_AUDIO_TESTING_RUNNING | AS_EVENT_WAKE_WORD_RUNNING |
-                                           AS_EVENT_AUDIO_PROCESSOR_RUNNING |
-                                           AS_EVENT_AUDIO_INPUT_STOP_REQUEST);
+bool AudioService::EnsureCodecsLocked() {
+    if (codec_ == nullptr)
+        return false;
+    std::lock_guard<std::mutex> decoder_lock(decoder_mutex_);
+    void* encoder = nullptr;
+    void* decoder = nullptr;
+    int frame_bytes = 0, output_bytes = 0;
+    auto failed = [&]() {
+        if (decoder != nullptr)
+            esp_opus_dec_close(decoder);
+        if (encoder != nullptr)
+            esp_opus_enc_close(encoder);
+        return false;
+    };
+    // The packed mono encoder needs a larger contiguous allocation than the
+    // decoder. Keep both private until every missing codec is ready.
+    if (opus_encoder_ == nullptr) {
+        esp_opus_enc_config_t cfg = AS_OPUS_ENC_CONFIG();
+        auto ret = esp_opus_enc_open(&cfg, sizeof(cfg), &encoder);
+        if (ret != ESP_AUDIO_ERR_OK || encoder == nullptr) {
+            ESP_LOGE(TAG, "Cannot restore Opus encoder, error code: %d", ret);
+            return failed();
+        }
+        ret = esp_opus_enc_get_frame_size(encoder, &frame_bytes, &output_bytes);
+        if (ret != ESP_AUDIO_ERR_OK || frame_bytes <= 0 || output_bytes <= 0 ||
+            frame_bytes % sizeof(int16_t) != 0) {
+            ESP_LOGE(TAG, "Cannot obtain Opus encoder frame sizes, error code: %d", ret);
+            return failed();
+        }
+    }
+    if (opus_decoder_ == nullptr) {
+        esp_opus_dec_cfg_t cfg = OPUS_DEC_CFG(codec_->output_sample_rate(), OPUS_FRAME_DURATION_MS);
+        auto ret = esp_opus_dec_open(&cfg, sizeof(cfg), &decoder);
+        if (ret != ESP_AUDIO_ERR_OK || decoder == nullptr) {
+            ESP_LOGE(TAG, "Cannot restore Opus decoder, error code: %d", ret);
+            return failed();
+        }
+    }
+    if (encoder != nullptr) {
+        opus_encoder_ = encoder;
+        encoder_sample_rate_ = 16000;
+        encoder_duration_ms_ = OPUS_FRAME_DURATION_MS;
+        encoder_frame_size_ = frame_bytes / sizeof(int16_t);
+        encoder_outbuf_size_ = output_bytes;
+    }
+    if (decoder != nullptr) {
+        opus_decoder_ = decoder;
+        decoder_sample_rate_ = codec_->output_sample_rate();
+        decoder_duration_ms_ = OPUS_FRAME_DURATION_MS;
+        decoder_frame_size_ = decoder_sample_rate_ / 1000 * decoder_duration_ms_;
+    }
+    return true;
+}
 
-    esp_timer_start_periodic(audio_power_timer_, 1000000);
+void AudioService::CloseCodecsLocked() {
+    std::lock_guard<std::mutex> decoder_lock(decoder_mutex_);
+    if (opus_encoder_ != nullptr) {
+        esp_opus_enc_close(opus_encoder_);
+        opus_encoder_ = nullptr;
+    }
+    if (opus_decoder_ != nullptr) {
+        esp_opus_dec_close(opus_decoder_);
+        opus_decoder_ = nullptr;
+    }
+    if (output_resampler_ != nullptr) {
+        esp_ae_rate_cvt_close(output_resampler_);
+        output_resampler_ = nullptr;
+    }
+    encoder_sample_rate_ = encoder_duration_ms_ = encoder_frame_size_ = encoder_outbuf_size_ = 0;
+    decoder_sample_rate_ = decoder_duration_ms_ = decoder_frame_size_ = 0;
+}
 
+bool AudioService::ReleaseStoppedCodecs() {
+    std::lock_guard<std::mutex> lifecycle_lock(lifecycle_mutex_);
+    if (!service_stopped_.load() || !WaitStopped(0))
+        return false;
+    const bool had_codecs = opus_encoder_ != nullptr || opus_decoder_ != nullptr;
+    CloseCodecsLocked();
+    std::lock_guard<std::mutex> queue_lock(audio_queue_mutex_);
+    audio_send_queue_.clear();
+    if (had_codecs)
+        ESP_LOGI(TAG, "Stopped Opus codecs released");
+    return true;
+}
+
+bool AudioService::Start() {
+    std::lock_guard<std::mutex> lifecycle_lock(lifecycle_mutex_);
+    if (!service_stopped_.load())
+        return true;
+    if (tasks_started_ && !WaitStopped(0)) {
+        ESP_LOGE(TAG, "Cannot restart audio before its tasks stop");
+        return false;
+    }
+    // An in-flight task or sound request may have rearmed the timer after
+    // Stop first disarmed it. Reconcile it only after the old tasks joined.
+    esp_timer_stop(audio_power_timer_);
+    constexpr EventBits_t stopped = (1 << 5) | (1 << 6) | (1 << 7);
+    TaskHandle_t input = nullptr, output = nullptr, opus = nullptr;
+    const bool had_encoder = opus_encoder_ != nullptr;
+    const bool had_decoder = opus_decoder_ != nullptr;
+    auto failed = [&]() {
+        esp_timer_stop(audio_power_timer_);
+        // None of these tasks has passed its notification gate. These are
+        // this attempt's handles, never stale handles from self-deleted tasks.
+        if (input != nullptr)
+            vTaskDelete(input);
+        if (output != nullptr)
+            vTaskDelete(output);
+        if (opus != nullptr)
+            vTaskDelete(opus);
+        {
+            std::lock_guard<std::mutex> decoder_lock(decoder_mutex_);
+            if (!had_encoder && opus_encoder_ != nullptr) {
+                esp_opus_enc_close(opus_encoder_);
+                opus_encoder_ = nullptr;
+                encoder_sample_rate_ = encoder_duration_ms_ = encoder_frame_size_ =
+                    encoder_outbuf_size_ = 0;
+            }
+            if (!had_decoder && opus_decoder_ != nullptr) {
+                esp_opus_dec_close(opus_decoder_);
+                opus_decoder_ = nullptr;
+                decoder_sample_rate_ = decoder_duration_ms_ = decoder_frame_size_ = 0;
+            }
+        }
+        audio_input_task_handle_ = audio_output_task_handle_ = opus_codec_task_handle_ = nullptr;
+        service_stopped_.store(true);
+        xEventGroupSetBits(event_group_, stopped);
+        return false;
+    };
+    auto opus_entry = [](void* arg) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        auto* service = static_cast<AudioService*>(arg);
+        service->OpusCodecTask();
+        xEventGroupSetBits(service->event_group_, 1 << 7);
+        vTaskDelete(nullptr);
+    };
+    auto input_entry = [](void* arg) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        auto* service = static_cast<AudioService*>(arg);
+        service->AudioInputTask();
+        xEventGroupSetBits(service->event_group_, 1 << 5);
+        vTaskDelete(nullptr);
+    };
+    auto output_entry = [](void* arg) {
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        auto* service = static_cast<AudioService*>(arg);
+        service->AudioOutputTask();
+        xEventGroupSetBits(service->event_group_, 1 << 6);
+        vTaskDelete(nullptr);
+    };
 #if CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO
-    // The C3 has no PSRAM. Allocate its largest task stack before the smaller
-    // input/output stacks fragment the heap when returning from BLE and TLS.
-    opus_codec_task_handle_ = nullptr;
-    BaseType_t opus_created = xTaskCreate(
-        [](void* arg) {
-            AudioService* audio_service = (AudioService*)arg;
-            audio_service->OpusCodecTask();
-            xEventGroupSetBits(audio_service->event_group_, 1 << 7);
-            vTaskDelete(NULL);
-        },
-        "opus_codec", 2048 * 12, this, 2, &opus_codec_task_handle_);
-    if (opus_created != pdPASS) {
-        // No task exists to acknowledge Stop; do not strand local-app handoff.
-        xEventGroupSetBits(event_group_, 1 << 7);
+    // Reserve the largest contiguous stack before either codec workspace.
+    if (xTaskCreate(opus_entry, "opus_codec", 2048 * 12, this, 2, &opus) != pdPASS) {
         ESP_LOGE(TAG, "Cannot allocate Opus task stack");
-    } else
-        ESP_LOGI(TAG, "Opus task allocated before audio input/output");
+        return failed();
+    }
 #endif
-
+    if (!EnsureCodecsLocked())
+        return failed();
 #if CONFIG_USE_AUDIO_PROCESSOR
-    /* Start the audio input task */
-    xTaskCreatePinnedToCore(
-        [](void* arg) {
-            AudioService* audio_service = (AudioService*)arg;
-            audio_service->AudioInputTask();
-            xEventGroupSetBits(audio_service->event_group_, 1 << 5);
-            vTaskDelete(NULL);
-        },
-        "audio_input", 2048 * 3, this, 8, &audio_input_task_handle_, 0);
-
-    /* Start the audio output task */
-    xTaskCreate(
-        [](void* arg) {
-            AudioService* audio_service = (AudioService*)arg;
-            audio_service->AudioOutputTask();
-            xEventGroupSetBits(audio_service->event_group_, 1 << 6);
-            vTaskDelete(NULL);
-        },
-        "audio_output", 2048 * 2, this, 4, &audio_output_task_handle_);
+    if (xTaskCreatePinnedToCore(input_entry, "audio_input", 2048 * 3, this, 8, &input, 0) !=
+            pdPASS ||
+        xTaskCreate(output_entry, "audio_output", 2048 * 2, this, 4, &output) != pdPASS)
+        return failed();
 #else
-    /* Start the audio input task */
-    xTaskCreate(
-        [](void* arg) {
-            AudioService* audio_service = (AudioService*)arg;
-            audio_service->AudioInputTask();
-            xEventGroupSetBits(audio_service->event_group_, 1 << 5);
-            vTaskDelete(NULL);
-        },
-        "audio_input", 2048 * 2, this, 8, &audio_input_task_handle_);
-
-    /* Start the audio output task */
-    xTaskCreate(
-        [](void* arg) {
-            AudioService* audio_service = (AudioService*)arg;
-            audio_service->AudioOutputTask();
-            xEventGroupSetBits(audio_service->event_group_, 1 << 6);
-            vTaskDelete(NULL);
-        },
-        "audio_output", 2048, this, 4, &audio_output_task_handle_);
+    if (xTaskCreate(input_entry, "audio_input", 2048 * 2, this, 8, &input) != pdPASS ||
+        xTaskCreate(output_entry, "audio_output", 2048, this, 4, &output) != pdPASS)
+        return failed();
 #endif
-
 #if !CONFIG_BOARD_TYPE_FOLOTOY_AI_PASSPORT_NABO
-    /* Start the opus codec task */
-    xTaskCreate(
-        [](void* arg) {
-            AudioService* audio_service = (AudioService*)arg;
-            audio_service->OpusCodecTask();
-            xEventGroupSetBits(audio_service->event_group_, 1 << 7);
-            vTaskDelete(NULL);
-        },
-        "opus_codec", 2048 * 12, this, 2, &opus_codec_task_handle_);
+    if (xTaskCreate(opus_entry, "opus_codec", 2048 * 12, this, 2, &opus) != pdPASS)
+        return failed();
 #endif
+    auto timer_error = esp_timer_start_periodic(audio_power_timer_, 1000000);
+    if (timer_error != ESP_OK) {
+        ESP_LOGE(TAG, "Cannot start audio power timer, error code: %d", (int)timer_error);
+        return failed();
+    }
+    audio_input_task_handle_ = input;
+    audio_output_task_handle_ = output;
+    opus_codec_task_handle_ = opus;
+    xEventGroupClearBits(event_group_,
+                         stopped | AS_EVENT_AUDIO_TESTING_RUNNING | AS_EVENT_WAKE_WORD_RUNNING |
+                             AS_EVENT_AUDIO_PROCESSOR_RUNNING | AS_EVENT_AUDIO_INPUT_STOP_REQUEST);
+    service_stopped_.store(false);
+    tasks_started_ = true;
+    xTaskNotifyGive(opus);
+    xTaskNotifyGive(input);
+    xTaskNotifyGive(output);
+    return true;
 }
 
 bool AudioService::WaitStopped(int timeout_ms) {
@@ -219,6 +309,7 @@ void AudioService::LogMemoryStats() {
 }
 
 void AudioService::Stop() {
+    std::unique_lock<std::mutex> lifecycle_lock(lifecycle_mutex_);
     esp_timer_stop(audio_power_timer_);
     service_stopped_.store(true);
     xEventGroupSetBits(event_group_, AS_EVENT_AUDIO_TESTING_RUNNING | AS_EVENT_WAKE_WORD_RUNNING |
@@ -235,6 +326,7 @@ void AudioService::Stop() {
         notify_drained = MarkPlaybackDrainedLocked();
         audio_queue_cv_.notify_all();
     }
+    lifecycle_lock.unlock();
     if (notify_drained && callbacks_.on_playback_drained) {
         callbacks_.on_playback_drained();
     }
@@ -578,18 +670,23 @@ void AudioService::OpusCodecTask() {
 }
 
 void AudioService::SetDecodeSampleRate(int sample_rate, int frame_duration) {
-    if (decoder_sample_rate_ == sample_rate && decoder_duration_ms_ == frame_duration) {
+    std::unique_lock<std::mutex> decoder_lock(decoder_mutex_);
+    if (opus_decoder_ != nullptr && decoder_sample_rate_ == sample_rate &&
+        decoder_duration_ms_ == frame_duration) {
         return;
     }
-    std::unique_lock<std::mutex> decoder_lock(decoder_mutex_);
     if (opus_decoder_ != nullptr) {
         esp_opus_dec_close(opus_decoder_);
         opus_decoder_ = nullptr;
     }
-    decoder_lock.unlock();
+    decoder_sample_rate_ = decoder_duration_ms_ = decoder_frame_size_ = 0;
     esp_opus_dec_cfg_t opus_dec_cfg = OPUS_DEC_CFG(sample_rate, frame_duration);
     auto ret = esp_opus_dec_open(&opus_dec_cfg, sizeof(esp_opus_dec_cfg_t), &opus_decoder_);
-    if (opus_decoder_ == nullptr) {
+    if (ret != ESP_AUDIO_ERR_OK || opus_decoder_ == nullptr) {
+        if (opus_decoder_ != nullptr) {
+            esp_opus_dec_close(opus_decoder_);
+            opus_decoder_ = nullptr;
+        }
         ESP_LOGE(TAG, "Failed to create audio decoder, error code: %d", ret);
         return;
     }
@@ -623,6 +720,8 @@ void AudioService::PushTaskToEncodeQueue(AudioTaskType type, std::vector<int16_t
     {
         /* Push the task to the encode queue */
         std::unique_lock<std::mutex> lock(audio_queue_mutex_);
+        if (service_stopped_.load())
+            return;
 
         /* If the task is to send queue, we need to set the timestamp */
         if (type == kAudioTaskTypeEncodeToSendQueue && !timestamp_queue_.empty()) {
@@ -879,6 +978,8 @@ bool AudioService::MarkPlaybackDrainedLocked() {
 }
 
 void AudioService::CheckAndUpdateAudioPowerState() {
+    if (service_stopped_.load())
+        return;
     auto now = std::chrono::steady_clock::now();
     auto input_elapsed =
         std::chrono::duration_cast<std::chrono::milliseconds>(now - last_input_time_).count();

@@ -1,0 +1,81 @@
+{
+  "version": "1.0.1",
+  "purpose": "AI Passport community gallery",
+  "dimensions": [
+    900,
+    1200
+  ],
+  "format": "SVG source + PNG publication exports",
+  "files": [
+    "01-cover.svg",
+    "02-listen.svg",
+    "03-favorites.svg",
+    "04-clock.svg",
+    "05-start.svg"
+  ],
+  "source_images": {
+    "design/nabo-radio/art/design/S2_on_air_cutout.png": "c04b9b5084e8d4b1fa5a1ba1b6fa5d978f0e16566c8f14c40440d96758a0c6f8",
+    "docs/images/radio/playing.png": "f110eac25be7ce27ef4f4df64a749157afdc7c5343151aefddb2b4f7dca389ea",
+    "docs/images/radio/favorites-direct.png": "d346548b9cfe180c7a2b3fc638e3f76f31b9c5bf242236bae39b678706c3bec5",
+    "docs/images/radio/clock.png": "47f1e60969a4752705dc5388f89a8317eb20e68b15a6de2f1f1cfadcc0984d20"
+  },
+  "font_sources": {
+    "sans": "design\\nabo-radio\\fonts\\SourceHanSansSC-Normal.otf",
+    "title": "design\\nabo-radio\\fonts\\LXGWWenKai-Regular.ttf",
+    "bold": "design\\nabo-radio\\prototype\\fonts\\sans_bold.woff2"
+  },
+  "provenance": "Deterministic vector layout and outlined exact copy using existing NABO artwork and production-code host UI previews. No device photos; no invented UI; development/design assisted by AI.",
+  "firmware_change": false,
+  "publication_exports": {
+    "01-cover.png": {
+      "bytes": 470243,
+      "sha256": "3dea43db34a524c46942977cc0ff4aa606041c924e4dcdc2bc59f4e99bfa5df2",
+      "dimensions": [
+        900,
+        1200
+      ]
+    },
+    "02-listen.png": {
+      "bytes": 179742,
+      "sha256": "b728fb208beb21e0901e2bf248b7e1160184872fbbe7fd37aafbf52f69fc786a",
+      "dimensions": [
+        900,
+        1200
+      ]
+    },
+    "03-favorites.png": {
+      "bytes": 120214,
+      "sha256": "51014ba5be71d542cfd44a3b5f11f226725867e0b107d85a941444e8cbd50fe9",
+      "dimensions": [
+        900,
+        1200
+      ]
+    },
+    "04-clock.png": {
+      "bytes": 107926,
+      "sha256": "997bece0188cc6ab713cbe464e4ad3ed6d72e6692e468d9209162f92e4893ffb",
+      "dimensions": [
+        900,
+        1200
+      ]
+    },
+    "05-start.png": {
+      "bytes": 410960,
+      "sha256": "e6b210f6fde8400714bc53bda5876931360aa40c544c4235540f2f4ca81d16b8",
+      "dimensions": [
+        900,
+        1200
+      ]
+    }
+  },
+  "rendering": "Completed Chrome headless SVG rasterization at native 900x1200; exact upload PNG files visually inspected.",
+  "readme_preview": {
+    "file": "gallery-preview.png",
+    "dimensions": [
+      1250,
+      360
+    ],
+    "sha256": "669995333230e2d0c04a2b13269a04eb4eb5aacd4141ef1ad3287c1f61c79cc8",
+    "use": "README thumbnail contact sheet, not a community upload image"
+  }
+}
