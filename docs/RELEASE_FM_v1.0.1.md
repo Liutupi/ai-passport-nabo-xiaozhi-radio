@@ -1,6 +1,6 @@
 # NABO FM v1.0.1 · 体验更新
 
-**v1.0.1 为基于封存 06r5 的部分验收体验版。** 用户主动提前结束剩余验收；本版不宣称全部 QA 或长播通过。实际发布 / 审核状态以 GitHub Release 和社区页面为准。
+**v1.0.1 为基于封存 06r5 的部分验收体验版。** 用户主动提前结束剩余验收；本版不宣称全部 QA 或长播通过。**GitHub 体验版已发布；社区新版本已提交待审。** [v1.0.1 Release](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.1) 为预发布体验版。社区作品 1423 / nabo-fm 的 revision **4193** 已提交，状态为 **pending / 待审核**；社区当前公开版本仍为 revision 3241，不能将新版本称为已公开。[发布回执](../validation/radio-v1.0.1-publication-2026-10-31.json)。
 
 把 AI Passport 变成带 NABO DJ 动画的网络收音机：1,105 台内置目录、拼音首字母搜索、收藏与最近收听、定时关闭和北京时间待机小钟。
 
@@ -26,9 +26,9 @@
 
 v1.0.1 提供以下附件：
 
-- `ai-passport-nabo-xiaozhi-radio-v1.0.1-full.bin`：社区/网页完整安装镜像，从 `0x0` 写入。**会清空配网、激活和 NVS 设置，刷完需重新配网/激活。**
-- `ai-passport-nabo-xiaozhi-radio-v1.0.1.zip`：分区镜像、manifest、校验和、受保护的分区刷写工具、使用文档和第三方许可。
-- `manifest.json`、`SHA256SUMS.txt`：最终源码提交、镜像身份和实际发布附件的校验值。ZIP 不能直接作为完整 BIN 写入。
+- [ai-passport-nabo-xiaozhi-radio-v1.0.1-full.bin](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/download/v1.0.1/ai-passport-nabo-xiaozhi-radio-v1.0.1-full.bin)：社区/网页完整安装镜像，从 `0x0` 写入。**会清空配网、激活和 NVS 设置，刷完需重新配网/激活。**
+- [ai-passport-nabo-xiaozhi-radio-v1.0.1.zip](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/download/v1.0.1/ai-passport-nabo-xiaozhi-radio-v1.0.1.zip)：分区镜像、manifest、校验和、受保护的分区刷写工具、使用文档和第三方许可。
+- [manifest.json](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/download/v1.0.1/manifest.json)、[SHA256SUMS.txt](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/download/v1.0.1/SHA256SUMS.txt)：最终源码提交、镜像身份和实际发布附件的校验值。ZIP 不能直接作为完整 BIN 写入。
 
 已有设备希望保留数据，先读 [刷写说明](FLASHING.md)。只有 bootloader、分区和资源均确认匹配时，才具备专门校验的仅应用更新前提；历史 v1.0.0 设备不能据版本号直接推定匹配。普通包内 upgrade 工具写应用和资源，并核对 bootloader / 分区；不匹配时停止核对，不绕过检查。
 
@@ -49,7 +49,7 @@ v1.0.1 提供以下附件：
 | 完整镜像 | 7,213,881 | `14655b7580cd43d5e6735d65fd34ef5c3943a8ebf06fdd271cac617f1d8f51dd` |
 | 资源 | 3,019,577 | `0de5c9d3b8f824730b169549463b06d00bbce27814daf1d633ac3b6a068dbb3f` |
 
-发行号为 v1.0.1；应用仍保留上游内部版本字符串 2.5.0，以 SHA256 和发行 manifest 识别精确镜像。源码提交由最终随包 manifest 记录，并与封存生产源码核对；构建前的 `f66616a` 基线不是本轮修复的完整源码身份。
+发行号为 v1.0.1；应用仍保留上游内部版本字符串 2.5.0，以 SHA256 和发行 manifest 识别精确镜像。发行源码与 tag `v1.0.1` 绑定提交 [8e38c85fce253d46037405c190f2f931bf149100](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/tree/8e38c85fce253d46037405c190f2f931bf149100)，与封存生产源码核对并由随包 manifest 记录；构建前的 `f66616a` 基线不是本轮修复的完整源码身份。
 
 源码：https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio
 

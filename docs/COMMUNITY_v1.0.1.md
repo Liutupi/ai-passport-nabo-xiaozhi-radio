@@ -1,6 +1,6 @@
 # NABO FM v1.0.1 社区更新资料
 
-本资料对应原作品 **1423 / nabo-fm** 的 v1.0.1 体验更新，使用封存 06r5 精确镜像，沿用既有标题与介绍主线。文案审阅基线为原公开 revision 3241；实际发布 / 审核状态以官方回执和社区页面为准。
+本资料对应原作品 **1423 / nabo-fm** 的 v1.0.1 体验更新，使用封存 06r5 精确镜像，沿用既有标题与介绍主线。文案审阅基线为原公开 revision 3241；**GitHub 体验版已发布；社区新版本已提交待审。** [v1.0.1 Release](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.1) 为预发布体验版。社区作品 1423 / nabo-fm 的 revision **4193** 已提交，状态为 **pending / 待审核**；社区当前公开版本仍为 revision 3241，不能将新版本称为已公开。[发布回执](../validation/radio-v1.0.1-publication-2026-10-31.json)。
 
 Build / Host 通过；台 26 约 3 分钟短测及 2 轮主页往返通过，用户确认当前声音连续清楚。剩余完整验收由用户主动提前结束，三台各 600 秒和 20 次切台未完成；本页不宣称全部 QA 或长播通过。详见 [发行说明](RELEASE_FM_v1.0.1.md)。
 

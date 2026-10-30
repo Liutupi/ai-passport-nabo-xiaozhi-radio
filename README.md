@@ -6,7 +6,9 @@
 
 适用 ESP32-C3 / 8 MB FoloToy AI Passport；午夜琥珀界面、文楷台名与 13 个 NABO DJ 动作。展示图由现有原画与生产代码宿主界面预览组成，非实机照片。[社区介绍](docs/COMMUNITY_v1.0.1.md)。
 
-**v1.0.1 · 部分验收体验更新（2026-10-31）。** 使用已刷入的封存 06r5 精确镜像，调整解码内存布局、语音与电台资源交接、断粮恢复及网络等待。实际发布 / 审核状态以 [GitHub Releases](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases) 和社区页面为准。[本次说明](docs/RELEASE_FM_v1.0.1.md) · [安装与升级](docs/FLASHING.md) · [历史 v1.0.0](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.0)。
+**v1.0.1 · 部分验收体验更新（2026-10-31）。** 使用已刷入的封存 06r5 精确镜像，调整解码内存布局、语音与电台资源交接、断粮恢复及网络等待。[下载 v1.0.1 体验版](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.1)。[本次说明](docs/RELEASE_FM_v1.0.1.md) · [安装与升级](docs/FLASHING.md) · [历史 v1.0.0](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.0)。
+
+**GitHub 体验版已发布；社区新版本已提交待审。** [v1.0.1 Release](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.1) 为预发布体验版。社区作品 1423 / nabo-fm 的 revision **4193** 已提交，状态为 **pending / 待审核**；社区当前公开版本仍为 revision 3241，不能将新版本称为已公开。[发布回执](validation/radio-v1.0.1-publication-2026-10-31.json)。
 
 **这是部分验收的体验版。** Build 与 16 脚本 Host 套件通过；台 26 约 3 分钟短测、2 轮主页往返通过，用户确认当前声音“连续、清楚”。剩余完整验收由用户主动提前结束，三台各 600 秒和 20 次受控切台尚未完成；不代表全部 QA 或长播无卡顿。AAC/HE-AAC、部分失效台源及空白设备完整首装仍未验收，1,105 是目录数量，不保证全部台可播。详见 [设备记录](validation/radio-candidate06r5-device-2026-10-31.json)。
 
@@ -32,7 +34,7 @@ python tools/build.py
 python tools/run_tests.py
 ```
 
-发布包沿用封存 06r5 镜像，不为改版本号重新编译。应用 SHA256 为 `282cf47d20af170dccbcaf0e6b06c84cbf73cea8e8752744f9a0f0463d90f836`；最终源码提交、镜像与校验值由随包 manifest 绑定。内部上游版本字符串不作为发行身份。
+发布包沿用封存 06r5 镜像，不为改版本号重新编译。应用 SHA256 为 `282cf47d20af170dccbcaf0e6b06c84cbf73cea8e8752744f9a0f0463d90f836`；发行源码 / tag 绑定提交 [8e38c85](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/tree/8e38c85fce253d46037405c190f2f931bf149100)，镜像与校验值由随包 manifest 记录。内部上游版本字符串不作为发行身份。
 
 动画、子集字体和台表在板型的 `radio_assets/`；原设计、美术和源字体在 `design/nabo-radio/`。克隆后执行 `python tools/verify_handoff.py` 核对资源，正常编译不依赖原电脑素材目录。NABO 形象与美术不随源码 MIT 许可授权。
 

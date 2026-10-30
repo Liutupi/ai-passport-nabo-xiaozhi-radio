@@ -1,0 +1,83 @@
+{
+  "schema": "nabo-fm-publication-receipt-v1",
+  "date": "2026-10-31",
+  "recorded_utc": "2026-10-30T17:14:10.337923+00:00",
+  "version": "1.0.1",
+  "candidate": "06r5",
+  "source_commit": "8e38c85fce253d46037405c190f2f931bf149100",
+  "application_sha256": "282cf47d20af170dccbcaf0e6b06c84cbf73cea8e8752744f9a0f0463d90f836",
+  "full_image_sha256": "14655b7580cd43d5e6735d65fd34ef5c3943a8ebf06fdd271cac617f1d8f51dd",
+  "github": {
+    "status": "PUBLISHED_PRERELEASE",
+    "release_id": 429293853,
+    "tag": "v1.0.1",
+    "url": "https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.1",
+    "published_at": "2026-10-30T17:12:18Z",
+    "assets": [
+      {
+        "name": "ai-passport-nabo-xiaozhi-radio-v1.0.1-full.bin",
+        "bytes": 7213881,
+        "sha256": "14655b7580cd43d5e6735d65fd34ef5c3943a8ebf06fdd271cac617f1d8f51dd",
+        "url": "https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/download/v1.0.1/ai-passport-nabo-xiaozhi-radio-v1.0.1-full.bin",
+        "remote_digest_matches_local": true
+      },
+      {
+        "name": "ai-passport-nabo-xiaozhi-radio-v1.0.1.zip",
+        "bytes": 13197292,
+        "sha256": "ac33bf7c42a830d63a8e898865cb1129b67952be5e8673269e0b2b275606f7a1",
+        "url": "https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/download/v1.0.1/ai-passport-nabo-xiaozhi-radio-v1.0.1.zip",
+        "remote_digest_matches_local": true
+      },
+      {
+        "name": "manifest.json",
+        "bytes": 2980,
+        "sha256": "386478e958a4e69bf88adfcdcf79a02071335a609fc5330f6b732494e3f6a75d",
+        "url": "https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/download/v1.0.1/manifest.json",
+        "remote_digest_matches_local": true
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 304,
+        "sha256": "5f115efb30e619f9c01a1ba476ebd286eac2f47feb03cf19a09a986271e0ad63",
+        "url": "https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/download/v1.0.1/SHA256SUMS.txt",
+        "remote_digest_matches_local": true
+      }
+    ]
+  },
+  "community": {
+    "project_id": 1423,
+    "slug": "nabo-fm",
+    "revision_id": 4193,
+    "status_at_verification": "pending",
+    "previous_public_revision_id": 3241,
+    "submission_result_reconciled_with_projects": true,
+    "uploaded_firmware_sha256_matches_release": true,
+    "original_filename": "ai-passport-nabo-xiaozhi-radio-v1.0.1-full.bin",
+    "is_new_revision_public": false,
+    "source_url": "https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio",
+    "allow_remix_derived_from_public_source": true,
+    "separate_bilingual_description_instructions_changelog": true,
+    "inspected_portrait_images": 5
+  },
+  "device_validation": {
+    "status": "PARTIAL_USER_ENDED_TEST",
+    "full_qa_pass": false,
+    "user_requested_current_preview_publication": true,
+    "report": "validation/radio-candidate06r5-device-2026-10-31.json",
+    "preflight_station26_window_ms": 180422,
+    "complete_home_radio_cycles": 2,
+    "three_600_second_station_runs": "NOT_RUN",
+    "twenty_switches": "NOT_RUN",
+    "serial_closed": true
+  },
+  "github_ci": {
+    "initial_runs": [
+      41096618004,
+      41096765028
+    ],
+    "initial_failure": "Default shallow checkout omitted the fixed historical recovery comparison baseline f66616a.",
+    "workflow_correction": "actions/checkout fetch-depth: 0; firmware, tag and release assets unchanged.",
+    "current_status_url": "https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/actions/workflows/host-tests.yml"
+  },
+  "private_device_data_or_credentials_included": false
+}
