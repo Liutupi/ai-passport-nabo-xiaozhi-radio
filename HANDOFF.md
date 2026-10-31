@@ -2,7 +2,11 @@
 
 本轮优化入口：[2026-10-30 优化交接](handoff/OPTIMIZATION_2026-10-30.md)；当前候选与设备边界见最新节，候选 06 失败及此前构建记录保留为历史。
 
-## 2026-10-31 已刷入、未发布：播放页长按上下键调音量
+## 2026-10-31 发布回执：播放页音量调节 v1.0.2
+
+GitHub [v1.0.2 体验版](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.2) 已公开，四个附件匿名下载哈希核对通过，发行固件绑定源码提交 `56f6901d9a1a3a058401f572fcc3d5ac47bad8da`。社区作品 1423 新 revision **4259 / pending**，旧版 4193 仍为公开版本。详见 [发布回执](validation/radio-v1.0.2-publication-2026-10-31.json)。
+
+### 下列为提交审核前的实机记录
 
 用户明确“刷吧”后，已写入精确 `player-volume-20261031-01` 的应用与资源。新备份、写后完整 8 MiB 读回通过；应用、资源与封存一致，bootloader / 分区 / NVS / PHY / files 及全部未写字节保持。启动 ELF 前缀匹配，Wi-Fi 自动恢复，用户确认“音量和声音都正常变化，没有误切台”；日志记录双向 5% 步进。见 [实机记录](validation/radio-volume-controls-device-2026-10-31.json)。
 

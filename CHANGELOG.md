@@ -4,7 +4,7 @@
 
 - 播放页长按 ▲ / ▼ 增减音量，每档 5%，显示当前百分比；松手不切台，短按仍切台。
 - 回小智改为先长按 OK 打开菜单，再长按 ▲；列表内长按 ▼ 仍快速浏览。
-- 补齐“量”字。Build / 16 脚本 Host PASS；应用与资源受保护升级及启动通过，用户确认长按音量与声音正常变化、没有误切台。GitHub 体验版已发布，社区更新尚待新授权；新音量重启保存及完整长测未复验。[构建记录](validation/radio-volume-controls-2026-10-31.json) · [实机记录](validation/radio-volume-controls-device-2026-10-31.json)。
+- 补齐“量”字。Build / 16 脚本 Host PASS；应用与资源受保护升级及启动通过，用户确认长按音量与声音正常变化、没有误切台。GitHub 体验版已发布，社区更新 revision 4259 已提交、待审核；新音量重启保存及完整长测未复验。[构建记录](validation/radio-volume-controls-2026-10-31.json) · [实机记录](validation/radio-volume-controls-device-2026-10-31.json)。
 
 ## NABO FM v1.0.1 · 部分验收体验更新 — 2026-10-31
 

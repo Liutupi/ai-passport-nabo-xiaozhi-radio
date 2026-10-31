@@ -1,0 +1,16 @@
+{
+  "release": "v1.0.2",
+  "channel": "preview",
+  "github_release": "https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.2",
+  "source_commit": "56f6901d9a1a3a058401f572fcc3d5ac47bad8da",
+  "firmware_sha256": "0283319ce800d2d7e0976be0558f7d08069fa6bb7d2355ea048f910d416aac20",
+  "github_assets_anonymously_downloaded_and_hash_verified": true,
+  "community": {
+    "project_id": 1423,
+    "slug": "nabo-fm",
+    "revision_id": 4259,
+    "status": "pending",
+    "published_revision_id": 4193
+  },
+  "device_acceptance": "volume adjustment confirmed; long-play and volume persistence unverified"
+}
