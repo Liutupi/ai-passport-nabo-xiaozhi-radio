@@ -8,13 +8,15 @@
 
 **v1.0.1 · 部分验收体验更新（2026-10-31）。** 使用已刷入的封存 06r5 精确镜像，调整解码内存布局、语音与电台资源交接、断粮恢复及网络等待。[下载 v1.0.1 体验版](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.1)。[本次说明](docs/RELEASE_FM_v1.0.1.md) · [安装与升级](docs/FLASHING.md) · [历史 v1.0.0](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.0)。
 
-**GitHub 体验版已发布；社区新版本已提交待审。** [v1.0.1 Release](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.1) 为预发布体验版。社区作品 1423 / nabo-fm 的 revision **4193** 已提交，状态为 **pending / 待审核**；社区当前公开版本仍为 revision 3241，不能将新版本称为已公开。[发布回执](validation/radio-v1.0.1-publication-2026-10-31.json)。
+**GitHub v1.0.1 体验版已发布；社区 v1.0.1 已审核通过。** [v1.0.1 Release](https://github.com/Liutupi/ai-passport-nabo-xiaozhi-radio/releases/tag/v1.0.1) 为预发布体验版。社区作品 1423 / nabo-fm 的 revision **4193** 已审核通过并成为公开版本。[发布回执](validation/radio-v1.0.1-publication-2026-10-31.json)。
 
 **这是部分验收的体验版。** Build 与 16 脚本 Host 套件通过；台 26 约 3 分钟短测、2 轮主页往返通过，用户确认当前声音“连续、清楚”。剩余完整验收由用户主动提前结束，三台各 600 秒和 20 次受控切台尚未完成；不代表全部 QA 或长播无卡顿。AAC/HE-AAC、部分失效台源及空白设备完整首装仍未验收，1,105 是目录数量，不保证全部台可播。详见 [设备记录](validation/radio-candidate06r5-device-2026-10-31.json)。
 
 ![NABO FM 生产代码画面预览](docs/images/radio/contact-sheet.png)
 
 已接入：
+
+> 当前工作区另有未发布改动：播放页长按 ▲ / ▼ 改为增减音量（每档 5%，屏幕显示百分比），短按仍换台；先长按 OK 打开菜单，再长按 ▲ 回小智。列表内长按 ▼ 仍可快速浏览。已发布 v1.0.1 仍使用下方旧操作；开发版已受保护地刷入工牌，用户确认音量显示和声音正常变化、没有误切台。完整长测及新音量重启保存未复验。[本次实机记录](validation/radio-volume-controls-device-2026-10-31.json)。
 
 - 1,105 台内置目录；全国、收藏、最近、类型和地区波段；拼音首字母搜索，手动本地地区。
 - 上下换台，停手 500 ms 后连接；按住下键加速扫台。OK 单击播放/暂停、双击收藏、长按菜单。

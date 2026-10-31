@@ -26,7 +26,7 @@
     ".js": 1,
     ".gif": 1
   },
-  "total_bytes": 160260981,
+  "total_bytes": 160261338,
   "files": [
     {
       "path": "checkpoints/radio-dev-0.2.6/README.md",
@@ -1225,8 +1225,8 @@
     },
     {
       "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_name.bin",
-      "bytes": 192093,
-      "sha256": "6dbcdf18f5502d4891ddf9b281acab3ee65db7f8c809817bd76e473fe7b43ede"
+      "bytes": 192362,
+      "sha256": "acb262ed395c5c6a9911a1c024962eccb68191a21db6ed9850b17fd5116c5330"
     },
     {
       "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_sprites.bin",
@@ -1235,8 +1235,8 @@
     },
     {
       "path": "xiaozhi-esp32/main/boards/folotoy/ai-passport-nabo/radio_assets/radio_ui.bin",
-      "bytes": 67673,
-      "sha256": "7833387413fa9bc350e9082f1ac0f436e9d2f43ca32d314978c961a18df16968"
+      "bytes": 67761,
+      "sha256": "0345f2fa0efe3c466381ae51660d075565fc88e7bc591a281ceaea15f8673387"
     }
   ],
   "radio_preview_update": "v1.0.0 candidate 03 production host renderer; original design and firmware checkpoint bytes unchanged"

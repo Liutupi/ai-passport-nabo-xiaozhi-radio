@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -20,6 +21,8 @@ extern int64_t host_us;
 extern std::string host_assets;
 extern uint16_t host_lcd[240 * 320];
 extern int host_opened;
+extern std::atomic<int> volume, setting_command;
+int nabo_apps_adjust_volume(int direction);
 constexpr int MALLOC_CAP_INTERNAL = 1, MALLOC_CAP_DMA = 2;
 enum { NABO_HOME, NABO_TOOLS, NABO_SETTINGS };
 inline int64_t esp_timer_get_time() { return host_us; }

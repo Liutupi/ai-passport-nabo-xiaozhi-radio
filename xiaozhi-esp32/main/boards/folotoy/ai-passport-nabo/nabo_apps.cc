@@ -142,6 +142,19 @@ bool nabo_apps_active() { return wanted.load() != NABO_HOME || ready.load(); }
 bool nabo_apps_is_jump() { return false; }
 bool nabo_apps_is_fast() { return false; }
 
+int nabo_apps_adjust_volume(int direction) {
+    int previous = volume.load();
+    for (;;) {
+        int next = std::clamp(previous + (direction > 0 ? 5 : -5), 0, 100);
+        if (next == previous)
+            return previous;
+        if (volume.compare_exchange_weak(previous, next)) {
+            setting_command = ST_VOLUME;
+            return next;
+        }
+    }
+}
+
 static void save_settings() {
     nvs_handle_t h;
     esp_err_t err = nvs_open("nabo_ui", NVS_READWRITE, &h);
@@ -896,7 +909,8 @@ void nabo_apps_register_tools() {
     server.AddTool(
         "self.apps.open",
         "打开工牌内置程序。app 可用：网络电台(radio)、设置(settings)、工具(tools)。"
-        "进入程序会暂停语音对话；双击上键返回上一级，长按上键回到 NABO 恢复小智。",
+        "进入程序会暂停语音对话；双击上键返回上一级。在电台播放页先长按 OK 打开菜单，"
+        "再长按上键回到 NABO 恢复小智；播放页长按上下键调音量。",
         PropertyList({Property("app", kPropertyTypeString).SetMaxLength(40)}),
         [](const PropertyList& properties) -> ToolResult {
             const auto& name = properties["app"].value<std::string>();
@@ -910,7 +924,9 @@ void nabo_apps_register_tools() {
             else
                 return std::unexpected("Unknown app. Use radio, settings or tools.");
             nabo_apps_open(app, 900);
-            return std::string("已安排打开 ") + name + "。程序中使用实体按键；长按上键返回小智。";
+            return std::string("已安排打开 ") + name +
+                   "。程序中使用实体按键；电台播放页长按上下键调音量，先长按 OK 打开菜单，"
+                   "再长按上键返回小智。";
         });
     server.AddTool(
         "self.radio.search",
@@ -935,7 +951,8 @@ void nabo_apps_register_tools() {
             return result;
         });
     server.AddTool("self.radio.play",
-                   "播放 search 返回的 station 编号并打开电台。长按上键返回小智。",
+                   "播放 search 返回的 station 编号并打开电台。播放页长按上下键调音量；"
+                   "先长按 OK 打开菜单，再长按上键返回小智。",
                    PropertyList({Property("station", kPropertyTypeInteger, 0, 4095)}),
                    [](const PropertyList& p) -> ToolResult {
                        ensure_radio_catalog();

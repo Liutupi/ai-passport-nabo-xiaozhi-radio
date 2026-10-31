@@ -83,6 +83,9 @@ with tempfile.TemporaryDirectory() as temp:
     for n in [0,3,11,len(cat_blob)-1]:
         truncated=Catalog();assert not lib.nrf_catalog_init(C.byref(truncated),cb,n)
     CALLBACK=C.CFUNCTYPE(None,C.c_void_p,C.c_int,C.c_int)
+    ui=(BOARD/'radio_assets/radio_ui.bin').read_bytes()
+    glyphs={struct.unpack_from('<I',ui,8+16*i)[0] for i in range(struct.unpack_from('<H',ui,4)[0])}
+    assert all(ord(c) in glyphs for c in '音量 100%▲▼ 换台 长按OK播放/暂停 双击收藏返回 回小智')
     events=[]
     @CALLBACK
     def emit(ctx,key,event):events.append((key,event))
@@ -95,7 +98,11 @@ with tempfile.TemporaryDirectory() as temp:
     events.clear();edge(1,True,1200);tick(1850);edge(1,False,1900);tick(2200);assert events==[(1,2)]
     events.clear();edge(0,True,2300);edge(0,False,2340);edge(0,True,2400);edge(0,False,2440);tick(2800);assert events==[(0,0),(0,1)]
     events.clear();edge(2,True,3000);tick(3650);tick(3870);tick(4100);edge(2,False,4200);tick(4500);assert events==[(2,2),(2,3),(2,3)]
+    events.clear();edge(0,True,5000);tick(5649);assert events==[];tick(5650);tick(5870);tick(6090);edge(0,False,6100);tick(6500);assert events==[(0,2),(0,3),(0,3)]
+    # Long release is recognized even without an intervening display tick.
+    events.clear();edge(0,True,7000);edge(0,False,7650);tick(8000);assert events==[(0,2)]
     # Debounce duplicates and uint32 millisecond wrap preserve the same gestures.
     events.clear();edge(1,True,0xfffffff0);edge(1,True,0xfffffff1);edge(1,False,20);tick(271);assert events==[(1,0)]
+    events.clear();edge(0,True,0xffffff00);tick(394);tick(614);edge(0,False,615);tick(1000);assert events==[(0,2),(0,3)]
     unload_library(lib._handle)
-    print(f'PASS: {checks} production sprite actions, {frames} frames, delta seeks/loops, corrupt-input checks; {cat.count} catalog records, stable IDs and GZJT search; 6 key-timing scenarios')
+    print(f'PASS: {checks} production sprite actions, {frames} frames, delta seeks/loops, corrupt-input checks; {cat.count} catalog records, stable IDs and GZJT search; 9 key-timing scenarios')

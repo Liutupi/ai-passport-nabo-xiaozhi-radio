@@ -16,17 +16,19 @@ void nrf_keys_tick(nrf_keys_t* k, uint32_t now) {
             k->held[i] = true;
             k->pending[i] = 0;
             k->emit(k->ctx, i, NRF_LONG);
-            if (i == NRF_DOWN) {
-                k->repeat_at = now + 220;
-                k->repeats = 0;
+            if (i != NRF_OK) {
+                k->repeat_at[i] = now + 220;
+                k->repeats[i] = 0;
             }
         }
-    }
-    if (k->down[NRF_DOWN] && k->held[NRF_DOWN] && (int32_t)(now - k->repeat_at) >= 0) {
-        k->emit(k->ctx, NRF_DOWN, NRF_REPEAT);
-        if (k->repeats < 12)
-            ++k->repeats;
-        k->repeat_at = now + 220 - k->repeats * 13;
+        if (i != NRF_OK && k->down[i] && k->held[i] && (int32_t)(now - k->repeat_at[i]) >= 0) {
+            k->emit(k->ctx, i, NRF_REPEAT);
+            // DOWN retains accelerated list scrolling. UP repeats at a steady
+            // rate; the scene limits both volume directions to the same pace.
+            if (i == NRF_DOWN && k->repeats[i] < 12)
+                ++k->repeats[i];
+            k->repeat_at[i] = now + 220 - k->repeats[i] * 13;
+        }
     }
 }
 void nrf_keys_edge(nrf_keys_t* k, int i, bool down, uint32_t now) {

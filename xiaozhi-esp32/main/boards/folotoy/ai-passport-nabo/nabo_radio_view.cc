@@ -68,6 +68,7 @@ struct View {
     int count[80], start[80], bands, total, band = 0, position = 0, current = 0, selection = 0,
                                             top = 0;
     Page page = PLAYER;
+    Page press_page[3] = {};
     int undo_band = 0, undo_position = 0, undo_selection = 0, undo_current = 0;
     int player_band = 0, player_position = 0;
     Page undo_page = PLAYER;
@@ -76,6 +77,7 @@ struct View {
     int brightness = 80;
     int action = -1, last_state = -1, level = 0;
     uint32_t action_at = 0, last_key = 0, connect_at = 0, sip_at = 0, dial_at = 0, toast_until = 0;
+    uint32_t volume_at = 0;
     int dial_from = 0, dial_to = 0;
     char query[7] = {}, message[96] = {};
     int hits[12], hit_count = 0;
@@ -93,7 +95,7 @@ int band_station(int b, int pos) {
         nrf_station_t s;
         nabo_radio_station_info(i, &s);
         bool match = b == 0   ? (nabo_radio_local() < 0 ||
-                                 s.region_id == static_cast<unsigned>(nabo_radio_local()))
+                               s.region_id == static_cast<unsigned>(nabo_radio_local()))
                      : b == 1 ? nabo_radio_favorite(i)
                      : b < 14 ? (s.types & (1u << (b - 3))) != 0
                               : s.region_id == static_cast<unsigned>(b - 14);
@@ -345,6 +347,25 @@ void choose() {
     }
 }
 void key_event(void*, int key, int event) {
+    v->last_key = now_ms();
+    if ((key == NRF_UP || key == NRF_DOWN) && (event == NRF_LONG || event == NRF_REPEAT)) {
+        // A key held across a page change must not acquire that page's action.
+        if (v->press_page[key] != v->page)
+            return;
+        if (v->page == PLAYER) {
+            uint32_t now = now_ms();
+            if (event == NRF_LONG || static_cast<int32_t>(now - v->volume_at) >= 0) {
+                v->volume_at = now + 220;
+                int volume = nabo_apps_adjust_volume(key == NRF_UP ? 1 : -1);
+                char message[32];
+                snprintf(message, sizeof(message), "音量 %d%%", volume);
+                toast(message);
+            }
+            return;
+        }
+        if (key == NRF_UP && event == NRF_REPEAT)
+            return;
+    }
     if (key == NRF_UP && event == NRF_LONG) {
         nabo_apps_open(NABO_HOME);
         return;
@@ -499,13 +520,14 @@ void hints(uint32_t now) {
         text(v->message, 120, 305, 196, 0);
         return;
     }
-    text(v->page == PLAYER   ? "▲▼ 换台   OK 播放/暂停"
+    text(v->page == PLAYER   ? "▲▼ 换台   长按▲▼ 音量"
          : v->page == SEARCH ? "▲▼ 选字母   OK 输入"
                              : "▲▼ 选择   OK 确定",
          120, 298, 228, 0, MUTED);
-    text(v->page == PLAYER ? "双击OK 收藏   长按OK 菜单"
+    text(v->page == PLAYER
+             ? ((now / 4000) % 2 ? "双击OK 收藏   长按OK 菜单" : "OK 播放/暂停   双击▲ 返回")
          : v->page == LIST ? "双击OK 收藏   长按OK 换波段"
-                           : "双击▲ 返回",
+                           : "双击▲ 返回   长按▲ 回小智",
          120, 313, 228, 0, DIM);
 }
 void overlay() {
@@ -738,6 +760,8 @@ void nabo_radio_view_edge(int key, bool pressed, uint32_t when) {
             v->swallow[key] = false;
         return;
     }
+    if (pressed)
+        v->press_page[key] = v->page;
     nrf_keys_edge(&v->keys, key, pressed, when);
 }
 bool nabo_radio_view_back() {

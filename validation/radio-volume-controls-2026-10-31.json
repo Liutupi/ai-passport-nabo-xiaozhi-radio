@@ -1,0 +1,105 @@
+{
+  "candidate": "player-volume-20261031-01",
+  "date": "2026-10-31",
+  "source_base_commit": "ede705fdc15280a75e224d5730a26caec830a852",
+  "source_working_tree_dirty": true,
+  "published": false,
+  "build": {
+    "status": "PASS",
+    "idf": "6.0.2",
+    "target": "esp32c3",
+    "board": "ai-passport-nabo",
+    "app_partition_bytes": 4128768,
+    "assets_partition_bytes": 3145728
+  },
+  "host_tests": {
+    "status": "PASS",
+    "scripts": 16,
+    "windows_skips": 1,
+    "skip_reason": "file symlink permission in release package test",
+    "key_timing_scenarios": 9,
+    "controls": [
+      "long up/down adjusts existing volume in five-point steps",
+      "hold threshold and repeated steps",
+      "0/100 clamp with no redundant setting command",
+      "release does not tune",
+      "paused playback stays paused",
+      "short station changes and OK gestures retained",
+      "clock wake consumes first key",
+      "menu long UP exits",
+      "list/menu DOWN repeats retained",
+      "hold across page change does not gain player action"
+    ]
+  },
+  "ui": {
+    "status": "PASS_HOST_RENDER",
+    "volume_toast": "80%",
+    "new_font_glyph": "U+91CF",
+    "existing_glyphs_byte_identical": true
+  },
+  "artifacts": {
+    "xiaozhi.bin": {
+      "bytes": 3488912,
+      "sha256": "d74c508137e5529c5067a16bdbe64fb4ad1b6bd0fda7ee12cefb77e3d9e7a64f"
+    },
+    "xiaozhi.elf": {
+      "bytes": 35461664,
+      "sha256": "1ed5777495f3ee5867b6bba30283293191aee54c3df3e7f4b977bcca5f5fe228"
+    },
+    "xiaozhi.map": {
+      "bytes": 17480534,
+      "sha256": "b10b289ef7082aab529296cae247b0e44ca8216713c19780882e58ccb832658a"
+    },
+    "generated_assets.bin": {
+      "bytes": 3019934,
+      "sha256": "6fd0323a67f0b48897cc96ebf7ea232fada50145ffafc586c3482655f7521057"
+    },
+    "bootloader/bootloader.bin": {
+      "bytes": 14976,
+      "sha256": "886f5ef7541c3e6c93914cf932f211b34f1693a793952bf0b46a392b99cecf0a"
+    },
+    "partition_table/partition-table.bin": {
+      "bytes": 3072,
+      "sha256": "feb7ea496adb63179bf197f87431e6c8ddade47ce0228c1e671ef01421effc0c"
+    },
+    "full-build.bin": {
+      "bytes": 7214238,
+      "sha256": "0283319ce800d2d7e0976be0558f7d08069fa6bb7d2355ea048f910d416aac20"
+    },
+    "sdkconfig": {
+      "bytes": 120305,
+      "sha256": "707dfbd58c2790d04b602022b69751f2e089e918c9fded85492c0ac9fc5e1b21"
+    },
+    "flasher_args.json": {
+      "bytes": 1074,
+      "sha256": "2fbb5bf5a2f0269f9649f02e47079d8b3ccc0186d7460b1d97e3c83799e842c2"
+    }
+  },
+  "offline_verification": {
+    "status": "PASS",
+    "app_elf_match": true,
+    "merged_images_match": true,
+    "merged_gaps_and_nvs_phy_blank_ff": true,
+    "bootloader_partitions_sdkconfig_equal_06r5": true
+  },
+  "device_tests": {
+    "status": "NOT_RUN",
+    "serial_opened": false,
+    "flashed": false,
+    "previous_tests_remain_stopped": true,
+    "device_unchanged": "06r5"
+  },
+  "future_upgrade": {
+    "requires_confirmation": true,
+    "changed_images": {
+      "app": "0x10000",
+      "assets": "0x400000"
+    },
+    "reason": "Volume label adds one glyph to the existing radio fonts"
+  },
+  "unverified": [
+    "Physical button timing/feel",
+    "Audible volume steps and continuity during adjustment",
+    "Volume persistence after restart"
+  ]
+}

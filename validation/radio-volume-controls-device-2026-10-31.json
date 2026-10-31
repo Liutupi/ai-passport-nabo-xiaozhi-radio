@@ -1,0 +1,80 @@
+{
+  "candidate": "player-volume-20261031-01",
+  "date": "2026-10-31",
+  "status": "PASS_FLASH_BOOT_AND_USER_VOLUME_SMOKE",
+  "published": false,
+  "firmware": {
+    "application_sha256": "d74c508137e5529c5067a16bdbe64fb4ad1b6bd0fda7ee12cefb77e3d9e7a64f",
+    "elf_sha256": "1ed5777495f3ee5867b6bba30283293191aee54c3df3e7f4b977bcca5f5fe228",
+    "assets_sha256": "6fd0323a67f0b48897cc96ebf7ea232fada50145ffafc586c3482655f7521057",
+    "manifest_sha256": "9db056fbe30cdb0ca5caf141345eb8bb0a1ab18110ec33e9661f01a44248ee11"
+  },
+  "flash": {
+    "status": "PASS",
+    "written_offsets": [
+      "0x10000",
+      "0x400000"
+    ],
+    "write_operations": 1,
+    "fresh_backup_verified": true,
+    "full_readback_matches_expected": true,
+    "all_unwritten_bytes_preserved": true,
+    "protected_regions": {
+      "bootloader": true,
+      "partition": true,
+      "nvs": true,
+      "phy": true,
+      "app_tail": true,
+      "assets_tail": true,
+      "files": true
+    },
+    "sector_tails_restored": {
+      "app": 880,
+      "assets": 2914
+    }
+  },
+  "startup": {
+    "status": "PASS",
+    "reset_requested": true,
+    "elf_identity": "prefix_match",
+    "wifi_connected": true,
+    "faults_observed": {}
+  },
+  "volume_controls": {
+    "status": "PASS_USER_CONFIRMED",
+    "user_response": "音量和声音都正常变化，没有误切台",
+    "logged_step_sizes": [
+      -5,
+      5
+    ],
+    "increase_and_decrease_observed": true,
+    "latest_page_is_player": true,
+    "station_change_after_volume_sequence_observed": true,
+    "tail_station_change_is_not_hold_stability_evidence": true
+  },
+  "bounded_playback": {
+    "station": 7,
+    "complete_windows_between_decoder_start_and_next_pipeline": 8,
+    "window_ms": 40076,
+    "min_decoded_out_ratio": 1.0,
+    "min_output_clock_ratio": 0.9069117059528565,
+    "max_rebuffers": 0,
+    "max_reconnects": 0,
+    "formal_long_run_acceptance": false
+  },
+  "observation": {
+    "elapsed_seconds": 66.969,
+    "status_samples": 14,
+    "audio_windows_including_boot_and_tune": 13,
+    "network_windows": 13,
+    "serial_closed": true,
+    "playback_left_running": true,
+    "no_remaining_long_tests_restarted": true
+  },
+  "unverified": [
+    "Power-cycle persistence of the newly adjusted volume",
+    "Physical exit sequence via OK menu then long UP",
+    "Remaining prior full long-play/switch/AAC/voice acceptance"
+  ],
+  "privacy": "Original logs, device identifiers, network/settings and complete backups remain private."
+}

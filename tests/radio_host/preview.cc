@@ -118,6 +118,54 @@ int main(int argc, char **argv) {
   assert(wanted && state == 3);
   advance(40);
   int previous = current;
+  // Holding either direction adjusts the existing volume, without changing
+  // station, playback or navigation; release must not become a short click.
+  host_opened = -1;
+  volume = 70;
+  edge(NRF_UP, true);
+  advance(649);
+  assert(volume == 70 && current == previous && host_opened == -1);
+  advance(1);
+  assert(volume == 75 && setting_command.exchange(-1) == 1);
+  advance(220);
+  assert(volume == 80);
+  save(output, "volume");
+  edge(NRF_UP, false);
+  advance(700);
+  assert(volume == 80 && current == previous && wanted && state == 3);
+  assert(host_opened == -1);
+  edge(NRF_DOWN, true);
+  advance(650);
+  assert(volume == 75);
+  advance(220);
+  assert(volume == 70);
+  advance(207); // accelerated list repeat is throttled on the player
+  assert(volume == 70);
+  advance(194);
+  assert(volume == 65);
+  edge(NRF_DOWN, false);
+  advance(700);
+  assert(volume == 65 && current == previous && wanted && state == 3);
+  volume = 98;
+  hold(NRF_UP);
+  assert(volume == 100);
+  setting_command = -1;
+  hold(NRF_UP);
+  assert(volume == 100 && setting_command == -1);
+  volume = 2;
+  hold(NRF_DOWN);
+  assert(volume == 0);
+  setting_command = -1;
+  hold(NRF_DOWN);
+  assert(volume == 0 && setting_command == -1 && current == previous);
+  // Paused playback remains paused while volume changes.
+  single(NRF_OK);
+  assert(!wanted);
+  hold(NRF_UP);
+  assert(volume == 5 && !wanted && current == previous);
+  single(NRF_OK);
+  state = 3;
+  volume = 70;
   click(NRF_DOWN);
   click(NRF_DOWN);
   click(NRF_DOWN);
@@ -172,6 +220,13 @@ int main(int argc, char **argv) {
   advance(600);
   assert(current == before);
   save(output, "awakened");
+  // A long first key on the clock is consumed completely as a wake gesture.
+  state = 3;
+  advance(61000);
+  int prior_volume = volume;
+  hold(NRF_UP);
+  advance(600);
+  assert(volume == prior_volume && current == before && host_opened == NABO_TOOLS);
   // External station selection keeps the scene and next-button position in
   // sync, without reallocating the complete view during audio playback.
   nabo_radio_select_station(1059);
@@ -269,7 +324,31 @@ int main(int argc, char **argv) {
   single(NRF_DOWN);
   advance(600);
   assert(current == before); // clock now wakes; it must not tune
+  // A menu still supports long UP to HOME and accelerated DOWN scrolling.
+  host_opened = -1;
+  hold(NRF_OK);
+  prior_volume = volume;
+  hold(NRF_UP);
+  assert(host_opened == NABO_HOME && volume == prior_volume);
+  host_opened = -1;
+  edge(NRF_DOWN, true);
+  advance(650); // favorites
+  advance(220); // search
+  edge(NRF_DOWN, false);
+  single(NRF_OK);
+  assert(volume == prior_volume);
+  save(output, "search-after-hold");
+  // Holding across a page transition must not start adjusting player volume.
+  edge(NRF_DOWN, true);
+  advance(650);
+  assert(nabo_radio_view_back()); // search -> list
+  assert(nabo_radio_view_back()); // list -> player
+  advance(250);
+  edge(NRF_DOWN, false);
+  advance(600);
+  assert(volume == prior_volume && current == before);
   nabo_radio_view_close();
   puts("PASS: production FM scene; 1105 catalog entries, deferred scan, "
-       "favorite double click, hold menu, nested back, wake suppression");
+       "favorite double click, hold menu, nested back, wake suppression, "
+       "held volume both directions, bounds, release and page isolation");
 }
